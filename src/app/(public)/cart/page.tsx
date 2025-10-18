@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'

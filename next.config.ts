@@ -23,10 +23,16 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // KALICI ÇÖZÜM: Static generation'ı kapat
+  // KALICI ÇÖZÜM: Static generation'ı tamamen kapat
   trailingSlash: false,
   generateBuildId: async () => {
     return 'build'
+  },
+  // Static generation'ı tamamen kapat
+  experimental: {
+    ...config.experimental,
+    staticGenerationRetryCount: 0,
+    staticGenerationTimeout: 0,
   },
   // SWC minification is enabled by default in Next.js 15
   // Webpack optimization
