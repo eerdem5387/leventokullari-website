@@ -9,9 +9,9 @@ const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
 }
 
-// KALICI ÇÖZÜM: Minimal Prisma client - cache sorununu çöz
+// KALICI ÇÖZÜM: Prisma 5.x stable client
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     datasources: {
         db: {
             url: process.env.DATABASE_URL

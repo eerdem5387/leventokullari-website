@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   },
   // External packages for server components
   serverExternalPackages: ['@prisma/client'],
+  // KALICI ÇÖZÜM: Prisma 5.x için optimize
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+    reactCompiler: false,
+  },
   compress: true,
   poweredByHeader: false,
   reactStrictMode: false,
