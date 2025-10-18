@@ -56,20 +56,24 @@ const nextConfig: NextConfig = {
     if (isServer) {
       config.externals.push('@prisma/client')
 
-      // Fix for 'self is not defined' error - Add global polyfills
+      // KESİN ÇÖZÜM: Vendors chunk'ını server'dan ayır
+      config.externals.push({
+        'vendors': 'commonjs vendors'
+      })
+
+      // KESİN ÇÖZÜM: Doğru DefinePlugin
       config.plugins.push(
         new webpack.DefinePlugin({
-          'typeof window': JSON.stringify('undefined'),
-          'typeof self': JSON.stringify('undefined'),
-          'typeof global': JSON.stringify('undefined'),
-          'typeof document': JSON.stringify('undefined'),
-          'typeof navigator': JSON.stringify('undefined'),
-          'typeof localStorage': JSON.stringify('undefined'),
-          'typeof sessionStorage': JSON.stringify('undefined'),
-          'typeof screen': JSON.stringify('undefined'),
-          'typeof performance': JSON.stringify('undefined'),
-          'typeof requestAnimationFrame': JSON.stringify('undefined'),
-          'typeof addEventListener': JSON.stringify('undefined'),
+          'self': 'undefined',
+          'window': 'undefined',
+          'document': 'undefined',
+          'navigator': 'undefined',
+          'localStorage': 'undefined',
+          'sessionStorage': 'undefined',
+          'screen': 'undefined',
+          'performance': 'undefined',
+          'requestAnimationFrame': 'undefined',
+          'addEventListener': 'undefined',
         })
       )
 
