@@ -28,41 +28,59 @@ const nextConfig: NextConfig = {
     return 'build'
   },
   // SWC minification is enabled by default in Next.js 15
-  // Webpack optimization
-  webpack: (config, { isServer, dev }) => {
-    // Memory optimization
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          default: {
-            minChunks: 1,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
+      // Webpack optimization
+      webpack: (config, { isServer, dev }) => {
+        // Memory optimization
+        config.optimization = {
+          ...config.optimization,
+          splitChunks: {
             chunks: 'all',
+            cacheGroups: {
+              default: {
+                minChunks: 1,
+                priority: -20,
+                reuseExistingChunk: true,
+              },
+              vendor: {
+                test: /[\\/]node_modules[\\/]/,
+                name: 'vendors',
+                priority: -10,
+                chunks: 'all',
+              },
+            },
           },
-        },
+        }
+
+        // SSR/Client separation
+        if (isServer) {
+          config.externals.push('@prisma/client')
+          
+          // Fix for 'self is not defined' error
+          config.resolve.fallback = {
+            ...config.resolve.fallback,
+            fs: false,
+            net: false,
+            tls: false,
+            crypto: false,
+            stream: false,
+            util: false,
+            url: false,
+            assert: false,
+            http: false,
+            https: false,
+            os: false,
+            path: false,
+            zlib: false,
+          }
+        }
+
+        // Build performance
+        if (!dev) {
+          config.optimization.minimize = true
+        }
+
+        return config
       },
-    }
-
-    // Prisma client optimization
-    if (isServer) {
-      config.externals.push('@prisma/client')
-    }
-
-    // Build performance
-    if (!dev) {
-      config.optimization.minimize = true
-    }
-
-    return config
-  },
   async headers() {
     return [
       {
