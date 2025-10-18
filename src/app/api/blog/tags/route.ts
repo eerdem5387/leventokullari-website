@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
     try {
         const tags = await prisma.blogTag.findMany({
@@ -15,6 +17,9 @@ export async function GET(request: NextRequest) {
                 }
             },
             take: 20
+        }).catch((error) => {
+            console.log('BlogTag table not found, returning empty array')
+            return []
         })
 
         return NextResponse.json(tags)

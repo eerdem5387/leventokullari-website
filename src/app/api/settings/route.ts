@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
 import { z } from 'zod'
 
 const updateSettingsSchema = z.object({
@@ -24,6 +26,9 @@ export async function GET(request: NextRequest) {
         const settings = await prisma.settings.findMany({
             where,
             orderBy: { category: 'asc' }
+        }).catch((error) => {
+            console.log('Settings table not found, returning empty array')
+            return []
         })
 
         console.log('Found settings:', settings.length)

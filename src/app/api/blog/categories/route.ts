@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
     try {
         const categories = await prisma.blogCategory.findMany({
@@ -11,6 +13,9 @@ export async function GET(request: NextRequest) {
                 }
             },
             orderBy: { name: 'asc' }
+        }).catch((error) => {
+            console.log('BlogCategory table not found, returning empty array')
+            return []
         })
 
         return NextResponse.json(categories)
