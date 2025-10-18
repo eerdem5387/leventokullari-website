@@ -24,27 +24,17 @@ const nextConfig = {
     generateBuildId: async () => {
         return 'build'
     },
+    // Build optimization
+    swcMinify: true,
+    compiler: {
+        removeConsole: process.env.NODE_ENV === 'production'
+    },
     // Static generation'ı tamamen kapat
     // Webpack optimization
-    webpack: (config, { isServer, dev }) => {
-        // SSR/Client separation
+    webpack: (config, { isServer }) => {
         if (isServer) {
             config.externals.push('@prisma/client')
-
-            // React DOM SSR fix
-            const webpack = require('webpack')
-            config.plugins.push(
-                new webpack.DefinePlugin({
-                    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-                    'typeof window': JSON.stringify('undefined'),
-                    'typeof document': JSON.stringify('undefined'),
-                    'typeof navigator': JSON.stringify('undefined'),
-                    'typeof localStorage': JSON.stringify('undefined'),
-                    'typeof sessionStorage': JSON.stringify('undefined'),
-                })
-            )
         }
-
         return config
     },
     async headers() {

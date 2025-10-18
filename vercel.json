@@ -18,5 +18,11 @@
   "regions": [
     "iad1"
   ],
-  "crons": []
+  "crons": [],
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ]
 }
