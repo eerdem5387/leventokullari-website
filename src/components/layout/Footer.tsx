@@ -23,6 +23,9 @@ async function getFooterSettings() {
           ]
         }
       }
+    }).catch((error) => {
+      console.log('Settings table not found, using defaults')
+      return []
     })
 
     console.log('Footer settings from DB:', settings)

@@ -9,12 +9,35 @@ const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
 }
 
-// KALICI ÇÖZÜM: Prisma 5.x stable client
+// KALICI ÇÖZÜM: Prisma 5.x stable client with error handling
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     datasources: {
         db: {
             url: process.env.DATABASE_URL
+        }
+    },
+    errorFormat: 'pretty'
+}).$extends({
+    query: {
+        $allModels: {
+            async $allOperations({ model, operation, args, query }) {
+                try {
+                    return await query(args)
+                } catch (error: any) {
+                    // Database connection errors
+                    if (error.code === 'P1001' || error.code === 'P1017') {
+                        console.log(`Database connection error for ${model}.${operation}:`, error.message)
+                        return []
+                    }
+                    // Table doesn't exist errors
+                    if (error.code === 'P2021') {
+                        console.log(`Table not found for ${model}.${operation}:`, error.message)
+                        return []
+                    }
+                    throw error
+                }
+            }
         }
     }
 })

@@ -5,6 +5,10 @@ import HeaderWrapper from '@/components/layout/HeaderWrapper'
 import Footer from '@/components/layout/Footer'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import '@/lib/ssr-polyfills'
+import { validateEnvironment } from '@/lib/env-check'
+
+// Validate environment on startup
+validateEnvironment()
 
 const lexendDeca = Lexend_Deca({ 
   subsets: ['latin'],
