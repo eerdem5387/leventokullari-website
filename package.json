@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build:vercel": "prisma generate && next build --no-lint"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.7.0",

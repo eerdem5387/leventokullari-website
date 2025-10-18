@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // Build optimization
+    serverComponentsExternalPackages: ['@prisma/client'],
   },
   compress: true,
   poweredByHeader: false,
@@ -20,16 +22,46 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Build sırasında statik sayfa oluşturmayı devre dışı bırak
+  // Build optimization
   trailingSlash: false,
   generateBuildId: async () => {
     return 'build'
   },
-  // Prisma client için build optimization
-  webpack: (config, { isServer }) => {
+  // Memory optimization
+  swcMinify: true,
+  // Webpack optimization
+  webpack: (config, { isServer, dev }) => {
+    // Memory optimization
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          default: {
+            minChunks: 1,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: -10,
+            chunks: 'all',
+          },
+        },
+      },
+    }
+
+    // Prisma client optimization
     if (isServer) {
       config.externals.push('@prisma/client')
     }
+
+    // Build performance
+    if (!dev) {
+      config.optimization.minimize = true
+    }
+
     return config
   },
   async headers() {
