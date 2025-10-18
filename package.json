@@ -33,7 +33,7 @@
     "firebase": "^10.7.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.526.0",
-    "next": "15.4.4",
+    "next": "14.2.15",
     "nodemailer": "^7.0.5",
     "prisma": "^5.22.0",
     "react": "18.3.1",
@@ -52,7 +52,7 @@
     "@eslint/eslintrc": "^3",
     "@types/node": "^20.19.9",
     "eslint": "^9",
-    "eslint-config-next": "15.4.4",
+    "eslint-config-next": "14.2.15",
     "tsx": "^4.20.3"
   }
 }

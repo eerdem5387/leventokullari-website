@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  // External packages for server components
-  serverExternalPackages: ['@prisma/client'],
+  // KALICI ÇÖZÜM: Prisma'yı tamamen external yap
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   // KALICI ÇÖZÜM: Prisma 5.x için optimize
   experimental: {
     optimizePackageImports: ['lucide-react'],
