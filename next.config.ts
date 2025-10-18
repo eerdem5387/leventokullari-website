@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return 'build'
   },
+  // Prisma client için build optimization
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('@prisma/client')
+    }
+    return config
+  },
   async headers() {
     return [
       {
