@@ -1,0 +1,21 @@
+import { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
+    return {
+        rules: {
+            userAgent: '*',
+            allow: '/',
+            disallow: [
+                '/admin/',
+                '/api/',
+                '/checkout/',
+                '/profile/',
+                '/orders/',
+                '/cart/',
+                '/login',
+                '/register',
+            ],
+        },
+        sitemap: 'https://ecommerce-store.com/sitemap.xml',
+    }
+} 

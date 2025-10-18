@@ -1,0 +1,73 @@
+steps:
+  # Run database migrations
+  - name: 'node:20'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        npm install
+        npx prisma generate
+        npx prisma db push
+    env:
+      - 'DATABASE_URL=postgresql://ecommerce_user:Ecommerce2024!@34.38.85.124:5432/ecommerce_db'
+      - 'NODE_ENV=production'
+  
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'europe-west1-docker.pkg.dev/e-commerce-levent-468811/ecommerce-repo/ecommerce-app:latest', '.']
+  
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west1-docker.pkg.dev/e-commerce-levent-468811/ecommerce-repo/ecommerce-app:latest']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ecommerce-app'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/e-commerce-levent-468811/ecommerce-repo/ecommerce-app:latest'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--min-instances'
+      - '0'
+      - '--set-env-vars'
+      - 'NODE_ENV=production'
+      - '--set-env-vars'
+      - 'DATABASE_URL=${_DATABASE_URL}'
+      - '--set-env-vars'
+      - 'JWT_SECRET=${_JWT_SECRET}'
+      - '--set-env-vars'
+      - 'NEXTAUTH_URL=${_NEXTAUTH_URL}'
+      - '--set-env-vars'
+      - 'NEXTAUTH_SECRET=${_NEXTAUTH_SECRET}'
+      - '--set-env-vars'
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID}'
+      - '--set-env-vars'
+      - 'STORAGE_BUCKET=${_STORAGE_BUCKET}'
+
+# Store images in Artifact Registry
+images:
+  - 'europe-west1-docker.pkg.dev/e-commerce-levent-468811/ecommerce-repo/ecommerce-app:latest'
+
+# Build timeout
+timeout: '1200s'
+
+# Available substitutions
+substitutions:
+  _DATABASE_URL: 'postgresql://ecommerce_user:Ecommerce2024!@34.38.85.124:5432/ecommerce_db'
+  _JWT_SECRET: 'ecommerce-levent-468811-super-secret-jwt-key-2024'
+  _NEXTAUTH_URL: 'https://ecommerce-app-xxxxx-ew.a.run.app'
+  _NEXTAUTH_SECRET: 'ecommerce-levent-468811-nextauth-secret-2024'
+  _STORAGE_BUCKET: 'e-commerce-levent-468811-ecommerce-assets'

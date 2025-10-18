@@ -6,22 +6,49 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "tsx prisma/seed.ts",
+    "deploy": "npm run build && ./deploy.sh",
+    "docker:build": "docker build -t ecommerce-app .",
+    "docker:run": "docker run -p 3000:3000 ecommerce-app",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.7.0",
+    "@headlessui/react": "^2.2.6",
+    "@heroicons/react": "^2.2.0",
+    "@hookform/resolvers": "^5.2.0",
+    "@prisma/client": "^6.12.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^7.0.0",
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
+    "clsx": "^2.1.1",
+    "firebase": "^10.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.526.0",
+    "next": "15.4.4",
+    "nodemailer": "^7.0.5",
+    "prisma": "^6.12.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.4.4"
+    "react-hook-form": "^7.61.1",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^4.0.10"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4",
+    "tsx": "^4.20.3",
+    "typescript": "^5"
   }
 }
