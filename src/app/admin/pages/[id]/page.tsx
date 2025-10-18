@@ -4,8 +4,6 @@ import EditorClient from './EditorClient'
 
 export const dynamic = 'force-dynamic'
 
-export const dynamic = 'force-dynamic'
-
 export default async function EditPage({ params }: { params: { id: string } }) {
   const page = await prisma.page.findUnique({
     where: { id: params.id },
