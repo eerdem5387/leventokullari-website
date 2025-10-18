@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import webpack from 'webpack';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -62,6 +61,7 @@ const nextConfig: NextConfig = {
       })
 
       // KESİN ÇÖZÜM: Doğru DefinePlugin
+      const webpack = require('webpack')
       config.plugins.push(
         new webpack.DefinePlugin({
           'self': 'undefined',
