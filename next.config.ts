@@ -55,6 +55,15 @@ const nextConfig: NextConfig = {
         if (isServer) {
           config.externals.push('@prisma/client')
           
+          // Fix for 'self is not defined' error - Add global polyfills
+          config.plugins.push(
+            new config.webpack.DefinePlugin({
+              'typeof window': JSON.stringify('undefined'),
+              'typeof self': JSON.stringify('undefined'),
+              'typeof global': JSON.stringify('undefined'),
+            })
+          )
+          
           // Fix for 'self is not defined' error
           config.resolve.fallback = {
             ...config.resolve.fallback,
@@ -72,6 +81,13 @@ const nextConfig: NextConfig = {
             path: false,
             zlib: false,
           }
+          
+          // Additional externals for problematic packages
+          config.externals.push({
+            'lucide-react': 'commonjs lucide-react',
+            'react': 'commonjs react',
+            'react-dom': 'commonjs react-dom',
+          })
         }
 
         // Build performance

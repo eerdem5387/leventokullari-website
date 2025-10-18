@@ -3,6 +3,7 @@ import { Lexend_Deca } from 'next/font/google'
 import './globals.css'
 import HeaderWrapper from '@/components/layout/HeaderWrapper'
 import Footer from '@/components/layout/Footer'
+import '@/lib/ssr-polyfills'
 
 const lexendDeca = Lexend_Deca({ 
   subsets: ['latin'],
