@@ -30,35 +30,36 @@ const nextConfig: NextConfig = {
   // SWC minification is enabled by default in Next.js 15
   // Webpack optimization
   webpack: (config, { isServer, dev }) => {
-    // Memory optimization
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          default: {
-            minChunks: 1,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
+    // Memory optimization - Vendors chunk'ı sadece client'da oluştur
+    if (isServer) {
+      // Server'da vendors chunk oluşturma
+      config.optimization.splitChunks = false
+    } else {
+      // Client'da vendors chunk oluştur
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'async',  // ✅ Sadece async chunks (client-only)
+          cacheGroups: {
+            default: {
+              minChunks: 1,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: -10,
+              chunks: 'async',  // ✅ Sadece client'da
+            },
           },
         },
-      },
+      }
     }
 
     // SSR/Client separation
     if (isServer) {
       config.externals.push('@prisma/client')
-
-      // KESİN ÇÖZÜM: Vendors chunk'ını server'dan ayır
-      config.externals.push({
-        'vendors': 'commonjs vendors'
-      })
 
       // KESİN ÇÖZÜM: Doğru DefinePlugin
       const webpack = require('webpack')
