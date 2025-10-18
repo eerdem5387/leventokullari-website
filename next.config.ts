@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import webpack from 'webpack';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -51,78 +52,78 @@ const nextConfig: NextConfig = {
       },
     }
 
-        // SSR/Client separation
-        if (isServer) {
-          config.externals.push('@prisma/client')
-          
-          // Fix for 'self is not defined' error - Add global polyfills
-          config.plugins.push(
-            new config.webpack.DefinePlugin({
-              'typeof window': JSON.stringify('undefined'),
-              'typeof self': JSON.stringify('undefined'),
-              'typeof global': JSON.stringify('undefined'),
-              'typeof document': JSON.stringify('undefined'),
-              'typeof navigator': JSON.stringify('undefined'),
-              'typeof localStorage': JSON.stringify('undefined'),
-              'typeof sessionStorage': JSON.stringify('undefined'),
-            })
-          )
-          
-          // Fix for 'self is not defined' error
-          config.resolve.fallback = {
-            ...config.resolve.fallback,
-            fs: false,
-            net: false,
-            tls: false,
-            crypto: false,
-            stream: false,
-            util: false,
-            url: false,
-            assert: false,
-            http: false,
-            https: false,
-            os: false,
-            path: false,
-            zlib: false,
-            buffer: false,
-            process: false,
-            events: false,
-            querystring: false,
-            punycode: false,
-            readline: false,
-            repl: false,
-            tty: false,
-            vm: false,
-            child_process: false,
-            cluster: false,
-            dgram: false,
-            dns: false,
-            domain: false,
-            module: false,
-            net: false,
-            readline: false,
-            string_decoder: false,
-            sys: false,
-            timers: false,
-            tls: false,
-            tty: false,
-            url: false,
-            util: false,
-            v8: false,
-            vm: false,
-            zlib: false,
-          }
-          
-          // Additional externals for problematic packages
-          config.externals.push({
-            'lucide-react': 'commonjs lucide-react',
-            'react': 'commonjs react',
-            'react-dom': 'commonjs react-dom',
-            'next': 'commonjs next',
-            'next/router': 'commonjs next/router',
-            'next/navigation': 'commonjs next/navigation',
-          })
-        }
+    // SSR/Client separation
+    if (isServer) {
+      config.externals.push('@prisma/client')
+
+      // Fix for 'self is not defined' error - Add global polyfills
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'typeof window': JSON.stringify('undefined'),
+          'typeof self': JSON.stringify('undefined'),
+          'typeof global': JSON.stringify('undefined'),
+          'typeof document': JSON.stringify('undefined'),
+          'typeof navigator': JSON.stringify('undefined'),
+          'typeof localStorage': JSON.stringify('undefined'),
+          'typeof sessionStorage': JSON.stringify('undefined'),
+        })
+      )
+
+      // Fix for 'self is not defined' error
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        url: false,
+        assert: false,
+        http: false,
+        https: false,
+        os: false,
+        path: false,
+        zlib: false,
+        buffer: false,
+        process: false,
+        events: false,
+        querystring: false,
+        punycode: false,
+        readline: false,
+        repl: false,
+        tty: false,
+        vm: false,
+        child_process: false,
+        cluster: false,
+        dgram: false,
+        dns: false,
+        domain: false,
+        module: false,
+        net: false,
+        readline: false,
+        string_decoder: false,
+        sys: false,
+        timers: false,
+        tls: false,
+        tty: false,
+        url: false,
+        util: false,
+        v8: false,
+        vm: false,
+        zlib: false,
+      }
+
+      // Additional externals for problematic packages
+      config.externals.push({
+        'lucide-react': 'commonjs lucide-react',
+        'react': 'commonjs react',
+        'react-dom': 'commonjs react-dom',
+        'next': 'commonjs next',
+        'next/router': 'commonjs next/router',
+        'next/navigation': 'commonjs next/navigation',
+      })
+    }
 
     // Build performance
     if (!dev) {
