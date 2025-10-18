@@ -8,10 +8,6 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  experimental: {
-    optimizePackageImports: ['lucide-react'],
-    reactCompiler: false,
-  },
   // External packages for server components
   serverExternalPackages: ['@prisma/client'],
   compress: true,
@@ -30,7 +26,8 @@ const nextConfig: NextConfig = {
   },
   // Static generation'ı tamamen kapat
   experimental: {
-    ...config.experimental,
+    optimizePackageImports: ['lucide-react'],
+    reactCompiler: false,
     staticGenerationRetryCount: 0,
     staticGenerationTimeout: 0,
   },
