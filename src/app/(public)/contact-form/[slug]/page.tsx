@@ -1,5 +1,8 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { Mail, Send, CheckCircle } from 'lucide-react'
 

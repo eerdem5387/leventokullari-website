@@ -1,9 +1,13 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
+import { safeLocalStorage, isClient } from '@/lib/browser-utils'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -50,8 +54,10 @@ export default function RegisterPage() {
       }
 
       // Token'ı localStorage'a kaydet
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      if (isClient) {
+        safeLocalStorage.setItem('token', data.token)
+        safeLocalStorage.setItem('user', JSON.stringify(data.user))
+      }
 
       // Başarılı kayıt sonrası yönlendirme
       router.push('/')

@@ -1,5 +1,8 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { CreditCard, DollarSign, TrendingUp, AlertCircle } from 'lucide-react'
 

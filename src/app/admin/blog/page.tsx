@@ -1,5 +1,8 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { FileText, Plus, Edit, Trash2, Eye, Tag, User } from 'lucide-react'
 

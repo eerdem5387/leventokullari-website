@@ -1,8 +1,12 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { User, Mail, Phone, MapPin, Edit, Save, X } from 'lucide-react'
 import Link from 'next/link'
+import { safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface UserData {
   id: string
@@ -50,12 +54,17 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token')
+      if (!isClient) {
+        setIsLoading(false)
+        return
+      }
+      
+      const token = safeLocalStorage.getItem('token')
       if (!token) {
         setIsLoading(false)
         setUserData(null)
         // Token yoksa login sayfasına yönlendir
-        window.location.href = '/login?redirect=/profile'
+        safeWindow.location.href = '/login?redirect=/profile'
         return
       }
       
@@ -66,10 +75,10 @@ export default function ProfilePage() {
         
         if (res.status === 401) {
           // Token geçersiz, localStorage'ı temizle ve login'e yönlendir
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
+          safeLocalStorage.removeItem('token')
+          safeLocalStorage.removeItem('user')
           setUserData(null)
-          window.location.href = '/login?redirect=/profile'
+          safeWindow.location.href = '/login?redirect=/profile'
           return
         }
         
@@ -83,12 +92,12 @@ export default function ProfilePage() {
           name: user.name || '',
           phone: user.phone || ''
         })
-        localStorage.setItem('user', JSON.stringify(user))
+        safeLocalStorage.setItem('user', JSON.stringify(user))
       } catch (error) {
         console.error('Profile fetch error:', error)
         setUserData(null)
         // Hata durumunda da login'e yönlendir
-        window.location.href = '/login?redirect=/profile'
+        safeWindow.location.href = '/login?redirect=/profile'
       }
       setIsLoading(false)
     }

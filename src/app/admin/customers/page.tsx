@@ -1,8 +1,12 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Users, Eye, Mail, Calendar } from 'lucide-react'
+import { safeLocalStorage, isClient } from '@/lib/browser-utils'
 
 interface Customer {
   id: string
@@ -26,9 +30,14 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     const fetchCustomers = async () => {
+      if (!isClient) {
+        setIsLoading(false)
+        return
+      }
+      
       try {
         // Token'ı localStorage'dan al
-        const token = localStorage.getItem('token')
+        const token = safeLocalStorage.getItem('token')
         if (!token) {
           console.error('No token found')
           setCustomers([])

@@ -1,9 +1,13 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { ReactNode, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader from '@/components/admin/AdminHeader'
+import { safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -16,8 +20,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('token')
-      const userStr = localStorage.getItem('user')
+      if (!isClient) return
+      
+      const token = safeLocalStorage.getItem('token')
+      const userStr = safeLocalStorage.getItem('user')
       
       if (!token || !userStr) {
         router.push('/login?redirect=/admin')
@@ -34,6 +40,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         setIsAuthorized(true)
       } catch (error) {
         console.error('Auth error:', error)
+        safeLocalStorage.removeItem('token')
+        safeLocalStorage.removeItem('user')
         router.push('/login?redirect=/admin')
       } finally {
         setIsLoading(false)

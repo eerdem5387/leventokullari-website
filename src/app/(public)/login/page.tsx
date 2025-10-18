@@ -1,9 +1,13 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -43,8 +47,10 @@ export default function LoginPage() {
       }
 
       // Token'ı localStorage'a kaydet
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      if (isClient) {
+        safeLocalStorage.setItem('token', data.token)
+        safeLocalStorage.setItem('user', JSON.stringify(data.user))
+      }
 
       // Başarılı giriş sonrası yönlendirme
       if (data.user.role === 'ADMIN') {

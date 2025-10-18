@@ -1,5 +1,8 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { Settings, Save, Globe, Mail, Shield, CreditCard, Truck } from 'lucide-react'
 

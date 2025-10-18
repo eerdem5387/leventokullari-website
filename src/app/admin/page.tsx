@@ -1,5 +1,8 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
@@ -11,6 +14,7 @@ import {
   Eye,
   Star
 } from 'lucide-react'
+import { safeLocalStorage, isClient } from '@/lib/browser-utils'
 
 interface DashboardData {
   totalOrders: number
@@ -99,7 +103,11 @@ export default function AdminDashboard() {
         setIsLoading(true)
         
         // Token'ı localStorage'dan al
-        const token = localStorage.getItem('token')
+        if (!isClient) {
+          throw new Error('Client-side only')
+        }
+        
+        const token = safeLocalStorage.getItem('token')
         if (!token) {
           throw new Error('Yetkilendirme gerekli')
         }

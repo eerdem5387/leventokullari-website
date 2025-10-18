@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 // KALICI ÇÖZÜM: Static generation'ı kapat
 export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
+import { safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,8 +25,13 @@ export default function CartPage() {
 
   useEffect(() => {
     const loadCart = () => {
+      if (!isClient) {
+        setIsLoading(false)
+        return
+      }
+      
       try {
-        const cart = sessionStorage.getItem('cart')
+        const cart = safeSessionStorage.getItem('cart')
         if (cart) {
           const items = JSON.parse(cart)
           setCartItems(items)
@@ -51,18 +57,24 @@ export default function CartPage() {
     )
     
     setCartItems(updatedItems)
-    sessionStorage.setItem('cart', JSON.stringify(updatedItems))
+    if (isClient) {
+      safeSessionStorage.setItem('cart', JSON.stringify(updatedItems))
+    }
   }
 
   const removeItem = (id: string) => {
     const updatedItems = cartItems.filter(item => item.id !== id)
     setCartItems(updatedItems)
-    sessionStorage.setItem('cart', JSON.stringify(updatedItems))
+    if (isClient) {
+      safeSessionStorage.setItem('cart', JSON.stringify(updatedItems))
+    }
   }
 
   const clearCart = () => {
     setCartItems([])
-    sessionStorage.removeItem('cart')
+    if (isClient) {
+      safeSessionStorage.removeItem('cart')
+    }
   }
 
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)

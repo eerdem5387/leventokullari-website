@@ -1,8 +1,12 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CreditCard, Truck, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
+import { safeSessionStorage, safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface CartItem {
   id: string
@@ -61,14 +65,19 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!isClient) {
+        setIsLoading(false)
+        return
+      }
+      
       // SessionStorage'dan sepet verilerini al
-      const savedCart = sessionStorage.getItem('cart')
+      const savedCart = safeSessionStorage.getItem('cart')
       if (savedCart) {
         setCartItems(JSON.parse(savedCart))
       }
 
       // Kullanıcının kayıtlı adreslerini getir
-      const token = localStorage.getItem('token')
+      const token = safeLocalStorage.getItem('token')
       if (token) {
         try {
           const response = await fetch('/api/users/addresses', {

@@ -1,5 +1,8 @@
 'use client'
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { BarChart3, TrendingUp, TrendingDown, Calendar, DollarSign, ShoppingCart, Users, Download, Filter } from 'lucide-react'
 import { useRouter } from 'next/navigation'

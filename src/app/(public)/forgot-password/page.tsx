@@ -1,5 +1,8 @@
 'use client';
 
+// KALICI ÇÖZÜM: Static generation'ı kapat
+export const dynamic = 'force-dynamic'
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
