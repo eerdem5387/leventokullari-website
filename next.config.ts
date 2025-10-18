@@ -66,6 +66,10 @@ const nextConfig: NextConfig = {
           'typeof navigator': JSON.stringify('undefined'),
           'typeof localStorage': JSON.stringify('undefined'),
           'typeof sessionStorage': JSON.stringify('undefined'),
+          'typeof screen': JSON.stringify('undefined'),
+          'typeof performance': JSON.stringify('undefined'),
+          'typeof requestAnimationFrame': JSON.stringify('undefined'),
+          'typeof addEventListener': JSON.stringify('undefined'),
         })
       )
 
