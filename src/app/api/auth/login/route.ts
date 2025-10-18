@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { comparePassword, generateToken } from '@/lib/auth'
 import { z } from 'zod'
+import { handleApiError, ValidationError, UnauthorizedError, validateRequest } from '@/lib/error-handler'
 
 const loginSchema = z.object({
     email: z.string().email('Geçerli bir email adresi giriniz'),
@@ -11,7 +12,7 @@ const loginSchema = z.object({
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { email, password } = loginSchema.parse(body)
+        const { email, password } = validateRequest(loginSchema, body)
 
         // Kullanıcıyı bul
         const user = await prisma.user.findUnique({
@@ -19,20 +20,14 @@ export async function POST(request: NextRequest) {
         })
 
         if (!user) {
-            return NextResponse.json(
-                { error: 'Geçersiz email veya şifre' },
-                { status: 401 }
-            )
+            throw new UnauthorizedError('Geçersiz email veya şifre')
         }
 
         // Şifreyi kontrol et
         const isPasswordValid = await comparePassword(password, user.password)
 
         if (!isPasswordValid) {
-            return NextResponse.json(
-                { error: 'Geçersiz email veya şifre' },
-                { status: 401 }
-            )
+            throw new UnauthorizedError('Geçersiz email veya şifre')
         }
 
         // JWT token oluştur
@@ -53,17 +48,6 @@ export async function POST(request: NextRequest) {
         })
 
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                { error: 'Geçersiz veri formatı', details: error.issues },
-                { status: 400 }
-            )
-        }
-
-        console.error('Login error:', error)
-        return NextResponse.json(
-            { error: 'Giriş işlemi sırasında bir hata oluştu' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 } 

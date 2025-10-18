@@ -2,41 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { emailService } from '@/lib/email'
+import { handleApiError, UnauthorizedError, NotFoundError, ValidationError, requireAuth, validateRequest } from '@/lib/error-handler'
+import { z } from 'zod'
+
+const orderItemSchema = z.object({
+    productId: z.string().min(1, 'Ürün ID gerekli'),
+    variationId: z.string().optional(),
+    quantity: z.number().min(1, 'Miktar en az 1 olmalı')
+})
+
+const addressSchema = z.object({
+    title: z.string().min(1, 'Adres başlığı gerekli'),
+    firstName: z.string().min(1, 'Ad gerekli'),
+    lastName: z.string().min(1, 'Soyad gerekli'),
+    phone: z.string().min(1, 'Telefon gerekli'),
+    city: z.string().min(1, 'Şehir gerekli'),
+    district: z.string().min(1, 'İlçe gerekli'),
+    fullAddress: z.string().min(1, 'Adres gerekli')
+})
+
+const createOrderSchema = z.object({
+    items: z.array(orderItemSchema).min(1, 'En az bir ürün gerekli'),
+    shippingAddress: addressSchema,
+    billingAddress: addressSchema.optional(),
+    notes: z.string().optional()
+})
 
 export async function GET(request: NextRequest) {
     try {
-        console.log('=== ORDERS LIST API CALLED ===')
-
-        // Authorization header'dan token'ı al
+        // Authorization kontrolü
         const authHeader = request.headers.get('authorization')
-        console.log('Auth header:', authHeader)
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.log('Auth error: Invalid authorization header')
-            return NextResponse.json(
-                { error: 'Yetkilendirme gerekli' },
-                { status: 401 }
-            )
-        }
-
-        const token = authHeader.substring(7)
-        console.log('Token:', token)
-
-        // JWT token'ı doğrula
-        const decodedToken = verifyToken(token)
-        console.log('Decoded token:', decodedToken)
-
-        if (!decodedToken) {
-            console.log('Token verification failed')
-            return NextResponse.json(
-                { error: 'Geçersiz token' },
-                { status: 401 }
-            )
-        }
+        const user = requireAuth(authHeader)
 
         // Kullanıcıya ait siparişleri getir
         const orders = await prisma.order.findMany({
-            where: { userId: decodedToken.userId },
+            where: { userId: user.userId },
             include: {
                 user: {
                     select: { name: true, email: true }
@@ -66,74 +66,31 @@ export async function GET(request: NextRequest) {
             orderBy: { createdAt: 'desc' }
         })
 
-        console.log('Found orders:', orders.length)
         return NextResponse.json(orders)
     } catch (error) {
-        console.error('Error fetching orders:', error)
-        return NextResponse.json(
-            { error: 'Siparişler getirilemedi' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 }
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('=== ORDER API CALLED ===')
-        const body = await request.json()
-        console.log('Request body:', body)
+        // Authorization kontrolü
+        const authHeader = request.headers.get('authorization')
+        const user = requireAuth(authHeader)
 
-        const { items, shippingAddress, billingAddress, notes } = body
+        const body = await request.json()
+        const { items, shippingAddress, billingAddress, notes } = validateRequest(createOrderSchema, body)
 
         // billingAddress undefined ise shippingAddress'i kullan
         const finalBillingAddress = billingAddress || shippingAddress
 
-        // Authorization header'dan token'ı al
-        const authHeader = request.headers.get('authorization')
-        console.log('Auth header:', authHeader)
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.log('Auth error: Invalid authorization header')
-            return NextResponse.json(
-                { error: 'Yetkilendirme gerekli' },
-                { status: 401 }
-            )
-        }
-
-        const token = authHeader.substring(7)
-        console.log('Token:', token)
-
-        // JWT token'ı doğrula
-        const decodedToken = verifyToken(token)
-        console.log('Decoded token:', decodedToken)
-
-        if (!decodedToken) {
-            console.log('Token verification failed')
-            return NextResponse.json(
-                { error: 'Geçersiz token' },
-                { status: 401 }
-            )
-        }
-
-        // Kullanıcıyı token'dan al
-        const user = await prisma.user.findUnique({
-            where: { id: decodedToken.userId }
+        // Kullanıcıyı veritabanından al
+        const dbUser = await prisma.user.findUnique({
+            where: { id: user.userId }
         })
-        console.log('Found user:', user ? 'Yes' : 'No')
 
-        if (!user) {
-            console.log('User not found error')
-            return NextResponse.json(
-                { error: 'Kullanıcı bulunamadı' },
-                { status: 404 }
-            )
-        }
-
-        if (!items || items.length === 0) {
-            return NextResponse.json(
-                { error: 'Ürünler gereklidir' },
-                { status: 400 }
-            )
+        if (!dbUser) {
+            throw new NotFoundError('Kullanıcı bulunamadı')
         }
 
         // Toplam tutarı hesapla
@@ -145,18 +102,20 @@ export async function POST(request: NextRequest) {
                     where: { id: item.variationId },
                     select: { price: true }
                 })
-                if (variation) {
-                    totalAmount += Number(variation.price) * item.quantity
+                if (!variation) {
+                    throw new NotFoundError(`Varyasyon bulunamadı: ${item.variationId}`)
                 }
+                totalAmount += Number(variation.price) * item.quantity
             } else {
                 // Basit ürünler için ana ürün fiyatını kullan
                 const product = await prisma.product.findUnique({
                     where: { id: item.productId },
                     select: { price: true }
                 })
-                if (product) {
-                    totalAmount += Number(product.price) * item.quantity
+                if (!product) {
+                    throw new NotFoundError(`Ürün bulunamadı: ${item.productId}`)
                 }
+                totalAmount += Number(product.price) * item.quantity
             }
         }
 
@@ -202,7 +161,7 @@ export async function POST(request: NextRequest) {
 
         const order = await prisma.order.create({
             data: {
-                userId: user.id,
+                userId: dbUser.id,
                 orderNumber: `ORD-${Date.now()}`,
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
@@ -261,30 +220,20 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        console.log('Order created successfully:', order.id)
-
         // E-posta bildirimleri gönder (asenkron olarak)
         try {
-          // Müşteriye sipariş onay e-postası
-          await emailService.sendOrderConfirmation(order, user.email)
-          
-          // Admin'e yeni sipariş bildirimi
-          await emailService.sendOrderNotificationToAdmin(order)
+            // Müşteriye sipariş onay e-postası
+            await emailService.sendOrderConfirmation(order, dbUser.email)
+
+            // Admin'e yeni sipariş bildirimi
+            await emailService.sendOrderNotificationToAdmin(order)
         } catch (emailError) {
-          console.error('E-posta gönderilirken hata:', emailError)
-          // E-posta hatası sipariş oluşturmayı etkilemesin
+            console.error('E-posta gönderilirken hata:', emailError)
+            // E-posta hatası sipariş oluşturmayı etkilemesin
         }
 
         return NextResponse.json(order, { status: 201 })
     } catch (error) {
-        console.error('Error creating order:', error)
-        console.error('Error details:', {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined
-        })
-        return NextResponse.json(
-            { error: 'Sipariş oluşturulamadı', details: error instanceof Error ? error.message : 'Unknown error' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 } 

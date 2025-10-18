@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handleApiError, NotFoundError, ConflictError, ValidationError, requireAdmin } from '@/lib/error-handler'
 
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         const resolvedParams = await params
         const productId = resolvedParams.id
+
+        // ID formatını kontrol et
+        if (!productId || typeof productId !== 'string') {
+            throw new ValidationError('Geçersiz ürün ID')
+        }
 
         // Ürünü bul
         const product = await prisma.product.findUnique({
@@ -19,18 +29,12 @@ export async function DELETE(
         })
 
         if (!product) {
-            return NextResponse.json(
-                { error: 'Ürün bulunamadı' },
-                { status: 404 }
-            )
+            throw new NotFoundError('Ürün bulunamadı')
         }
 
         // Ürünün siparişlerde kullanılıp kullanılmadığını kontrol et
         if (product.orderItems.length > 0) {
-            return NextResponse.json(
-                { error: 'Bu ürün siparişlerde kullanıldığı için silinemez' },
-                { status: 400 }
-            )
+            throw new ConflictError('Bu ürün siparişlerde kullanıldığı için silinemez')
         }
 
         // Ürünü sil (varyasyonlar cascade ile silinecek)
@@ -44,11 +48,7 @@ export async function DELETE(
         )
 
     } catch (error) {
-        console.error('Delete product error:', error)
-        return NextResponse.json(
-            { error: 'Ürün silinirken bir hata oluştu' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 }
 
@@ -59,6 +59,11 @@ export async function GET(
     try {
         const resolvedParams = await params
         const productId = resolvedParams.id
+
+        // ID formatını kontrol et
+        if (!productId || typeof productId !== 'string') {
+            throw new ValidationError('Geçersiz ürün ID')
+        }
 
         const product = await prisma.product.findUnique({
             where: { id: productId },
@@ -81,20 +86,13 @@ export async function GET(
         })
 
         if (!product) {
-            return NextResponse.json(
-                { error: 'Ürün bulunamadı' },
-                { status: 404 }
-            )
+            throw new NotFoundError('Ürün bulunamadı')
         }
 
         return NextResponse.json(product)
 
     } catch (error) {
-        console.error('Get product error:', error)
-        return NextResponse.json(
-            { error: 'Ürün getirilirken bir hata oluştu' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 }
 
@@ -103,9 +101,28 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         const resolvedParams = await params
         const productId = resolvedParams.id
+
+        // ID formatını kontrol et
+        if (!productId || typeof productId !== 'string') {
+            throw new ValidationError('Geçersiz ürün ID')
+        }
+
         const body = await request.json()
+
+        // Ürünün var olup olmadığını kontrol et
+        const existingProduct = await prisma.product.findUnique({
+            where: { id: productId }
+        })
+
+        if (!existingProduct) {
+            throw new NotFoundError('Ürün bulunamadı')
+        }
 
         // Ürünü güncelle
         const updatedProduct = await prisma.product.update({
@@ -130,10 +147,6 @@ export async function PUT(
         return NextResponse.json(updatedProduct)
 
     } catch (error) {
-        console.error('Update product error:', error)
-        return NextResponse.json(
-            { error: 'Ürün güncellenirken bir hata oluştu' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 } 

@@ -1,38 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(req: NextRequest) {
-    const { pathname } = req.nextUrl
-    if (!pathname.startsWith('/admin')) return NextResponse.next()
-
-    const auth = req.headers.get('authorization')
-    const expectedUser = process.env.ADMIN_USER || 'admin'
-    const expectedPass = process.env.ADMIN_PASS || 'password'
-
-    if (!auth?.startsWith('Basic ')) {
-        return new NextResponse('Authentication required', {
-            status: 401,
-            headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
-        })
-    }
-
-    const [, base64] = auth.split(' ')
-    const [user, pass] = Buffer.from(base64, 'base64').toString().split(':')
-    if (user !== expectedUser || pass !== expectedPass) {
-        return new NextResponse('Unauthorized', { status: 401 })
-    }
-
-    return NextResponse.next()
-}
-
-export const config = {
-    matcher: ['/admin/:path*'],
-}
-
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+// Rate limiting store (in production, use Redis)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
 export function middleware(request: NextRequest) {
+    const { pathname } = request.nextUrl
+
     // Security headers
     const response = NextResponse.next()
 
@@ -62,16 +36,62 @@ export function middleware(request: NextRequest) {
         ].join('; ')
     )
 
+    // Admin route protection
+    if (pathname.startsWith('/admin')) {
+        const auth = request.headers.get('authorization')
+        const expectedUser = process.env.ADMIN_USER || 'admin'
+        const expectedPass = process.env.ADMIN_PASS || 'password'
+
+        if (!auth?.startsWith('Basic ')) {
+            return new NextResponse('Authentication required', {
+                status: 401,
+                headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
+            })
+        }
+
+        try {
+            const [, base64] = auth.split(' ')
+            const [user, pass] = Buffer.from(base64, 'base64').toString().split(':')
+            if (user !== expectedUser || pass !== expectedPass) {
+                return new NextResponse('Unauthorized', { status: 401 })
+            }
+        } catch (error) {
+            return new NextResponse('Invalid authentication', { status: 401 })
+        }
+    }
+
     // Rate limiting for API routes
-    if (request.nextUrl.pathname.startsWith('/api/')) {
-        const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    if (pathname.startsWith('/api/')) {
+        const ip = request.headers.get('x-forwarded-for') ||
+            request.headers.get('x-real-ip') ||
+            'unknown'
 
-        // Simple rate limiting (in production, use Redis or similar)
-        const maxRequests = 100 // max 100 requests per window
+        const now = Date.now()
+        const windowMs = 15 * 60 * 1000 // 15 minutes
+        const maxRequests = 100
 
-        // This is a simplified version - in production use proper rate limiting
+        const key = `rate_limit:${ip}`
+        const current = rateLimitStore.get(key)
+
+        if (!current || now > current.resetTime) {
+            rateLimitStore.set(key, { count: 1, resetTime: now + windowMs })
+        } else if (current.count >= maxRequests) {
+            return new NextResponse('Too Many Requests', {
+                status: 429,
+                headers: {
+                    'Retry-After': '900', // 15 minutes
+                    'X-RateLimit-Limit': maxRequests.toString(),
+                    'X-RateLimit-Remaining': '0',
+                    'X-RateLimit-Reset': current.resetTime.toString()
+                }
+            })
+        } else {
+            current.count++
+            rateLimitStore.set(key, current)
+        }
+
         response.headers.set('X-RateLimit-Limit', maxRequests.toString())
-        response.headers.set('X-RateLimit-Remaining', '99') // Simplified
+        response.headers.set('X-RateLimit-Remaining', (maxRequests - (current?.count || 1)).toString())
     }
 
     return response

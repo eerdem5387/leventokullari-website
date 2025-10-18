@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { handleApiError, NotFoundError, ValidationError, validateRequest } from '@/lib/error-handler'
 
 const cartItemSchema = z.object({
-    productId: z.string(),
-    quantity: z.number().min(1)
+    productId: z.string().min(1, 'Ürün ID gerekli'),
+    quantity: z.number().min(1, 'Miktar en az 1 olmalı')
 })
 
 export async function GET() {
@@ -21,7 +22,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { productId, quantity } = cartItemSchema.parse(body)
+        const { productId, quantity } = validateRequest(cartItemSchema, body)
 
         // Ürünü kontrol et
         const product = await prisma.product.findUnique({
@@ -29,11 +30,11 @@ export async function POST(request: NextRequest) {
         })
 
         if (!product) {
-            return NextResponse.json({ error: 'Ürün bulunamadı' }, { status: 404 })
+            throw new NotFoundError('Ürün bulunamadı veya aktif değil')
         }
 
         if (product.stock < quantity) {
-            return NextResponse.json({ error: 'Yeterli stok bulunmuyor' }, { status: 400 })
+            throw new ValidationError('Yeterli stok bulunmuyor')
         }
 
         // Ürün bilgilerini döndür (client-side'da sepete eklenecek)
@@ -46,18 +47,14 @@ export async function POST(request: NextRequest) {
             quantity
         })
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Geçersiz veri formatı', details: error.issues }, { status: 400 })
-        }
-        console.error('Error adding to cart:', error)
-        return NextResponse.json({ error: 'Sepete eklenirken bir hata oluştu' }, { status: 500 })
+        return handleApiError(error)
     }
 }
 
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json()
-        const { productId, quantity } = cartItemSchema.parse(body)
+        const { productId, quantity } = validateRequest(cartItemSchema, body)
 
         // Ürünü kontrol et
         const product = await prisma.product.findUnique({
@@ -65,11 +62,11 @@ export async function PUT(request: NextRequest) {
         })
 
         if (!product) {
-            return NextResponse.json({ error: 'Ürün bulunamadı' }, { status: 404 })
+            throw new NotFoundError('Ürün bulunamadı veya aktif değil')
         }
 
         if (product.stock < quantity) {
-            return NextResponse.json({ error: 'Yeterli stok bulunmuyor' }, { status: 400 })
+            throw new ValidationError('Yeterli stok bulunmuyor')
         }
 
         return NextResponse.json({
@@ -81,11 +78,7 @@ export async function PUT(request: NextRequest) {
             quantity
         })
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Geçersiz veri formatı', details: error.issues }, { status: 400 })
-        }
-        console.error('Error updating cart:', error)
-        return NextResponse.json({ error: 'Sepet güncellenirken bir hata oluştu' }, { status: 500 })
+        return handleApiError(error)
     }
 }
 
@@ -95,7 +88,7 @@ export async function DELETE(request: NextRequest) {
         const productId = searchParams.get('productId')
 
         if (!productId) {
-            return NextResponse.json({ error: 'Ürün ID gerekli' }, { status: 400 })
+            throw new ValidationError('Ürün ID gerekli')
         }
 
         // Ürünün var olduğunu kontrol et
@@ -104,12 +97,11 @@ export async function DELETE(request: NextRequest) {
         })
 
         if (!product) {
-            return NextResponse.json({ error: 'Ürün bulunamadı' }, { status: 404 })
+            throw new NotFoundError('Ürün bulunamadı')
         }
 
         return NextResponse.json({ message: 'Ürün sepetten kaldırıldı' })
     } catch (error) {
-        console.error('Error removing from cart:', error)
-        return NextResponse.json({ error: 'Sepetten kaldırılırken bir hata oluştu' }, { status: 500 })
+        return handleApiError(error)
     }
 } 
