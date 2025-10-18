@@ -1,28 +1,10 @@
 {
-  "buildCommand": "prisma generate && next build --no-lint",
-  "installCommand": "npm install",
-  "framework": "nextjs",
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
   "regions": [
     "iad1"
-  ],
-  "crons": [],
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
   ]
 }
