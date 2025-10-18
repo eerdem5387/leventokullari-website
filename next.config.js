@@ -29,12 +29,28 @@ const nextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production'
     },
+    // Disable static optimization to prevent file copy errors
+    experimental: {
+        optimizePackageImports: ['lucide-react'],
+        outputFileTracingRoot: undefined,
+        outputFileTracingIncludes: undefined,
+        outputFileTracingExcludes: ['**/*'],
+    },
+    // Disable output file tracing completely
+    outputFileTracing: false,
     // Static generation'ı tamamen kapat
     // Webpack optimization
     webpack: (config, { isServer }) => {
         if (isServer) {
             config.externals.push('@prisma/client')
         }
+
+        // Disable file tracing to prevent ENOENT errors
+        config.experiments = {
+            ...config.experiments,
+            outputModule: false
+        }
+
         return config
     },
     async headers() {
