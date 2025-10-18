@@ -1,5 +1,10 @@
 generator client {
   provider = "prisma-client-js"
+  // KALICI ÇÖZÜM: Engine cache sorununu çöz
+  engineType = "binary"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+  // KALICI ÇÖZÜM: Cache mekanizmalarını kapat
+  previewFeatures = []
 }
 
 datasource db {
