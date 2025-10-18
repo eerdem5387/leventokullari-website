@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface AddToCartButtonProps {
   product: {
@@ -15,11 +16,13 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const addToCart = () => {
+    if (!isClient) return
+    
     setIsLoading(true)
     
     try {
       // Mevcut sepeti al (sessionStorage kullan)
-      const existingCart = sessionStorage.getItem('cart')
+      const existingCart = safeSessionStorage.getItem('cart')
       const cart = existingCart ? JSON.parse(existingCart) : []
       
       // Ürünü sepete ekle
@@ -52,15 +55,15 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       
       // Sepeti sessionStorage'a kaydet
       try {
-        sessionStorage.setItem('cart', JSON.stringify(cart))
+        safeSessionStorage.setItem('cart', JSON.stringify(cart))
       } catch (storageError) {
         // Eğer sessionStorage da doluysa, eski verileri temizle
         console.warn('Storage quota exceeded, clearing old cart data')
-        sessionStorage.clear()
+        safeSessionStorage.clear()
         
         // Tekrar dene
         try {
-          sessionStorage.setItem('cart', JSON.stringify(cart))
+          safeSessionStorage.setItem('cart', JSON.stringify(cart))
         } catch (finalError) {
           console.error('Final storage error:', finalError)
           alert('Sepet verileri çok büyük. Lütfen sepetinizi temizleyip tekrar deneyin.')
@@ -69,7 +72,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       }
       
       // Custom event tetikle
-      window.dispatchEvent(new Event('cartUpdated'))
+      safeWindow.dispatchEvent(new Event('cartUpdated'))
       
       // Başarı mesajı göster
       alert('Ürün sepete eklendi!')

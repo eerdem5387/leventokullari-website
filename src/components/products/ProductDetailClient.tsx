@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Star, ShoppingCart, Heart, Share2, ChevronDown } from 'lucide-react'
+import { safeSessionStorage, safeWindow, safeDocument, isClient } from '@/lib/browser-utils'
 
 interface ProductDetailClientProps {
   product: {
@@ -54,9 +55,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
 
   const handleAddToCart = () => {
+    if (!isClient) return
+    
     try {
       // Mevcut sepeti al (sessionStorage kullan)
-      const existingCart = sessionStorage.getItem('cart')
+      const existingCart = safeSessionStorage.getItem('cart')
       const cart = existingCart ? JSON.parse(existingCart) : []
       
       if (product.productType === 'VARIABLE' && selectedVariation) {
@@ -122,16 +125,16 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       
       // Sepeti sessionStorage'a kaydet
       try {
-        sessionStorage.setItem('cart', JSON.stringify(cart))
+        safeSessionStorage.setItem('cart', JSON.stringify(cart))
       } catch (storageError) {
         // Eğer sessionStorage da doluysa, eski verileri temizle
         console.warn('Storage quota exceeded, clearing old cart data')
-        sessionStorage.clear()
-        sessionStorage.setItem('cart', JSON.stringify(cart))
+        safeSessionStorage.clear()
+        safeSessionStorage.setItem('cart', JSON.stringify(cart))
       }
       
       // Custom event tetikle
-      window.dispatchEvent(new Event('cartUpdated'))
+      safeWindow.dispatchEvent(new Event('cartUpdated'))
       
       // Başarı mesajı göster
       alert('Ürün sepete eklendi!')
@@ -247,6 +250,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   // Click outside handler for dropdowns
   useEffect(() => {
+    if (!isClient) return
+    
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element
       if (!target.closest('.dropdown-container')) {
@@ -254,9 +259,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    safeDocument.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      safeDocument.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
 

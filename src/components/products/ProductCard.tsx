@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Star, ShoppingCart, Search } from 'lucide-react'
+import { safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface ProductCardProps {
   product: {
@@ -23,15 +24,17 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = () => {
+    if (!isClient) return
+    
     // Varyasyonlu ürünler için ürün detay sayfasına yönlendir
     if (product.productType === 'VARIABLE') {
-      window.location.href = `/products/${product.slug}`
+      safeWindow.location.assign(`/products/${product.slug}`)
       return
     }
 
     try {
       // Mevcut sepeti al (sessionStorage kullan)
-      const existingCart = sessionStorage.getItem('cart')
+      const existingCart = safeSessionStorage.getItem('cart')
       const cart = existingCart ? JSON.parse(existingCart) : []
       
       // Ürünü sepete ekle
@@ -64,15 +67,15 @@ export default function ProductCard({ product }: ProductCardProps) {
       
       // Sepeti sessionStorage'a kaydet
       try {
-        sessionStorage.setItem('cart', JSON.stringify(cart))
+        safeSessionStorage.setItem('cart', JSON.stringify(cart))
       } catch (storageError) {
         // Eğer sessionStorage da doluysa, eski verileri temizle
         console.warn('Storage quota exceeded, clearing old cart data')
-        sessionStorage.clear()
+        safeSessionStorage.clear()
         
         // Tekrar dene
         try {
-          sessionStorage.setItem('cart', JSON.stringify(cart))
+          safeSessionStorage.setItem('cart', JSON.stringify(cart))
         } catch (finalError) {
           console.error('Final storage error:', finalError)
           alert('Sepet verileri çok büyük. Lütfen sepetinizi temizleyip tekrar deneyin.')
@@ -81,7 +84,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       }
       
       // Custom event tetikle
-      window.dispatchEvent(new Event('cartUpdated'))
+      safeWindow.dispatchEvent(new Event('cartUpdated'))
       
       // Başarı mesajı göster
       alert('Ürün sepete eklendi!')

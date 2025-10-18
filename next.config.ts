@@ -28,28 +28,28 @@ const nextConfig: NextConfig = {
     return 'build'
   },
   // SWC minification is enabled by default in Next.js 15
-      // Webpack optimization
-      webpack: (config, { isServer, dev }) => {
-        // Memory optimization
-        config.optimization = {
-          ...config.optimization,
-          splitChunks: {
-            chunks: 'all',
-            cacheGroups: {
-              default: {
-                minChunks: 1,
-                priority: -20,
-                reuseExistingChunk: true,
-              },
-              vendor: {
-                test: /[\\/]node_modules[\\/]/,
-                name: 'vendors',
-                priority: -10,
-                chunks: 'all',
-              },
-            },
+  // Webpack optimization
+  webpack: (config, { isServer, dev }) => {
+    // Memory optimization
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          default: {
+            minChunks: 1,
+            priority: -20,
+            reuseExistingChunk: true,
           },
-        }
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: -10,
+            chunks: 'all',
+          },
+        },
+      },
+    }
 
         // SSR/Client separation
         if (isServer) {
@@ -61,6 +61,10 @@ const nextConfig: NextConfig = {
               'typeof window': JSON.stringify('undefined'),
               'typeof self': JSON.stringify('undefined'),
               'typeof global': JSON.stringify('undefined'),
+              'typeof document': JSON.stringify('undefined'),
+              'typeof navigator': JSON.stringify('undefined'),
+              'typeof localStorage': JSON.stringify('undefined'),
+              'typeof sessionStorage': JSON.stringify('undefined'),
             })
           )
           
@@ -80,6 +84,33 @@ const nextConfig: NextConfig = {
             os: false,
             path: false,
             zlib: false,
+            buffer: false,
+            process: false,
+            events: false,
+            querystring: false,
+            punycode: false,
+            readline: false,
+            repl: false,
+            tty: false,
+            vm: false,
+            child_process: false,
+            cluster: false,
+            dgram: false,
+            dns: false,
+            domain: false,
+            module: false,
+            net: false,
+            readline: false,
+            string_decoder: false,
+            sys: false,
+            timers: false,
+            tls: false,
+            tty: false,
+            url: false,
+            util: false,
+            v8: false,
+            vm: false,
+            zlib: false,
           }
           
           // Additional externals for problematic packages
@@ -87,16 +118,19 @@ const nextConfig: NextConfig = {
             'lucide-react': 'commonjs lucide-react',
             'react': 'commonjs react',
             'react-dom': 'commonjs react-dom',
+            'next': 'commonjs next',
+            'next/router': 'commonjs next/router',
+            'next/navigation': 'commonjs next/navigation',
           })
         }
 
-        // Build performance
-        if (!dev) {
-          config.optimization.minimize = true
-        }
+    // Build performance
+    if (!dev) {
+      config.optimization.minimize = true
+    }
 
-        return config
-      },
+    return config
+  },
   async headers() {
     return [
       {

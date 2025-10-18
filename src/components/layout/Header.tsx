@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, User, Search, Menu, X } from 'lucide-react'
 import DynamicMenu from './DynamicMenu'
+import { safeLocalStorage, safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface HeaderProps {
   siteName?: string
@@ -17,15 +18,17 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    if (!isClient) return
+    
     setIsClient(true)
     
-    const userStr = localStorage.getItem('user')
+    const userStr = safeLocalStorage.getItem('user')
     if (userStr) {
       try {
         setUser(JSON.parse(userStr))
       } catch (error) {
         console.error('Error parsing user data:', error)
-        localStorage.removeItem('user')
+        safeLocalStorage.removeItem('user')
       }
     }
     setIsLoading(false)
@@ -33,8 +36,10 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
 
   // Sepet sayısını hesapla
   const calculateCartCount = () => {
+    if (!isClient) return
+    
     try {
-      const cart = sessionStorage.getItem('cart')
+      const cart = safeSessionStorage.getItem('cart')
       if (cart) {
         const cartItems = JSON.parse(cart)
         const totalCount = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0)
@@ -50,6 +55,8 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
 
   // Sepet sayısını güncelle
   useEffect(() => {
+    if (!isClient) return
+    
     calculateCartCount()
 
     // localStorage değişikliklerini dinle
@@ -57,22 +64,24 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
       calculateCartCount()
     }
 
-    window.addEventListener('storage', handleStorageChange)
+    safeWindow.addEventListener('storage', handleStorageChange)
     
     // Custom event listener for cart updates
-    window.addEventListener('cartUpdated', handleStorageChange)
+    safeWindow.addEventListener('cartUpdated', handleStorageChange)
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('cartUpdated', handleStorageChange)
+      safeWindow.removeEventListener('storage', handleStorageChange)
+      safeWindow.removeEventListener('cartUpdated', handleStorageChange)
     }
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
+    if (!isClient) return
+    
+    safeLocalStorage.removeItem('user')
+    safeLocalStorage.removeItem('token')
     setUser(null)
-    window.location.href = '/'
+    safeWindow.location.assign('/')
   }
 
   return (

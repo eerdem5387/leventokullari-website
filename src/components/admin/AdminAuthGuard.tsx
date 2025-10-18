@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeLocalStorage, isClient } from '@/lib/browser-utils'
 
 interface AdminAuthGuardProps {
   children: ReactNode
@@ -21,10 +22,12 @@ export default function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     }
 
     const checkAuth = () => {
+      if (!isClient) return
+      
       console.log('AdminAuthGuard: Token kontrolü başlıyor...')
       
-      const token = localStorage.getItem('token')
-      const userStr = localStorage.getItem('user')
+      const token = safeLocalStorage.getItem('token')
+      const userStr = safeLocalStorage.getItem('user')
       
       console.log('Token:', token ? 'Var' : 'Yok')
       console.log('User:', userStr ? 'Var' : 'Yok')
@@ -52,8 +55,8 @@ export default function AdminAuthGuard({ children }: AdminAuthGuardProps) {
         hasChecked.current = true
       } catch (error) {
         console.error('Admin auth error:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        safeLocalStorage.removeItem('token')
+        safeLocalStorage.removeItem('user')
         hasChecked.current = true
         router.push('/login?redirect=/admin')
       } finally {
