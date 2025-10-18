@@ -10,9 +10,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    // Build optimization
-    serverComponentsExternalPackages: ['@prisma/client'],
   },
+  // External packages for server components
+  serverExternalPackages: ['@prisma/client'],
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
@@ -27,8 +27,7 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return 'build'
   },
-  // Memory optimization
-  swcMinify: true,
+  // SWC minification is enabled by default in Next.js 15
   // Webpack optimization
   webpack: (config, { isServer, dev }) => {
     // Memory optimization
