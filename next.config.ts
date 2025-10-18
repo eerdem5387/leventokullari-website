@@ -10,19 +10,20 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    reactCompiler: false,
   },
   // External packages for server components
   serverExternalPackages: ['@prisma/client'],
   compress: true,
   poweredByHeader: false,
-  reactStrictMode: true,
+  reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Build optimization
+  // KALICI ÇÖZÜM: Static generation'ı kapat
   trailingSlash: false,
   generateBuildId: async () => {
     return 'build'
