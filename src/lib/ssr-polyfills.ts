@@ -16,7 +16,26 @@ if (typeof global !== 'undefined') {
 
     if (typeof global.document === 'undefined') {
         global.document = {
-            createElement: () => ({}),
+            createElement: () => ({
+                setAttribute: () => { },
+                getAttribute: () => null,
+                removeAttribute: () => { },
+                appendChild: () => { },
+                removeChild: () => { },
+                addEventListener: () => { },
+                removeEventListener: () => { },
+                style: {},
+                className: '',
+                id: '',
+                tagName: 'DIV',
+                nodeType: 1,
+                parentNode: null,
+                childNodes: [],
+                firstChild: null,
+                lastChild: null,
+                nextSibling: null,
+                previousSibling: null,
+            }),
             getElementById: () => null,
             querySelector: () => null,
             querySelectorAll: () => [],
