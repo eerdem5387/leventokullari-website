@@ -49,9 +49,9 @@
     "zod": "^4.0.10"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
+    "@eslint/eslintrc": "^2.1.4",
     "@types/node": "^20.19.9",
-    "eslint": "^9",
+    "eslint": "^8.57.0",
     "eslint-config-next": "14.2.15",
     "tsx": "^4.20.3"
   }
