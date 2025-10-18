@@ -28,9 +28,17 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react'],
     reactCompiler: false,
   },
+  // React 19 uyumluluğu için
+  reactStrictMode: false,
   // SWC minification is enabled by default in Next.js 15
   // Webpack optimization
   webpack: (config, { isServer, dev }) => {
+    // React 19 uyumluluğu için
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'react': require.resolve('react'),
+      'react-dom': require.resolve('react-dom'),
+    }
     // Memory optimization - Vendors chunk'ı sadece client'da oluştur
     if (isServer) {
       // Server'da vendors chunk oluşturma
