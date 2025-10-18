@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
   images: {
     domains: ['localhost', 'ecommerce-store.com', 'storage.googleapis.com'],
     formats: ['image/webp', 'image/avif'],
@@ -28,8 +27,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
     reactCompiler: false,
-    staticGenerationRetryCount: 0,
-    staticGenerationTimeout: 0,
   },
   // SWC minification is enabled by default in Next.js 15
   // Webpack optimization
