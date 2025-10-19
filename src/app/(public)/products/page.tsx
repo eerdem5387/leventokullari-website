@@ -1,4 +1,6 @@
-import { prisma } from '@/lib/prisma'
+'use client'
+
+import { useState, useEffect } from 'react'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
 
@@ -12,87 +14,59 @@ interface ProductsPageProps {
   }>
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = await searchParams
-  const page = parseInt(params.page || '1')
-  const limit = 12
-  const skip = (page - 1) * limit
+export default function ProductsPage({ searchParams }: ProductsPageProps) {
+  const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [params, setParams] = useState(null)
 
-  // Filtreleme koşulları
-      const where: {
-      isActive: boolean
-      category?: { slug: string }
-      OR?: Array<{
-        name?: { contains: string; mode: 'insensitive' }
-        description?: { contains: string; mode: 'insensitive' }
-        sku?: { contains: string; mode: 'insensitive' }
-      }>
-      price?: { gte?: number; lte?: number }
-    } = {
-      isActive: true
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const resolvedParams = await searchParams
+        setParams(resolvedParams)
+        
+        const queryParams = new URLSearchParams()
+        Object.entries(resolvedParams).forEach(([key, value]) => {
+          if (value) queryParams.append(key, value)
+        })
+        
+        const response = await fetch(`/api/products?${queryParams}`)
+        if (response.ok) {
+          const data = await response.json()
+          setProducts(data.products || [])
+          setTotal(data.total || 0)
+        }
+        
+        const categoriesResponse = await fetch('/api/categories')
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json()
+          setCategories(categoriesData || [])
+        }
+      } catch (error) {
+        console.log('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-  if (params.category) {
-    where.category = { slug: params.category }
+    fetchData()
+  }, [searchParams])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    )
   }
 
-  if (params.search) {
-    where.OR = [
-      { name: { contains: params.search, mode: 'insensitive' } },
-      { description: { contains: params.search, mode: 'insensitive' } }
-    ]
-  }
-
-  if (params.minPrice || params.maxPrice) {
-    where.price = {}
-    if (params.minPrice) where.price.gte = parseFloat(params.minPrice)
-    if (params.maxPrice) where.price.lte = parseFloat(params.maxPrice)
-  }
-
-  // Ürünleri ve toplam sayıyı getir
-  const [productsData, total, categories] = await Promise.all([
-    (prisma.product as any).findMany({
-      where,
-      include: {
-        category: true,
-        variations: {
-          include: {
-            attributes: {
-              include: {
-                attributeValue: true
-              }
-            }
-          }
-        },
-        _count: {
-          select: { reviews: true }
-        }
-      },
-      skip,
-      take: limit,
-      orderBy: [
-        { sortOrder: 'asc' },
-        { createdAt: 'desc' }
-      ]
-    }),
-    prisma.product.count({ where }),
-    prisma.category.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' }
-    })
-  ])
-
-  // Decimal değerlerini number'a çevir
-  const products = productsData.map((product: any) => ({
-    ...product,
-    price: Number(product.price),
-    comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
-    variations: product.variations.map((variation: any) => ({
-      ...variation,
-      price: Number(variation.price)
-    }))
-  }))
-
+  const page = parseInt(params?.page || '1')
+  const limit = 12
   const totalPages = Math.ceil(total / limit)
 
   return (
@@ -111,10 +85,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <div className="lg:w-64">
             <ProductFilters 
               categories={categories}
-              currentCategory={params.category}
-              currentSearch={params.search}
-              currentMinPrice={params.minPrice}
-              currentMaxPrice={params.maxPrice}
+              currentCategory={params?.category}
+              currentSearch={params?.search}
+              currentMinPrice={params?.minPrice}
+              currentMaxPrice={params?.maxPrice}
             />
           </div>
 

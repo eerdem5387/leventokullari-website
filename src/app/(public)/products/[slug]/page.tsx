@@ -1,4 +1,6 @@
-import { prisma } from '@/lib/prisma'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/products/ProductDetailClient'
 
@@ -8,49 +10,46 @@ interface ProductPageProps {
   }>
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const resolvedParams = await params
-  const productData = await prisma.product.findUnique({
-    where: { slug: resolvedParams.slug },
-    include: {
-      category: true,
-      variations: {
-        include: {
-          attributes: {
-            include: {
-              attributeValue: true
-            }
-          }
+export default function ProductPage({ params }: ProductPageProps) {
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const resolvedParams = await params
+        const response = await fetch(`/api/products/${resolvedParams.slug}`)
+        if (response.ok) {
+          const data = await response.json()
+          setProduct(data)
+        } else if (response.status === 404) {
+          notFound()
+        } else {
+          setError('Ürün yüklenemedi')
         }
-      },
-      reviews: {
-        include: {
-          user: {
-            select: { name: true }
-          }
-        },
-        where: { isApproved: true },
-        orderBy: { createdAt: 'desc' }
-      },
-      _count: {
-        select: { reviews: true }
+      } catch (err) {
+        setError('Ürün yüklenemedi')
+      } finally {
+        setLoading(false)
       }
     }
-  })
 
-  // Decimal değerlerini number'a çevir
-  const product = productData ? {
-    ...productData,
-    price: Number(productData.price),
-    comparePrice: productData.comparePrice ? Number(productData.comparePrice) : undefined,
-    sku: productData.sku || undefined,
-    variations: productData.variations.map(variation => ({
-      ...variation,
-      price: Number(variation.price)
-    }))
-  } : null
+    fetchProduct()
+  }, [params])
 
-  if (!product || !product.isActive) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !product || !product.isActive) {
     notFound()
   }
 
