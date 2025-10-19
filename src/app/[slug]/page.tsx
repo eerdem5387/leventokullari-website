@@ -1,4 +1,6 @@
-import { prisma } from '@/lib/prisma'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
