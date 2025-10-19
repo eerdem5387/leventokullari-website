@@ -16,13 +16,21 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     trailingSlash: false,
-    output: 'standalone', // Vercel için standalone output
+    // output: 'standalone', // Geçici olarak devre dışı
     // Next.js 15 uyumluluğu için
     serverExternalPackages: ['@prisma/client'],
     experimental: {
         serverActions: {
             allowedOrigins: ['localhost:3000', '*.vercel.app']
-        }
+        },
+        // Next.js 15 compatibility fixes
+        serverComponentsExternalPackages: ['@prisma/client'],
+        optimizePackageImports: ['@prisma/client'],
+        // Disable problematic features
+        serverMinification: false,
+        serverSourceMaps: false,
+        // Force static generation for problematic pages
+        staticPageGenerationTimeout: 1000,
     },
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production'
@@ -31,6 +39,11 @@ const nextConfig = {
     webpack: (config, { isServer }) => {
         if (isServer) {
             config.externals.push('@prisma/client')
+        }
+        // Disable problematic webpack features
+        config.optimization = {
+            ...config.optimization,
+            splitChunks: false,
         }
         return config
     },
