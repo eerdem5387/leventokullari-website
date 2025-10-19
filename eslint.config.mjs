@@ -19,6 +19,9 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "warn",
       "@next/next/no-img-element": "warn",
       "react-hooks/exhaustive-deps": "warn",
+      // React 19 uyumluluğu için
+      "react/jsx-no-target-blank": "warn",
+      "react/no-unknown-property": "warn",
     },
   },
 ];

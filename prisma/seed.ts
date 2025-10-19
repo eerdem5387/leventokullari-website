@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { hashPassword } from '../src/lib/auth'
 
 const prisma = new PrismaClient()
 
@@ -19,18 +20,7 @@ async function main() {
     for (const s of sections) {
         await prisma.pageSection.create({ data: { pageId: page.id, ...s } })
     }
-}
 
-main().finally(async () => {
-    await prisma.$disconnect()
-})
-
-import { PrismaClient } from '@prisma/client'
-import { hashPassword } from '../src/lib/auth'
-
-const prisma = new PrismaClient()
-
-async function main() {
     console.log('🌱 Seeding database...')
 
     // Admin kullanıcısı oluştur

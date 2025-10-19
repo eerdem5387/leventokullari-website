@@ -37,9 +37,10 @@ async function renderSection(section: any) {
   }
 }
 
-export default async function PageBySlug({ params }: { params: { slug: string } }) {
+export default async function PageBySlug({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const page = await prisma.page.findFirst({
-    where: { slug: params.slug, status: 'PUBLISHED' },
+    where: { slug, status: 'PUBLISHED' },
     include: { sections: { orderBy: { order: 'asc' } } },
   })
   if (!page) return notFound()
@@ -47,7 +48,7 @@ export default async function PageBySlug({ params }: { params: { slug: string } 
   return (
     <main>
       {page.sections.map((s) => (
-        <div key={s.id}>{/* @ts-expect-error Async Server Component */}
+        <div key={s.id}>
           {renderSection(s)}
         </div>
       ))}

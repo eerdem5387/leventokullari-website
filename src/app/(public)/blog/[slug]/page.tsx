@@ -25,10 +25,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   return {
     title: post.metaTitle || post.title,
-    description: post.metaDescription || post.excerpt,
+    description: post.metaDescription || post.excerpt || undefined,
     openGraph: {
       title: post.metaTitle || post.title,
-      description: post.metaDescription || post.excerpt,
+      description: post.metaDescription || post.excerpt || undefined,
       images: post.featuredImage ? [post.featuredImage] : []
     }
   }

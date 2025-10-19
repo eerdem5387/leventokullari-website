@@ -7,11 +7,11 @@ if (typeof global !== 'undefined') {
 
     // Core browser globals
     if (typeof global.self === 'undefined') {
-        global.self = global
+        (global as any).self = global
     }
 
     if (typeof global.window === 'undefined') {
-        global.window = global
+        (global as any).window = global
     }
 
     if (typeof global.document === 'undefined') {

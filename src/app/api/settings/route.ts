@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             const fieldName = keyParts.length > 1 ? keyParts[1] : setting.key
 
             // Değeri tipine göre dönüştür
-            let parsedValue = setting.value
+            let parsedValue: any = setting.value
             if (setting.type === 'number') {
                 parsedValue = parseFloat(setting.value)
             } else if (setting.type === 'boolean') {

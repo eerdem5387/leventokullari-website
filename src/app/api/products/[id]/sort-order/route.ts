@@ -9,8 +9,9 @@ const sortOrderSchema = z.object({
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params
     try {
         console.log('=== PRODUCT SORT ORDER UPDATE API CALLED ===')
 
@@ -43,11 +44,11 @@ export async function PUT(
         const body = await request.json()
         const { sortOrder } = sortOrderSchema.parse(body)
 
-        console.log('Updating product sort order:', { productId: params.id, sortOrder })
+        console.log('Updating product sort order:', { productId: id, sortOrder })
 
         // Ürünü güncelle
         const updatedProduct = await (prisma.product as any).update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 sortOrder: sortOrder
             },

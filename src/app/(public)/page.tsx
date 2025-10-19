@@ -49,7 +49,7 @@ export default async function HomePage() {
                     <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
                     <p className="text-gray-600 mb-4">{product.description}</p>
                     <div className="text-blue-600 font-bold">
-                      {product.price} TL
+                      {product.price.toString()} TL
                     </div>
                   </div>
                 ))}

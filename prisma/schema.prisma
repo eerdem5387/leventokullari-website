@@ -1,8 +1,8 @@
 generator client {
   provider = "prisma-client-js"
-  // KALICI ÇÖZÜM: Prisma 5.x stable versiyon
+  // KALICI ÇÖZÜM: Prisma 6.x stable versiyon - Vercel uyumlu
   engineType = "binary"
-  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

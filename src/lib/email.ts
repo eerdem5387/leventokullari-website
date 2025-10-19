@@ -61,7 +61,7 @@ class EmailService {
       this.settings = settings
 
       // Transporter oluştur
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: settings.smtpHost,
         port: parseInt(settings.smtpPort),
         secure: parseInt(settings.smtpPort) === 465, // true for 465, false for other ports
@@ -72,7 +72,9 @@ class EmailService {
       })
 
       // Bağlantıyı test et
-      await this.transporter.verify()
+      if (this.transporter) {
+        await this.transporter.verify()
+      }
       console.log('E-posta servisi başarıyla başlatıldı')
       return true
     } catch (error) {

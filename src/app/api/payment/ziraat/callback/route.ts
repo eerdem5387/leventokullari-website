@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
                 data: {
                     orderId: result.orderId,
                     amount: result.amount || 0,
-                    method: 'ZIRAAT_BANK',
+                    method: 'BANK_TRANSFER',
                     status: 'COMPLETED',
                     transactionId: result.transactionId || '',
                     responseCode: result.responseCode || '',
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
                     data: {
                         orderId: result.orderId,
                         amount: result.amount || 0,
-                        method: 'ZIRAAT_BANK',
+                        method: 'BANK_TRANSFER',
                         status: 'FAILED',
                         transactionId: result.transactionId || '',
                         responseCode: result.responseCode || '',
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
                 data: {
                     orderId: result.orderId,
                     amount: result.amount || 0,
-                    method: 'ZIRAAT_BANK',
+                    method: 'BANK_TRANSFER',
                     status: 'COMPLETED',
                     transactionId: result.transactionId || '',
                     responseCode: result.responseCode || '',
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
                     data: {
                         orderId: result.orderId,
                         amount: result.amount || 0,
-                        method: 'ZIRAAT_BANK',
+                        method: 'BANK_TRANSFER',
                         status: 'FAILED',
                         transactionId: result.transactionId || '',
                         responseCode: result.responseCode || '',

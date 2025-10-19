@@ -9,8 +9,9 @@ const activeStatusSchema = z.object({
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params
     try {
         console.log('=== PRODUCT ACTIVE STATUS UPDATE API CALLED ===')
 
@@ -43,11 +44,11 @@ export async function PUT(
         const body = await request.json()
         const { isActive } = activeStatusSchema.parse(body)
 
-        console.log('Updating product active status:', { productId: params.id, isActive })
+        console.log('Updating product active status:', { productId: id, isActive })
 
         // Ürünü güncelle
         const updatedProduct = await (prisma.product as any).update({
-            where: { id: params.id },
+            where: { id },
             data: { isActive },
             include: {
                 category: true

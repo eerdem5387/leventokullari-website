@@ -20,10 +20,10 @@ export async function generateMetadata({ params }: ContentPageProps): Promise<Me
 
   return {
     title: content.metaTitle || content.title,
-    description: content.metaDescription || content.excerpt,
+    description: content.metaDescription || content.excerpt || undefined,
     openGraph: {
       title: content.metaTitle || content.title,
-      description: content.metaDescription || content.excerpt,
+      description: content.metaDescription || content.excerpt || undefined,
       images: content.featuredImage ? [content.featuredImage] : []
     }
   }

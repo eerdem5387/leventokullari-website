@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         data: {
           orderId: result.orderId,
           amount: result.amount || 0,
-          method: 'MOCK_PAYMENT',
+          method: 'CREDIT_CARD',
           status: 'COMPLETED',
           transactionId: result.transactionId || '',
           responseCode: result.responseCode || '',
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
           data: {
             orderId: result.orderId,
             amount: result.amount || 0,
-            method: 'MOCK_PAYMENT',
+            method: 'CREDIT_CARD',
             status: 'FAILED',
             transactionId: result.transactionId || '',
             responseCode: result.responseCode || '',

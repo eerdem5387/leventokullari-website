@@ -259,9 +259,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       }
     }
 
-    safeDocument.addEventListener('mousedown', handleClickOutside)
+    safeDocument.addEventListener('mousedown', handleClickOutside as any)
     return () => {
-      safeDocument.removeEventListener('mousedown', handleClickOutside)
+      safeDocument.removeEventListener('mousedown', handleClickOutside as any)
     }
   }, [])
 
