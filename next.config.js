@@ -28,7 +28,9 @@ const nextConfig = {
         // Disable output file tracing to prevent ENOENT errors
         outputFileTracingRoot: undefined,
         outputFileTracingIncludes: undefined,
-        outputFileTracingExcludes: ['**/*'],
+        outputFileTracingExcludes: {
+            '**/*': true
+        },
     },
     // Disable output file tracing completely
     outputFileTracing: false,
