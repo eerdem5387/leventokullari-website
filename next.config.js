@@ -6,10 +6,6 @@ const nextConfig = {
         deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
         imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     },
-    // KALICI ÇÖZÜM: Prisma 5.x için optimize
-    experimental: {
-        optimizePackageImports: ['lucide-react'],
-    },
     compress: true,
     poweredByHeader: false,
     reactStrictMode: false,
@@ -19,27 +15,16 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
-    // KALICI ÇÖZÜM: Static generation'ı tamamen kapat
     trailingSlash: false,
     generateBuildId: async () => {
         return 'build'
     },
-    // Build optimization
     swcMinify: true,
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production'
     },
-    // Optimize package imports
-    experimental: {
-        optimizePackageImports: ['lucide-react'],
-    },
-    // Ensure proper module resolution
-    modularizeImports: {
-        'lucide-react': {
-            transform: 'lucide-react/dist/esm/icons/{{member}}',
-        },
-    },
-    // Static generation'ı tamamen kapat
+    // Disable all experimental features to prevent runtime errors
+    experimental: {},
     // Webpack optimization
     webpack: (config, { isServer }) => {
         if (isServer) {
