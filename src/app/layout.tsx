@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import { Lexend_Deca } from 'next/font/google'
 import './globals.css'
-import HeaderWrapper from '@/components/layout/HeaderWrapper'
-import Footer from '@/components/layout/Footer'
-import ErrorBoundary from '@/components/ErrorBoundary'
+// Client components moved to individual pages
 import '@/lib/ssr-polyfills'
 import { validateEnvironment } from '@/lib/env-check'
 
@@ -68,9 +66,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${lexendDeca.variable} font-lexend-deca`}>
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        {children}
       </body>
     </html>
   )

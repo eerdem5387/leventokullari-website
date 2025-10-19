@@ -1,3 +1,5 @@
+'use client'
+
 import HeaderWrapper from '@/components/layout/HeaderWrapper'
 import Footer from '@/components/layout/Footer'
 
