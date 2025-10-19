@@ -9,12 +9,16 @@ const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
 }
 
-// KALICI ÇÖZÜM: Prisma 5.x stable client with error handling
+// KALICI ÇÖZÜM: Prisma 6.x stable client with error handling
+if (!process.env.DATABASE_URL) {
+    console.warn('DATABASE_URL environment variable is not set. Using placeholder URL.')
+}
+
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     datasources: {
         db: {
-            url: process.env.DATABASE_URL
+            url: process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder'
         }
     },
     errorFormat: 'pretty'
