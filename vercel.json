@@ -1,4 +1,7 @@
 {
+  "buildCommand": "npm run build:production",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
@@ -6,5 +9,8 @@
   },
   "regions": [
     "iad1"
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

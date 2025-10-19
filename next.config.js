@@ -8,7 +8,7 @@ const nextConfig = {
     },
     compress: true,
     poweredByHeader: false,
-    reactStrictMode: false,
+    reactStrictMode: true, // Next.js 15 için true yapıldı
     eslint: {
         ignoreDuringBuilds: true,
     },
@@ -16,7 +16,10 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     trailingSlash: false,
-    // swcMinify: true, // Next.js 15'te deprecated
+    // Next.js 15 uyumluluğu için
+    experimental: {
+        serverComponentsExternalPackages: ['@prisma/client']
+    },
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production'
     },
