@@ -16,9 +16,13 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     trailingSlash: false,
+    output: 'standalone', // Vercel için standalone output
     // Next.js 15 uyumluluğu için
+    serverExternalPackages: ['@prisma/client'],
     experimental: {
-        serverComponentsExternalPackages: ['@prisma/client']
+        serverActions: {
+            allowedOrigins: ['localhost:3000', '*.vercel.app']
+        }
     },
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production'
