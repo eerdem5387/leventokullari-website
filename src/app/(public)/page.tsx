@@ -1,32 +1,40 @@
+'use client'
+
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { prisma } from '@/lib/prisma'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
-// Güvenli database sorgusu
-async function getFeaturedProducts() {
-  try {
-    const products = await prisma.product.findMany({
-      where: {
-        isFeatured: true,
-        isActive: true
-      },
-      take: 6,
-      include: {
-        category: true,
-        images: true
+// Client-side data fetching
+function useFeaturedProducts() {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products?featured=true&limit=6')
+        if (response.ok) {
+          const data = await response.json()
+          setProducts(data.products || [])
+        }
+      } catch (error) {
+        console.log('Error fetching products:', error)
+      } finally {
+        setLoading(false)
       }
-    })
-    return products
-  } catch (error) {
-    console.log('Database error, using fallback:', error)
-    return []
-  }
+    }
+
+    fetchProducts()
+  }, [])
+
+  return { products, loading }
 }
 
-export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts()
+export default function HomePage() {
+  const { products: featuredProducts, loading } = useFeaturedProducts()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,7 +48,12 @@ export default async function HomePage() {
           </p>
           
           {/* Öne Çıkan Ürünler */}
-          {featuredProducts.length > 0 && (
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-2 text-gray-600">Yükleniyor...</p>
+            </div>
+          ) : featuredProducts.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Öne Çıkan Ürünler</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
