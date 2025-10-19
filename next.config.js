@@ -24,12 +24,26 @@ const nextConfig = {
         removeConsole: process.env.NODE_ENV === 'production'
     },
     // Disable all experimental features to prevent runtime errors
-    experimental: {},
+    experimental: {
+        // Disable output file tracing to prevent ENOENT errors
+        outputFileTracingRoot: undefined,
+        outputFileTracingIncludes: undefined,
+        outputFileTracingExcludes: ['**/*'],
+    },
+    // Disable output file tracing completely
+    outputFileTracing: false,
     // Webpack optimization
     webpack: (config, { isServer }) => {
         if (isServer) {
             config.externals.push('@prisma/client')
         }
+
+        // Disable file tracing to prevent ENOENT errors
+        config.experiments = {
+            ...config.experiments,
+            outputModule: false
+        }
+
         return config
     },
     async headers() {
