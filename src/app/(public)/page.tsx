@@ -1,40 +1,35 @@
-'use client'
-
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
 import { prisma } from '@/lib/prisma'
 
-// Force dynamic rendering
+// Force dynamic rendering for real-time data
 export const dynamic = 'force-dynamic'
 
-// Client-side data fetching
-function useFeaturedProducts() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products?featured=true&limit=6')
-        if (response.ok) {
-          const data = await response.json()
-          setProducts(data.products || [])
-        }
-      } catch (error) {
-        console.log('Error fetching products:', error)
-      } finally {
-        setLoading(false)
+// Server-side data fetching - Direct database access
+async function getFeaturedProducts() {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        isFeatured: true,
+        isActive: true
+      },
+      take: 6,
+      include: {
+        category: true,
+        images: true
+      },
+      orderBy: {
+        sortOrder: 'asc'
       }
-    }
-
-    fetchProducts()
-  }, [])
-
-  return { products, loading }
+    })
+    return products
+  } catch (error) {
+    console.log('Database error, using fallback:', error)
+    return []
+  }
 }
 
-export default function HomePage() {
-  const { products: featuredProducts, loading } = useFeaturedProducts()
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -48,12 +43,7 @@ export default function HomePage() {
           </p>
           
           {/* Öne Çıkan Ürünler */}
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Yükleniyor...</p>
-            </div>
-          ) : featuredProducts.length > 0 && (
+          {featuredProducts.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Öne Çıkan Ürünler</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,6 +1,4 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import ProductCard from '@/components/products/ProductCard'
 import Link from 'next/link'
@@ -18,15 +16,15 @@ interface CategoryPageProps {
 }
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  const resolvedParams = await params
+  const { slug } = await params
   const resolvedSearchParams = await searchParams
   const page = parseInt(resolvedSearchParams.page || '1')
   const limit = 12
   const skip = (page - 1) * limit
 
-  // Kategoriyi bul
+  // Find category with server-side optimization
   const category = await prisma.category.findUnique({
-    where: { slug: resolvedParams.slug },
+    where: { slug },
     include: {
       _count: {
         select: { products: true }
@@ -38,7 +36,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     notFound()
   }
 
-  // Filtreleme koşulları
+  // Build filter conditions
   const where: {
     categoryId: string
     isActive: boolean
@@ -65,7 +63,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     if (resolvedSearchParams.maxPrice) where.price.lte = parseFloat(resolvedSearchParams.maxPrice)
   }
 
-  // Ürünleri getir
+  // Fetch products and total count in parallel
   const [productsData, total] = await Promise.all([
     (prisma.product as any).findMany({
       where,
@@ -85,7 +83,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     prisma.product.count({ where })
   ])
 
-  // Decimal değerlerini number'a çevir
+  // Convert Decimal to Number for client compatibility
   const products = productsData.map(product => ({
     ...product,
     price: Number(product.price),
@@ -134,7 +132,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 <nav className="flex items-center space-x-2">
                   {page > 1 && (
                     <a
-                      href={`/categories/${resolvedParams.slug}?${new URLSearchParams({
+                      href={`/categories/${slug}?${new URLSearchParams({
                         ...resolvedSearchParams,
                         page: (page - 1).toString()
                       })}`}
@@ -147,8 +145,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                     <a
                       key={pageNum}
-                      href={`/categories/${resolvedParams.slug}?${new URLSearchParams({
-                        ...searchParams,
+                      href={`/categories/${slug}?${new URLSearchParams({
+                        ...resolvedSearchParams,
                         page: pageNum.toString()
                       })}`}
                       className={`px-3 py-2 text-sm font-medium rounded-lg ${
@@ -163,8 +161,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   
                   {page < totalPages && (
                     <a
-                      href={`/categories/${resolvedParams.slug}?${new URLSearchParams({
-                        ...searchParams,
+                      href={`/categories/${slug}?${new URLSearchParams({
+                        ...resolvedSearchParams,
                         page: (page + 1).toString()
                       })}`}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

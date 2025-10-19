@@ -1,6 +1,4 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -41,17 +39,29 @@ async function renderSection(section: any) {
 
 export default async function PageBySlug({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  
+  // Direct database access - Server-side optimization
   const page = await prisma.page.findFirst({
-    where: { slug, status: 'PUBLISHED' },
-    include: { sections: { orderBy: { order: 'asc' } } },
+    where: { 
+      slug, 
+      status: 'PUBLISHED' 
+    },
+    include: { 
+      sections: { 
+        orderBy: { order: 'asc' } 
+      } 
+    },
   })
-  if (!page) return notFound()
+  
+  if (!page) {
+    notFound()
+  }
 
   return (
     <main>
-      {page.sections.map((s) => (
-        <div key={s.id}>
-          {renderSection(s)}
+      {page.sections.map((section) => (
+        <div key={section.id}>
+          {renderSection(section)}
         </div>
       ))}
     </main>

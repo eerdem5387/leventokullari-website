@@ -16,7 +16,7 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     trailingSlash: false,
-    output: 'standalone', // Vercel için gerekli
+    // output: 'standalone', // Next.js 15 bug'ı nedeniyle geçici olarak devre dışı
     // Next.js 15 uyumluluğu için
     serverExternalPackages: ['@prisma/client'],
     experimental: {
