@@ -36,28 +36,11 @@ export function middleware(request: NextRequest) {
         ].join('; ')
     )
 
-    // Admin route protection
+    // Admin route protection - JWT token kontrolü
     if (pathname.startsWith('/admin')) {
-        const auth = request.headers.get('authorization')
-        const expectedUser = process.env.ADMIN_USER || 'admin'
-        const expectedPass = process.env.ADMIN_PASS || 'password'
-
-        if (!auth?.startsWith('Basic ')) {
-            return new NextResponse('Authentication required', {
-                status: 401,
-                headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
-            })
-        }
-
-        try {
-            const [, base64] = auth.split(' ')
-            const [user, pass] = Buffer.from(base64, 'base64').toString().split(':')
-            if (user !== expectedUser || pass !== expectedPass) {
-                return new NextResponse('Unauthorized', { status: 401 })
-            }
-        } catch (error) {
-            return new NextResponse('Invalid authentication', { status: 401 })
-        }
+        // JWT token kontrolü için client-side'da yapılacak
+        // Middleware'de sadece güvenlik header'ları ekliyoruz
+        // Gerçek auth kontrolü AdminLayout component'inde yapılıyor
     }
 
     // Rate limiting for API routes
