@@ -36,12 +36,8 @@ export function middleware(request: NextRequest) {
         ].join('; ')
     )
 
-    // Admin route protection - JWT token kontrolü
-    if (pathname.startsWith('/admin')) {
-        // JWT token kontrolü için client-side'da yapılacak
-        // Middleware'de sadece güvenlik header'ları ekliyoruz
-        // Gerçek auth kontrolü AdminLayout component'inde yapılıyor
-    }
+    // Admin route protection - JWT token kontrolü client-side'da yapılıyor
+    // Middleware'de sadece güvenlik header'ları ekliyoruz
 
     // Rate limiting for API routes
     if (pathname.startsWith('/api/')) {
