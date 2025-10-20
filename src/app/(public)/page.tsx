@@ -1,4 +1,7 @@
 import Link from 'next/link'
+// Tiny client-only shim to force client reference manifest for (public)
+// This does not impact SSR; it's tree-shaken at runtime
+const ClientRef = () => null
 import { prisma } from '@/lib/prisma'
 
 // Force dynamic rendering for real-time data
@@ -35,6 +38,8 @@ export default async function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
+          {/* Force generation of client reference manifest for (public) group */}
+          <ClientRef />
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Levent Okulları
           </h1>
