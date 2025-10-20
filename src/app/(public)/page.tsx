@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import ClientMarker from '@/app/ClientMarker'
+import './page.client'
 import { prisma } from '@/lib/prisma'
 
 // Force dynamic rendering for real-time data
@@ -36,8 +36,7 @@ export default async function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          {/* Force generation of client reference manifest for (public) group */}
-          <ClientMarker />
+          {/* Client side-effect imported above ensures client manifest generation */}
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Levent Okulları
           </h1>
