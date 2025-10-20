@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Lexend_Deca } from 'next/font/google'
 import './globals.css'
-// Client components moved to individual pages
+import HeaderWrapper from '@/components/layout/HeaderWrapper'
+import Footer from '@/components/layout/Footer'
 import '@/lib/ssr-polyfills'
 import { validateEnvironment } from '@/lib/env-check'
 
@@ -66,7 +67,11 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${lexendDeca.variable} font-lexend-deca`}>
-        {children}
+        <div className="min-h-screen flex flex-col">
+          <HeaderWrapper />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   )

@@ -16,6 +16,6 @@ export default function robots(): MetadataRoute.Robots {
                 '/register',
             ],
         },
-        sitemap: 'https://ecommerce-store.com/sitemap.xml',
+        sitemap: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ecommerce-store.com'}/sitemap.xml`,
     }
 } 

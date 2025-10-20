@@ -94,7 +94,6 @@ export default function Footer() {
               <li><Link href="/about" className="text-gray-300 hover:text-white">Hakkımızda</Link></li>
               <li><Link href="/products" className="text-gray-300 hover:text-white">Ürünler</Link></li>
               <li><Link href="/contact" className="text-gray-300 hover:text-white">İletişim</Link></li>
-              <li><Link href="/help" className="text-gray-300 hover:text-white">Yardım</Link></li>
             </ul>
           </div>
 
@@ -102,9 +101,7 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Müşteri Hizmetleri</h3>
             <ul className="space-y-2">
-              <li><Link href="/shipping" className="text-gray-300 hover:text-white">Kargo</Link></li>
-              <li><Link href="/returns" className="text-gray-300 hover:text-white">İade</Link></li>
-              <li><Link href="/privacy" className="text-gray-300 hover:text-white">Gizlilik</Link></li>
+              <li><Link href="/contact" className="text-gray-300 hover:text-white">Destek</Link></li>
             </ul>
           </div>
 

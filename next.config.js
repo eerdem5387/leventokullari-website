@@ -34,6 +34,28 @@ const nextConfig = {
         }
         return config
     },
+    async redirects() {
+        return [
+            { source: '/cart', destination: '/products', permanent: true },
+            // allow checkout/payment flow to function
+            // { source: '/checkout', destination: '/products', permanent: true },
+            // { source: '/orders', destination: '/products', permanent: true },
+            // { source: '/orders/:path*', destination: '/products', permanent: true },
+            { source: '/categories', destination: '/products', permanent: true },
+            { source: '/categories/:path*', destination: '/products', permanent: true },
+            { source: '/blog', destination: '/products', permanent: true },
+            { source: '/blog/:path*', destination: '/products', permanent: true },
+            // allow auth and payment pages to function for bank review
+            // { source: '/register', destination: '/products', permanent: true },
+            // { source: '/login', destination: '/products', permanent: true },
+            // { source: '/profile', destination: '/products', permanent: true },
+            // { source: '/payment/:path*', destination: '/products', permanent: false },
+            { source: '/help', destination: '/contact', permanent: true },
+            { source: '/shipping', destination: '/contact', permanent: true },
+            { source: '/returns', destination: '/contact', permanent: true },
+            { source: '/privacy', destination: '/contact', permanent: true },
+        ]
+    },
     async headers() {
         return [
             {
