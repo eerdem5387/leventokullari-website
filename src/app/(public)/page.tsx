@@ -1,7 +1,5 @@
 import Link from 'next/link'
-// Tiny client-only shim to force client reference manifest for (public)
-// This does not impact SSR; it's tree-shaken at runtime
-const ClientRef = () => null
+import ClientRef from '@/app/ClientRef'
 import { prisma } from '@/lib/prisma'
 
 // Force dynamic rendering for real-time data

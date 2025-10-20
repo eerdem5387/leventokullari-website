@@ -4,6 +4,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
+import ClientRef from '@/app/ClientRef'
 import { useRouter } from 'next/navigation'
 import { 
   ShoppingCart, 
@@ -54,6 +55,9 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
+  // Force client reference manifest generation for admin group
+  // Has no runtime effect
+  ClientRef()
   const [data, setData] = useState<DashboardData>({
     totalOrders: 0,
     totalCustomers: 0,
