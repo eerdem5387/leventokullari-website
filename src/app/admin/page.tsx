@@ -55,9 +55,6 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
-  // Force client reference manifest generation for admin group
-  // Has no runtime effect
-  ClientRef()
   const [data, setData] = useState<DashboardData>({
     totalOrders: 0,
     totalCustomers: 0,
