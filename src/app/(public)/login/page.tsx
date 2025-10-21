@@ -174,17 +174,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Test hesapları:
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Admin: admin@emagaza.com / admin123
-            </p>
-            <p className="text-xs text-gray-500">
-              Müşteri: customer@test.com / customer123
-            </p>
-          </div>
         </form>
       </div>
     </div>
