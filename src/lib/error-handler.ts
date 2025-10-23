@@ -178,17 +178,22 @@ export function requireAuth(authHeader: string | null): { userId: string; email:
 
     const token = authHeader.substring(7)
 
-    // JWT token validation would go here
-    // For now, return a mock user
-    if (!token || token === 'invalid') {
+    if (!token) {
+        throw new UnauthorizedError('Token bulunamadı')
+    }
+
+    // JWT token'ı doğrula
+    const { verifyToken } = require('./auth')
+    const decoded = verifyToken(token)
+    
+    if (!decoded || !decoded.userId || !decoded.email || !decoded.role) {
         throw new UnauthorizedError('Geçersiz token')
     }
 
-    // In real implementation, verify JWT token
     return {
-        userId: 'user-id',
-        email: 'user@example.com',
-        role: 'CUSTOMER'
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role
     }
 }
 
