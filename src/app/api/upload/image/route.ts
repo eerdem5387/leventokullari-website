@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { verifyToken } from '@/lib/auth'
 
-export const runtime = 'edge'
-
 export async function POST(request: NextRequest) {
     try {
         // Yetkilendirme kontrolü
