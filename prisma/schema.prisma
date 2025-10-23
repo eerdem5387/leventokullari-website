@@ -53,7 +53,6 @@ model User {
   orders    Order[]
   addresses Address[]
   reviews   Review[]
-  blogPosts BlogPost[]
 
   @@map("users")
 }
