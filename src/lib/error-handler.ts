@@ -185,7 +185,7 @@ export function requireAuth(authHeader: string | null): { userId: string; email:
     // JWT token'ı doğrula
     const { verifyToken } = require('./auth')
     const decoded = verifyToken(token)
-    
+
     if (!decoded || !decoded.userId || !decoded.email || !decoded.role) {
         throw new UnauthorizedError('Geçersiz token')
     }

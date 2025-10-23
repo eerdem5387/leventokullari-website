@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mockPaymentService } from '@/lib/mock-payment'
+import { requireAdmin, handleApiError } from '@/lib/error-handler'
 import { z } from 'zod'
 
 const testMockSchema = z.object({
@@ -9,6 +10,10 @@ const testMockSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         console.log('=== TEST MOCK API CALLED ===')
 
         const body = await request.json()
@@ -35,17 +40,6 @@ export async function POST(request: NextRequest) {
         }
 
     } catch (error) {
-        console.error('Error testing Mock:', error)
-
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                error: 'Geçersiz veri formatı',
-                details: error.issues
-            }, { status: 400 })
-        }
-
-        return NextResponse.json({
-            error: 'Mock test edilemedi. Lütfen ayarları kontrol edin.'
-        }, { status: 500 })
+        return handleApiError(error)
     }
 }

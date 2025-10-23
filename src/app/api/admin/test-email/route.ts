@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { emailService } from '@/lib/email'
+import { requireAdmin, handleApiError } from '@/lib/error-handler'
 import { z } from 'zod'
 
 const testEmailSchema = z.object({
@@ -8,6 +9,10 @@ const testEmailSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         console.log('=== TEST EMAIL API CALLED ===')
 
         const body = await request.json()
@@ -51,17 +56,6 @@ export async function POST(request: NextRequest) {
         }, { status: 200 })
 
     } catch (error) {
-        console.error('Error sending test email:', error)
-
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                error: 'Geçersiz e-posta adresi',
-                details: error.issues
-            }, { status: 400 })
-        }
-
-        return NextResponse.json({
-            error: 'Test e-postası gönderilemedi. Lütfen e-posta ayarlarınızı kontrol edin.'
-        }, { status: 500 })
+        return handleApiError(error)
     }
 }
