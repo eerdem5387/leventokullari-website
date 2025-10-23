@@ -84,13 +84,13 @@ export default function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-16 w-64 h-full bg-white shadow-sm border-r border-gray-200 z-10">
-      <div className="p-6">
+    <aside className="fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-white shadow-sm border-r border-gray-200 z-10 flex flex-col">
+      <div className="p-6 flex-shrink-0">
         <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
       </div>
       
       {/* Anasayfa Butonu */}
-      <div className="px-6 mb-4">
+      <div className="px-6 mb-4 flex-shrink-0">
         <Link
           href="/"
           target="_blank"
@@ -101,8 +101,8 @@ export default function AdminSidebar() {
         </Link>
       </div>
       
-      <nav className="mt-6">
-        <ul className="space-y-2">
+      <nav className="flex-1 overflow-y-auto">
+        <ul className="space-y-2 pb-4">
           {menuItems.map((item) => {
             const isActive = pathname === item.href
             return (
