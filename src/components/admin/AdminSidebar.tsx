@@ -13,7 +13,8 @@ import {
   FileText,
   CreditCard,
   Menu,
-  Mail
+  Mail,
+  ExternalLink
 } from 'lucide-react'
 
 const menuItems = [
@@ -87,6 +88,19 @@ export default function AdminSidebar() {
       <div className="p-6">
         <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
       </div>
+      
+      {/* Anasayfa Butonu */}
+      <div className="px-6 mb-4">
+        <Link
+          href="/"
+          target="_blank"
+          className="flex items-center px-4 py-3 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Site Anasayfası
+        </Link>
+      </div>
+      
       <nav className="mt-6">
         <ul className="space-y-2">
           {menuItems.map((item) => {
