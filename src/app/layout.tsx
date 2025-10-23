@@ -67,11 +67,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${lexendDeca.variable} font-lexend-deca`}>
-        <div className="min-h-screen flex flex-col">
-          <HeaderWrapper />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        {children}
       </body>
     </html>
   )
