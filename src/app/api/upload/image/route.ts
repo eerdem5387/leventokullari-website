@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { put } from '@vercel/blob'
 import { verifyToken } from '@/lib/auth'
+
+export const runtime = 'edge'
 
 export async function POST(request: NextRequest) {
     try {
@@ -49,28 +50,20 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-
         // Dosya adını oluştur
         const timestamp = Date.now()
         const extension = file.name.split('.').pop()
-        const fileName = `${timestamp}.${extension}`
+        const fileName = `products/${timestamp}.${extension}`
 
-        // Uploads klasörünü oluştur
-        const uploadsDir = join(process.cwd(), 'public', 'uploads')
-        await mkdir(uploadsDir, { recursive: true })
-
-        // Dosyayı kaydet
-        const filePath = join(uploadsDir, fileName)
-        await writeFile(filePath, buffer)
-
-        // URL'i döndür
-        const fileUrl = `/uploads/${fileName}`
+        // Vercel Blob'a yükle
+        const blob = await put(fileName, file, {
+            access: 'public',
+            addRandomSuffix: false,
+        })
 
         return NextResponse.json({
             success: true,
-            url: fileUrl,
+            url: blob.url,
             fileName: fileName
         })
 
