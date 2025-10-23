@@ -43,8 +43,6 @@ const nextConfig = {
             // { source: '/orders/:path*', destination: '/products', permanent: true },
             { source: '/categories', destination: '/products', permanent: true },
             { source: '/categories/:path*', destination: '/products', permanent: true },
-            { source: '/blog', destination: '/products', permanent: true },
-            { source: '/blog/:path*', destination: '/products', permanent: true },
             // allow auth and payment pages to function for bank review
             // { source: '/register', destination: '/products', permanent: true },
             // { source: '/login', destination: '/products', permanent: true },

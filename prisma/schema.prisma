@@ -273,23 +273,6 @@ model Review {
   @@map("reviews")
 }
 
-model Content {
-  id          String      @id @default(cuid())
-  title       String
-  slug        String      @unique
-  content     String      // HTML content
-  excerpt     String?     // Short description
-  type        ContentType @default(PAGE)
-  status      ContentStatus @default(DRAFT)
-  featuredImage String?
-  metaTitle   String?
-  metaDescription String?
-  publishedAt DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@map("contents")
-}
 
 // Enums
 enum UserRole {
@@ -331,17 +314,6 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum ContentType {
-  PAGE
-  BANNER
-  BLOG
-}
-
-enum ContentStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
 
 model Settings {
   id        String   @id @default(cuid())
@@ -355,135 +327,3 @@ model Settings {
   @@map("settings")
 }
 
-// Yeni CMS modelleri
-model Menu {
-  id        String   @id @default(cuid())
-  name      String
-  location  String   @unique // header, footer, sidebar
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  items     MenuItem[]
-
-  @@map("menus")
-}
-
-model MenuItem {
-  id        String   @id @default(cuid())
-  menuId    String
-  title     String
-  url       String
-  target    String   @default("_self") // _self, _blank
-  order     Int      @default(0)
-  parentId  String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  menu      Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  parent    MenuItem? @relation("MenuItemHierarchy", fields: [parentId], references: [id])
-  children  MenuItem[] @relation("MenuItemHierarchy")
-
-  @@map("menu_items")
-}
-
-model ContactForm {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  fields      String   // JSON array of form fields
-  settings    String?  // JSON settings (email, redirect, etc.)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  submissions ContactFormSubmission[]
-
-  @@map("contact_forms")
-}
-
-model ContactFormSubmission {
-  id          String   @id @default(cuid())
-  formId      String
-  data        String   // JSON form data
-  ipAddress   String?
-  userAgent   String?
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  // Relations
-  form        ContactForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-
-  @@map("contact_form_submissions")
-}
-
-model BlogCategory {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  posts       BlogPost[]
-
-  @@map("blog_categories")
-}
-
-model BlogPost {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  content     String   // HTML content
-  excerpt     String?
-  featuredImage String?
-  metaTitle   String?
-  metaDescription String?
-  status      ContentStatus @default(DRAFT)
-  publishedAt DateTime?
-  categoryId  String?
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  category    BlogCategory? @relation(fields: [categoryId], references: [id])
-  author      User          @relation(fields: [authorId], references: [id])
-  tags        BlogPostTag[]
-
-  @@map("blog_posts")
-}
-
-model BlogTag {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  posts     BlogPostTag[]
-
-  @@map("blog_tags")
-}
-
-model BlogPostTag {
-  id        String   @id @default(cuid())
-  postId    String
-  tagId     String
-  createdAt DateTime @default(now())
-
-  // Relations
-  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag       BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@unique([postId, tagId])
-  @@map("blog_post_tags")
-}

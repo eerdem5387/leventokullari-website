@@ -4,23 +4,6 @@ import { hashPassword } from '../src/lib/auth'
 const prisma = new PrismaClient()
 
 async function main() {
-    // Upsert home page
-    const page = await prisma.page.upsert({
-        where: { slug: 'home' },
-        update: { title: 'Anasayfa', status: 'PUBLISHED' },
-        create: { slug: 'home', title: 'Anasayfa', status: 'PUBLISHED' },
-    })
-
-    const sections = [
-        { type: 'hero', order: 0, data: { title: 'Merhaba!', subtitle: 'Yeni siteniz hazır.' } },
-        { type: 'rich_text', order: 1, data: { html: '<p>Bu metni yönetim panelinden düzenleyebilirsiniz.</p>' } },
-    ]
-
-    await prisma.pageSection.deleteMany({ where: { pageId: page.id } })
-    for (const s of sections) {
-        await prisma.pageSection.create({ data: { pageId: page.id, ...s } })
-    }
-
     console.log('🌱 Seeding database...')
 
     // Admin kullanıcısı oluştur

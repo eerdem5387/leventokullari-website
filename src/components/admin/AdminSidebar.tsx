@@ -10,10 +10,7 @@ import {
   BarChart3, 
   Settings,
   Tag,
-  FileText,
   CreditCard,
-  Menu,
-  Mail,
   ExternalLink
 } from 'lucide-react'
 
@@ -47,26 +44,6 @@ const menuItems = [
     name: 'Ödemeler',
     href: '/admin/payments',
     icon: CreditCard
-  },
-  {
-    name: 'Blog',
-    href: '/admin/blog',
-    icon: FileText
-  },
-  {
-    name: 'İçerik',
-    href: '/admin/content',
-    icon: FileText
-  },
-  {
-    name: 'Menüler',
-    href: '/admin/menus',
-    icon: Menu
-  },
-  {
-    name: 'İletişim Formları',
-    href: '/admin/contact-forms',
-    icon: Mail
   },
   {
     name: 'Raporlar',
