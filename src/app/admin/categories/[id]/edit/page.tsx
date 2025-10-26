@@ -103,10 +103,12 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
     setIsSaving(true)
 
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/categories/${id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       })

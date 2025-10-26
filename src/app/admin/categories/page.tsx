@@ -67,8 +67,12 @@ export default function AdminCategoriesPage() {
   const handleDeleteCategory = async (categoryId: string) => {
     if (confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) {
       try {
+        const token = localStorage.getItem('token')
         const response = await fetch(`/api/categories/${categoryId}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         })
 
         if (response.ok) {
@@ -87,10 +91,12 @@ export default function AdminCategoriesPage() {
 
   const handleTogglePopular = async (categoryId: string, currentPopular: boolean) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/categories/${categoryId}/popular`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ isPopular: !currentPopular })
       })
