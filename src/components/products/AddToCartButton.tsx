@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
+import { safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface AddToCartButtonProps {
   product: {
@@ -21,18 +21,33 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     setIsLoading(true)
     
     try {
-      // Mevcut sepeti al (sessionStorage kullan)
-      const existingCart = safeSessionStorage.getItem('cart')
-      const cart = existingCart ? JSON.parse(existingCart) : []
+      // Mevcut sepeti al (localStorage kullan)
+      const existingCart = safeLocalStorage.getItem('cart')
+      let cart: any = { items: [] }
+      
+      if (existingCart) {
+        try {
+          cart = JSON.parse(existingCart)
+          // Eski format kontrolü (array ise yeni formata çevir)
+          if (Array.isArray(cart)) {
+            cart = { items: cart }
+          }
+          if (!cart.items) {
+            cart.items = []
+          }
+        } catch (e) {
+          cart = { items: [] }
+        }
+      }
       
       // Ürünü sepete ekle
-      const existingItem = cart.find((item: any) => item.id === product.id)
+      const existingItem = cart.items.find((item: any) => item.id === product.id)
       
       if (existingItem) {
         // Ürün zaten sepette varsa miktarını artır
         existingItem.quantity += 1
       } else {
-        // Yeni ürün ekle (maksimum optimize edilmiş veri)
+        // Yeni ürün ekle
         const cartItem: any = {
           id: product.id,
           name: product.name,
@@ -41,29 +56,23 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
           stock: 999
         }
         
-        // Sadece resim varsa ekle, yoksa ekleme
+        // Resim varsa ekle
         if (product.images && product.images.length > 0) {
-          // Resim URL'sini kısalt (sadece dosya adını al)
-          const imageUrl = product.images[0]
-          if (imageUrl && imageUrl.length < 200) { // Sadece kısa URL'leri ekle
-            cartItem.image = imageUrl
-          }
+          cartItem.image = product.images[0]
         }
         
-        cart.push(cartItem)
+        cart.items.push(cartItem)
       }
       
-      // Sepeti sessionStorage'a kaydet
+      // Sepeti localStorage'a kaydet
       try {
-        safeSessionStorage.setItem('cart', JSON.stringify(cart))
+        safeLocalStorage.setItem('cart', JSON.stringify(cart))
       } catch (storageError) {
-        // Eğer sessionStorage da doluysa, eski verileri temizle
         console.warn('Storage quota exceeded, clearing old cart data')
-        safeSessionStorage.clear()
+        safeLocalStorage.removeItem('cart')
         
-        // Tekrar dene
         try {
-          safeSessionStorage.setItem('cart', JSON.stringify(cart))
+          safeLocalStorage.setItem('cart', JSON.stringify(cart))
         } catch (finalError) {
           console.error('Final storage error:', finalError)
           alert('Sepet verileri çok büyük. Lütfen sepetinizi temizleyip tekrar deneyin.')

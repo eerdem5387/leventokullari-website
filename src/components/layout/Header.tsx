@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, Menu, X } from 'lucide-react'
+import { Search, Menu, X, ShoppingCart } from 'lucide-react'
 import DynamicMenu from './DynamicMenu'
 import { safeLocalStorage, safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
@@ -13,13 +13,46 @@ interface HeaderProps {
 export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [cartItemCount, setCartItemCount] = useState(0)
 
   useEffect(() => {
-    if (!isClient) return
-    
     setIsClient(true)
     
+    // Sepet sayısını güncelle
+    const updateCartCount = () => {
+      const cart = safeLocalStorage.getItem('cart')
+      if (cart) {
+        try {
+          const cartData = JSON.parse(cart)
+          const totalItems = cartData.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0
+          setCartItemCount(totalItems)
+        } catch (error) {
+          console.error('Cart parse error:', error)
+          setCartItemCount(0)
+        }
+      } else {
+        setCartItemCount(0)
+      }
+    }
+
+    updateCartCount()
+
+    // Storage değişikliklerini dinle
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cart') {
+        updateCartCount()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
     
+    // Custom event dinle (aynı tab içinde)
+    window.addEventListener('cartUpdated', updateCartCount)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('cartUpdated', updateCartCount)
+    }
   }, [])
 
   
@@ -65,7 +98,21 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                   </div>
 
                   {/* Action Buttons - Right side */}
-                  <div className="tgmenu__action flex-shrink-0"></div>
+                  <div className="tgmenu__action flex-shrink-0">
+                    <ul className="flex items-center space-x-4">
+                      {/* Cart Icon */}
+                      <li>
+                        <Link href="/checkout" className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                          <ShoppingCart className="h-6 w-6" />
+                          {cartItemCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                              {cartItemCount}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
                 </nav>
               </div>
 
@@ -113,7 +160,24 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                     </ul>
                   </div>
 
-                  <div className="tgmenu__action mt-8"></div>
+                  <div className="tgmenu__action mt-8">
+                    <ul className="space-y-4">
+                      {/* Mobile Cart */}
+                      <li>
+                        <Link href="/checkout" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <span className="flex items-center text-gray-700">
+                            <ShoppingCart className="h-5 w-5 mr-3" />
+                            Sepetim
+                          </span>
+                          {cartItemCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                              {cartItemCount}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
 
                   <div className="social-links mt-8 flex justify-center space-x-4">
                     <a href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
