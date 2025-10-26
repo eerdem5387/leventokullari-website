@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin, handleApiError } from '@/lib/error-handler'
 
 export async function GET() {
     try {
@@ -24,6 +25,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         const body = await request.json()
         const { name, slug, description, isActive = true, isPopular = false } = body
 
@@ -63,10 +68,6 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(category, { status: 201 })
     } catch (error) {
-        console.error('Error creating category:', error)
-        return NextResponse.json(
-            { error: 'Kategori oluşturulamadı' },
-            { status: 500 }
-        )
+        return handleApiError(error)
     }
 } 

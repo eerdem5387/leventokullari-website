@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin, handleApiError } from '@/lib/error-handler'
 
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         const resolvedParams = await params
         const body = await request.json()
         const { isPopular } = body
@@ -20,7 +25,6 @@ export async function PUT(
             category
         })
     } catch (error) {
-        console.error('Error updating category popular status:', error)
-        return NextResponse.json({ error: 'Kategori güncellenirken bir hata oluştu' }, { status: 500 })
+        return handleApiError(error)
     }
 } 

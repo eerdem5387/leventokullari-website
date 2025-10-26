@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin, handleApiError } from '@/lib/error-handler'
 import { z } from 'zod'
 
 const categoryUpdateSchema = z.object({
@@ -49,6 +50,10 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         const resolvedParams = await params
         const body = await request.json()
         const updateData = categoryUpdateSchema.parse(body)
@@ -79,11 +84,7 @@ export async function PUT(
 
         return NextResponse.json(category)
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Geçersiz veri formatı', details: error.issues }, { status: 400 })
-        }
-        console.error('Error updating category:', error)
-        return NextResponse.json({ error: 'Kategori güncellenirken bir hata oluştu' }, { status: 500 })
+        return handleApiError(error)
     }
 }
 
@@ -92,6 +93,10 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Admin yetkisi kontrolü
+        const authHeader = request.headers.get('authorization')
+        requireAdmin(authHeader)
+
         const resolvedParams = await params
 
         // Kategoride ürün var mı kontrol et
@@ -106,6 +111,14 @@ export async function DELETE(
 
         if (!categoryWithProducts) {
             return NextResponse.json({ error: 'Kategori bulunamadı' }, { status: 404 })
+        }
+
+        // Sistem kategorilerini silmeyi engelle
+        const protectedSlugs = ['kategorisiz', 'uncategorized', 'diger', 'other']
+        if (protectedSlugs.includes(categoryWithProducts.slug.toLowerCase())) {
+            return NextResponse.json({ 
+                error: 'Bu kategori sistem tarafından korunmaktadır ve silinemez' 
+            }, { status: 400 })
         }
 
         // Eğer kategoride ürünler varsa, onları "Kategorisiz" kategorisine taşı
@@ -140,7 +153,6 @@ export async function DELETE(
             movedProducts: categoryWithProducts._count.products > 0 ? categoryWithProducts._count.products : 0
         })
     } catch (error) {
-        console.error('Error deleting category:', error)
-        return NextResponse.json({ error: 'Kategori silinirken bir hata oluştu' }, { status: 500 })
+        return handleApiError(error)
     }
 } 
