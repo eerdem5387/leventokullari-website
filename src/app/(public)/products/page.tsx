@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
+import Banner from '@/components/ui/Banner'
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -98,6 +99,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Banner - Only show on first page without filters */}
+      {page === 1 && !params.search && !params.category && <Banner />}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">

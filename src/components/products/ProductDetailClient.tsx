@@ -571,9 +571,14 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
           {/* Description */}
           <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ürün Açıklaması</h3>
-            <div className="text-gray-600 leading-relaxed">
-              {product.description}
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span className="w-1 h-8 bg-blue-600 mr-3 rounded-full"></span>
+              Ürün Açıklaması
+            </h2>
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200">
+              <p className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
+                {product.description}
+              </p>
             </div>
           </div>
 

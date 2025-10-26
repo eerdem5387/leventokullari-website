@@ -108,15 +108,39 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Sosyal Medya</h3>
             <div className="flex space-x-4">
-              <a href={settings.facebook} className="text-gray-300 hover:text-white">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href={settings.twitter} className="text-gray-300 hover:text-white">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href={`https://instagram.com/${settings.instagram}`} className="text-gray-300 hover:text-white">
-                <Instagram className="w-5 h-5" />
-              </a>
+              {settings.facebook && settings.facebook !== '#' && (
+                <a 
+                  href={settings.facebook.startsWith('http') ? settings.facebook : `https://facebook.com/${settings.facebook}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-300 hover:text-white transition-colors"
+                  title="Facebook"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )}
+              {settings.twitter && settings.twitter !== '#' && (
+                <a 
+                  href={settings.twitter.startsWith('http') ? settings.twitter : `https://twitter.com/${settings.twitter}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-300 hover:text-white transition-colors"
+                  title="Twitter"
+                >
+                  <Twitter className="w-5 h-5" />
+                </a>
+              )}
+              {settings.instagram && settings.instagram !== '#' && (
+                <a 
+                  href={settings.instagram.startsWith('http') ? settings.instagram : `https://instagram.com/${settings.instagram}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-300 hover:text-white transition-colors"
+                  title="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
             </div>
           </div>
         </div>

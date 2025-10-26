@@ -237,24 +237,43 @@ export default function CheckoutPage() {
             </button>
           </div>
           <div className="flex items-center justify-center space-x-8">
-            <div className={`flex items-center ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'}`}>
+            {/* Step 1 - Teslimat Bilgileri */}
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className={`flex items-center transition-all ${step >= 1 ? 'text-blue-600' : 'text-gray-400'} ${step > 1 ? 'cursor-pointer hover:text-blue-700' : ''}`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${step >= 1 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'} ${step > 1 ? 'hover:bg-blue-700 hover:border-blue-700' : ''}`}>
                 1
               </div>
               <span className="ml-2 font-medium">Teslimat Bilgileri</span>
-            </div>
-            <div className={`flex items-center ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'}`}>
+            </button>
+            
+            {/* Step 2 - Ödeme */}
+            <button
+              type="button"
+              onClick={() => step >= 2 && setStep(2)}
+              disabled={step < 2}
+              className={`flex items-center transition-all ${step >= 2 ? 'text-blue-600' : 'text-gray-400'} ${step > 2 ? 'cursor-pointer hover:text-blue-700' : step < 2 ? 'cursor-not-allowed' : ''}`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${step >= 2 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'} ${step > 2 ? 'hover:bg-blue-700 hover:border-blue-700' : ''}`}>
                 2
               </div>
               <span className="ml-2 font-medium">Ödeme</span>
-            </div>
-            <div className={`flex items-center ${step >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'}`}>
+            </button>
+            
+            {/* Step 3 - Onay */}
+            <button
+              type="button"
+              onClick={() => step >= 3 && setStep(3)}
+              disabled={step < 3}
+              className={`flex items-center transition-all ${step >= 3 ? 'text-blue-600' : 'text-gray-400'} ${step < 3 ? 'cursor-not-allowed' : ''}`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${step >= 3 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'}`}>
                 3
               </div>
               <span className="ml-2 font-medium">Onay</span>
-            </div>
+            </button>
           </div>
         </div>
 

@@ -179,18 +179,15 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                     </ul>
                   </div>
 
-                  <div className="social-links mt-8 flex justify-center space-x-4">
-                    <a href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                      <i className="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                      <i className="fab fa-twitter"></i>
-                    </a>
-                    <a href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                      <i className="fab fa-linkedin-in"></i>
-                    </a>
-                    <a href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
-                      <i className="fab fa-instagram"></i>
+                  <div className="social-links mt-8 flex justify-center space-x-6">
+                    <a 
+                      href="https://instagram.com/rizelevent" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Instagram"
+                    >
+                      <i className="fab fa-instagram text-xl"></i>
                     </a>
                   </div>
                 </nav>
