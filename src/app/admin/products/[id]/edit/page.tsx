@@ -440,10 +440,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         variations: formData.productType === 'VARIABLE' ? variations : undefined
       }
 
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/products/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(productData),
       })

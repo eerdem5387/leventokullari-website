@@ -229,10 +229,12 @@ export default function NewProductPage() {
 
       console.log('Sending product data:', productData)
 
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(productData),
       })
