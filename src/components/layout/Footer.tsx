@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import DynamicMenu from './DynamicMenu'
 
 // Client-side settings fetch
 function useFooterSettings() {
@@ -124,7 +123,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
           <p className="text-gray-300">
-            © 2024 {settings.siteName}. Tüm hakları saklıdır.
+            © 2025 Yakın Boğaz. Tüm hakları saklıdır.
           </p>
         </div>
       </div>
