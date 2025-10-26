@@ -614,7 +614,7 @@ export default function AdminProductsPage() {
                         <span className="text-xs text-gray-500">#</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0">
                           {product.images && product.images.length > 0 ? (
@@ -629,11 +629,11 @@ export default function AdminProductsPage() {
                             </div>
                           )}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                        <div className="ml-4 max-w-xs">
+                          <div className="text-sm font-medium text-gray-900 line-clamp-2">
                             {product.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 truncate">
                             {product.sku}
                           </div>
                         </div>
