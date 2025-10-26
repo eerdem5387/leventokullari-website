@@ -123,15 +123,27 @@ export async function DELETE(
 
         // Eğer kategoride ürünler varsa, onları "Kategorisiz" kategorisine taşı
         if (categoryWithProducts._count.products > 0) {
-            // "Kategorisiz" kategorisini bul
-            const uncategorizedCategory = await prisma.category.findUnique({
-                where: { slug: 'kategorisiz' }
+            // "Kategorisiz" kategorisini bul veya oluştur
+            let uncategorizedCategory = await prisma.category.findFirst({
+                where: {
+                    OR: [
+                        { slug: 'kategorisiz' },
+                        { slug: 'uncategorized' }
+                    ]
+                }
             })
 
+            // Eğer kategorisiz kategorisi yoksa oluştur
             if (!uncategorizedCategory) {
-                return NextResponse.json({
-                    error: 'Kategorisiz kategori bulunamadı'
-                }, { status: 500 })
+                uncategorizedCategory = await prisma.category.create({
+                    data: {
+                        name: 'Kategorisiz',
+                        slug: 'kategorisiz',
+                        isActive: true,
+                        isPopular: false
+                    }
+                })
+                console.log('📁 Created uncategorized category')
             }
 
             // Bu kategorideki tüm ürünleri "Kategorisiz" kategorisine taşı
