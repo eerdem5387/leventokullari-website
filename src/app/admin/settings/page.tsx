@@ -84,10 +84,12 @@ export default function AdminSettingsPage() {
       setIsSaving(true)
       setError(null)
 
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/admin/test-ziraat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           amount: 1.00, // 1 TL test ödemesi
@@ -115,10 +117,12 @@ export default function AdminSettingsPage() {
       setIsSaving(true)
       setError(null)
 
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/admin/test-mock', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           amount: 1.00, // 1 TL test ödemesi
@@ -148,10 +152,12 @@ export default function AdminSettingsPage() {
       setIsSaving(true)
       setError(null)
 
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/admin/test-email', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           to: settings.general?.contactEmail || ''
@@ -245,10 +251,12 @@ export default function AdminSettingsPage() {
         })
       }
 
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ settings: flatSettings })
       })
