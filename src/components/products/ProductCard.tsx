@@ -11,6 +11,7 @@ interface ProductCardProps {
     slug: string
     price: number
     comparePrice?: number
+    stock: number
     images: string[]
     category?: {
       name: string
@@ -106,7 +107,11 @@ export default function ProductCard({ product }: ProductCardProps) {
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
           ) : (
-            <span className="text-gray-500 text-lg">Ürün Resmi</span>
+            <img
+              src="/placeholder-product.svg"
+              alt="Ürün görseli yok"
+              className="w-full h-full object-cover opacity-60"
+            />
           )}
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
@@ -124,6 +129,22 @@ export default function ProductCard({ product }: ProductCardProps) {
           <p className="text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full inline-block mb-4 font-medium">
             {product.category.name}
           </p>
+        )}
+        
+        {/* Stock Badge */}
+        {product.stock !== -1 && product.stock <= 10 && product.stock > 0 && product.productType !== 'VARIABLE' && (
+          <div className="mb-3">
+            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
+              Son {product.stock} adet!
+            </span>
+          </div>
+        )}
+        {product.stock === 0 && product.productType !== 'VARIABLE' && (
+          <div className="mb-3">
+            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+              Stokta Yok
+            </span>
+          </div>
         )}
         
         <div className="flex items-center mb-4">

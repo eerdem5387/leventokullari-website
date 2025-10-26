@@ -36,7 +36,8 @@ const nextConfig = {
     },
     async redirects() {
         return [
-            { source: '/cart', destination: '/products', permanent: true },
+            // Cart page is now functional - no redirect needed
+            // { source: '/cart', destination: '/products', permanent: true },
             // allow checkout/payment flow to function
             // { source: '/checkout', destination: '/products', permanent: true },
             // { source: '/orders', destination: '/products', permanent: true },

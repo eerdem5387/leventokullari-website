@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
+import { useToast } from '@/hooks/useToast'
+import Toast from '@/components/ui/Toast'
 
 interface AddToCartButtonProps {
   product: {
@@ -10,10 +12,12 @@ interface AddToCartButtonProps {
     price: number
     images?: string[]
   }
+  className?: string
 }
 
-export default function AddToCartButton({ product }: AddToCartButtonProps) {
+export default function AddToCartButton({ product, className }: AddToCartButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const { toasts, removeToast, success, error } = useToast()
 
   const addToCart = () => {
     if (!isClient) return
@@ -46,6 +50,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       if (existingItem) {
         // Ürün zaten sepette varsa miktarını artır
         existingItem.quantity += 1
+        success(`${product.name} miktarı güncellendi!`)
       } else {
         // Yeni ürün ekle
         const cartItem: any = {
@@ -62,6 +67,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
         }
         
         cart.items.push(cartItem)
+        success(`${product.name} sepete eklendi!`)
       }
       
       // Sepeti localStorage'a kaydet
@@ -75,7 +81,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
           safeLocalStorage.setItem('cart', JSON.stringify(cart))
         } catch (finalError) {
           console.error('Final storage error:', finalError)
-          alert('Sepet verileri çok büyük. Lütfen sepetinizi temizleyip tekrar deneyin.')
+          error('Sepet verileri çok büyük. Lütfen sepetinizi temizleyip tekrar deneyin.')
           return
         }
       }
@@ -83,24 +89,24 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       // Custom event tetikle
       safeWindow.dispatchEvent(new Event('cartUpdated'))
       
-      // Başarı mesajı göster
-      alert('Ürün sepete eklendi!')
-      
-    } catch (error) {
-      console.error('Sepete ekleme hatası:', error)
-      alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
+    } catch (err) {
+      console.error('Sepete ekleme hatası:', err)
+      error('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <button 
-      onClick={addToCart}
-      disabled={isLoading}
-      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {isLoading ? 'Ekleniyor...' : 'Sepete Ekle'}
-    </button>
+    <>
+      <button 
+        onClick={addToCart}
+        disabled={isLoading}
+        className={className || "bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"}
+      >
+        {isLoading ? 'Ekleniyor...' : 'Sepete Ekle'}
+      </button>
+      <Toast toasts={toasts} onRemove={removeToast} />
+    </>
   )
-} 
+}

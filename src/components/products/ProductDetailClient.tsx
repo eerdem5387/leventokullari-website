@@ -282,9 +282,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <span className="text-gray-500">Ürün Resmi</span>
-              </div>
+              <img
+                src="/placeholder-product.svg"
+                alt="Ürün görseli yok"
+                className="w-full h-full object-contain p-8 opacity-60"
+              />
             )}
           </div>
           
@@ -345,6 +347,43 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 </span>
               )}
             </div>
+            
+            {/* Stock Info */}
+            <div className="flex items-center space-x-2">
+              {(() => {
+                const currentStock = selectedVariation ? selectedVariation.stock : product.stock
+                if (currentStock === -1) {
+                  return (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-green-700">Sınırsız Stok</span>
+                    </div>
+                  )
+                } else if (currentStock > 10) {
+                  return (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-green-700">Stokta: {currentStock} adet</span>
+                    </div>
+                  )
+                } else if (currentStock > 0) {
+                  return (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-orange-700">Son {currentStock} adet!</span>
+                    </div>
+                  )
+                } else {
+                  return (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-red-700">Stokta Yok</span>
+                    </div>
+                  )
+                }
+              })()}
+            </div>
+            
             {product.comparePrice && !selectedVariation && (
               <div className="text-sm text-green-600">
                 %{Math.round(((Number(product.comparePrice) - Number(product.price)) / Number(product.comparePrice)) * 100)} indirim
