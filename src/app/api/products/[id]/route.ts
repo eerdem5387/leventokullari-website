@@ -124,6 +124,21 @@ export async function PUT(
             throw new NotFoundError('Ürün bulunamadı')
         }
 
+        // Otomatik SKU oluştur (eğer SKU boş veya undefined ise)
+        let sku = body.sku
+        if (!sku || sku.trim() === '') {
+            // Kategori bilgisini al
+            const category = await prisma.category.findUnique({
+                where: { id: body.categoryId },
+                select: { name: true }
+            })
+
+            const categoryPrefix = category?.name?.toUpperCase().replace(/[^A-Z]/g, '') || 'GENEL'
+            const productName = body.name.toUpperCase().replace(/[^A-Z0-9]/g, '')
+            const timestamp = Date.now().toString().slice(-6) // Son 6 hanesi
+            sku = `${categoryPrefix}-${productName}-${timestamp}`
+        }
+
         // Ürünü güncelle
         const updatedProduct = await prisma.product.update({
             where: { id: productId },
@@ -133,7 +148,7 @@ export async function PUT(
                 price: body.price,
                 comparePrice: body.comparePrice,
                 stock: body.stock,
-                sku: body.sku,
+                sku: sku,
                 categoryId: body.categoryId,
                 isActive: body.isActive,
                 isFeatured: body.isFeatured,
