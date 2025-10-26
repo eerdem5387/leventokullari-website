@@ -646,7 +646,15 @@ export default function AdminProductsPage() {
                       ₺{Number(product.price).toLocaleString('tr-TR')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.stock}
+                      {product.stock === -1 ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Sınırsız
+                        </span>
+                      ) : (
+                        <span className={product.stock === 0 ? 'text-red-600 font-semibold' : product.stock < 10 ? 'text-orange-600 font-semibold' : ''}>
+                          {product.stock}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
