@@ -74,57 +74,104 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        // Authorization kontrolü
         const authHeader = request.headers.get('authorization')
-        const user = requireAuth(authHeader)
+        let userId: string | null = null
+
+        // Try to authenticate; if fails, continue as guest
+        try {
+            if (authHeader) {
+                const user = requireAuth(authHeader)
+                userId = user.userId
+            }
+        } catch {
+            userId = null
+        }
 
         const body = await request.json()
-        const { items, shippingAddress, billingAddress, notes } = validateRequest(createOrderSchema, body)
+
+        // Extend schema at runtime for guest email
+        const guestOrderSchema = createOrderSchema.extend({
+            customerEmail: z.string().email('Geçerli bir e-posta giriniz').optional(),
+            customerName: z.string().optional(),
+            customerPhone: z.string().optional()
+        })
+
+        const { items, shippingAddress, billingAddress, notes, customerEmail, customerName, customerPhone } = validateRequest(guestOrderSchema, body)
+
+        // If no auth user, require customerEmail for guest checkout
+        if (!userId) {
+            if (!customerEmail) {
+                throw new ValidationError('Misafir sipariş için e-posta gereklidir')
+            }
+            // Upsert guest user by email
+            const nameParts = (customerName || `${shippingAddress.firstName} ${shippingAddress.lastName}`).trim()
+            const [first, ...rest] = nameParts.split(' ')
+            const displayName = nameParts || 'Müşteri'
+
+            const upserted = await prisma.user.upsert({
+                where: { email: customerEmail.toLowerCase() },
+                update: {
+                    name: displayName,
+                    phone: customerPhone || shippingAddress.phone
+                },
+                create: {
+                    email: customerEmail.toLowerCase(),
+                    password: 'guest',
+                    name: displayName,
+                    phone: customerPhone || shippingAddress.phone,
+                    role: 'CUSTOMER'
+                }
+            })
+            userId = upserted.id
+        }
 
         // billingAddress undefined ise shippingAddress'i kullan
         const finalBillingAddress = billingAddress || shippingAddress
 
         // Kullanıcıyı veritabanından al
-        const dbUser = await prisma.user.findUnique({
-            where: { id: user.userId }
-        })
-
+        const dbUser = await prisma.user.findUnique({ where: { id: userId! } })
         if (!dbUser) {
             throw new NotFoundError('Kullanıcı bulunamadı')
         }
 
-        // Toplam tutarı hesapla
-        let totalAmount = 0
+        // Toplam tutarı ve kargo ücretini hesapla
+        let subtotal = 0
         for (const item of items) {
-            // Varyasyonlu ürünler için varyasyon fiyatını kullan
             if (item.variationId) {
                 const variation = await prisma.productVariation.findUnique({
                     where: { id: item.variationId },
-                    select: { price: true }
+                    select: { price: true, stock: true, product: { select: { isActive: true } } }
                 })
-                if (!variation) {
-                    throw new NotFoundError(`Varyasyon bulunamadı: ${item.variationId}`)
+                if (!variation) throw new NotFoundError(`Varyasyon bulunamadı: ${item.variationId}`)
+                if (!variation.product.isActive) throw new ValidationError('Ürün aktif değil')
+                if (variation.stock !== -1 && variation.stock < item.quantity) {
+                    throw new ValidationError('Yetersiz stok (varyasyon)')
                 }
-                totalAmount += Number(variation.price) * item.quantity
+                subtotal += Number(variation.price) * item.quantity
             } else {
-                // Basit ürünler için ana ürün fiyatını kullan
                 const product = await prisma.product.findUnique({
                     where: { id: item.productId },
-                    select: { price: true }
+                    select: { price: true, stock: true, isActive: true }
                 })
-                if (!product) {
-                    throw new NotFoundError(`Ürün bulunamadı: ${item.productId}`)
+                if (!product) throw new NotFoundError(`Ürün bulunamadı: ${item.productId}`)
+                if (!product.isActive) throw new ValidationError('Ürün aktif değil')
+                if (product.stock !== -1 && product.stock < item.quantity) {
+                    throw new ValidationError('Yetersiz stok')
                 }
-                totalAmount += Number(product.price) * item.quantity
+                subtotal += Number(product.price) * item.quantity
             }
         }
 
+        const shippingFee = subtotal > 500 ? 0 : 29.99
+        const taxAmount = 0
+        const discountAmount = 0
+        const finalAmount = subtotal + shippingFee - discountAmount
+
         // Adresleri kontrol et veya oluştur
         const findOrCreateAddress = async (addressData: any) => {
-            // Mevcut adresi ara
             const existingAddress = await prisma.address.findFirst({
                 where: {
-                    userId: user.id,
+                    userId: dbUser.id,
                     title: addressData.title,
                     firstName: addressData.firstName,
                     lastName: addressData.lastName,
@@ -136,24 +183,21 @@ export async function POST(request: NextRequest) {
             })
 
             if (existingAddress) {
-                console.log('Using existing address:', existingAddress.id)
                 return existingAddress
-            } else {
-                console.log('Creating new address')
-                return await prisma.address.create({
-                    data: {
-                        userId: user.id,
-                        title: addressData.title,
-                        firstName: addressData.firstName,
-                        lastName: addressData.lastName,
-                        phone: addressData.phone,
-                        country: 'Türkiye', // Default değer
-                        city: addressData.city,
-                        district: addressData.district,
-                        fullAddress: addressData.fullAddress
-                    }
-                })
             }
+            return await prisma.address.create({
+                data: {
+                    userId: dbUser.id,
+                    title: addressData.title,
+                    firstName: addressData.firstName,
+                    lastName: addressData.lastName,
+                    phone: addressData.phone,
+                    country: 'Türkiye',
+                    city: addressData.city,
+                    district: addressData.district,
+                    fullAddress: addressData.fullAddress
+                }
+            })
         }
 
         const shippingAddressRecord = await findOrCreateAddress(shippingAddress)
@@ -165,8 +209,11 @@ export async function POST(request: NextRequest) {
                 orderNumber: `ORD-${Date.now()}`,
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
-                totalAmount: totalAmount,
-                finalAmount: totalAmount,
+                totalAmount: subtotal,
+                shippingFee: shippingFee,
+                taxAmount: taxAmount,
+                discountAmount: discountAmount,
+                finalAmount: finalAmount,
                 shippingAddressId: shippingAddressRecord.id,
                 billingAddressId: billingAddressRecord.id,
                 paymentMethod: 'CREDIT_CARD',
@@ -174,38 +221,20 @@ export async function POST(request: NextRequest) {
             },
             include: {
                 user: true,
-                items: {
-                    include: {
-                        product: true
-                    }
-                }
+                items: { include: { product: true } }
             }
         })
 
         // Sipariş kalemlerini oluştur
         for (const item of items) {
             let unitPrice = 0
-
-            // Varyasyonlu ürünler için varyasyon fiyatını kullan
             if (item.variationId) {
-                const variation = await prisma.productVariation.findUnique({
-                    where: { id: item.variationId },
-                    select: { price: true }
-                })
-                if (variation) {
-                    unitPrice = Number(variation.price)
-                }
+                const variation = await prisma.productVariation.findUnique({ where: { id: item.variationId }, select: { price: true } })
+                if (variation) unitPrice = Number(variation.price)
             } else {
-                // Basit ürünler için ana ürün fiyatını kullan
-                const product = await prisma.product.findUnique({
-                    where: { id: item.productId },
-                    select: { price: true }
-                })
-                if (product) {
-                    unitPrice = Number(product.price)
-                }
+                const product = await prisma.product.findUnique({ where: { id: item.productId }, select: { price: true } })
+                if (product) unitPrice = Number(product.price)
             }
-
             if (unitPrice > 0) {
                 await prisma.orderItem.create({
                     data: {
@@ -220,17 +249,11 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // E-posta bildirimleri gönder (asenkron olarak)
+        // E-posta bildirimleri gönder (asenkron)
         try {
-            // Müşteriye sipariş onay e-postası
             await emailService.sendOrderConfirmation(order, dbUser.email)
-
-            // Admin'e yeni sipariş bildirimi
             await emailService.sendOrderNotificationToAdmin(order)
-        } catch (emailError) {
-            console.error('E-posta gönderilirken hata:', emailError)
-            // E-posta hatası sipariş oluşturmayı etkilemesin
-        }
+        } catch { }
 
         return NextResponse.json(order, { status: 201 })
     } catch (error) {

@@ -39,6 +39,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1)
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string>('')
+  const [customerEmail, setCustomerEmail] = useState('')
   
   // Form state
   const [shippingAddress, setShippingAddress] = useState<Address>({
@@ -71,9 +72,19 @@ export default function CheckoutPage() {
       }
       
       // SessionStorage'dan sepet verilerini al
-      const savedCart = safeSessionStorage.getItem('cart')
-      if (savedCart) {
-        setCartItems(JSON.parse(savedCart))
+      const savedCartSession = safeSessionStorage.getItem('cart')
+      const savedCartLocal = safeLocalStorage.getItem('cart')
+      if (savedCartLocal) {
+        try {
+          const parsed = JSON.parse(savedCartLocal)
+          const items = Array.isArray(parsed) ? parsed : (parsed.items || [])
+          setCartItems(items)
+        } catch {
+          // fallback to session
+          if (savedCartSession) setCartItems(JSON.parse(savedCartSession))
+        }
+      } else if (savedCartSession) {
+        setCartItems(JSON.parse(savedCartSession))
       }
 
       // Kullanıcının kayıtlı adreslerini getir
@@ -140,12 +151,8 @@ export default function CheckoutPage() {
 
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/login?redirect=/checkout')
-        return
-      }
 
-      const orderData = {
+      const orderData: any = {
         items: cartItems.map(item => ({
           productId: item.id,
           quantity: item.quantity,
@@ -157,29 +164,33 @@ export default function CheckoutPage() {
         notes
       }
 
-      console.log('Sending order data:', orderData)
-      
+      if (!token) {
+        // guest checkout requires email
+        if (!customerEmail) {
+          alert('Lütfen e-posta adresinizi giriniz')
+          setIsSubmitting(false)
+          return
+        }
+        orderData.customerEmail = customerEmail
+        orderData.customerName = `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim()
+        orderData.customerPhone = shippingAddress.phone
+      }
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(orderData)
       })
 
-      console.log('Response status:', response.status)
-      console.log('Response ok:', response.ok)
-
       if (!response.ok) {
         const errorData = await response.json()
-        console.log('Error data:', errorData)
         throw new Error(errorData.error || 'Sipariş oluşturulurken bir hata oluştu')
       }
 
       const order = await response.json()
-      
-      // Ödeme sayfasına yönlendir (sepet verilerini henüz silme)
       router.push(`/payment/${order.id}`)
     } catch (error) {
       console.error('Error creating order:', error)
@@ -287,6 +298,23 @@ export default function CheckoutPage() {
                   <Truck className="h-5 w-5 mr-2" />
                   Teslimat Adresi
                 </h2>
+
+                {/* Email (guest checkout) */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    E-posta Adresi (fatura ve bildirimler için)
+                  </label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="ornek@domain.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Giriş yapmadıysanız e-posta zorunludur.
+                  </p>
+                </div>
 
                 {/* Kayıtlı Adresler */}
                 {savedAddresses.length > 0 && (
