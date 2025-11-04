@@ -59,28 +59,25 @@ export default function PaymentPage() {
   const fetchOrder = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/login?redirect=/payment/' + orderId)
-        return
-      }
+      const guestEmail = localStorage.getItem('userEmail') || ''
 
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const url = token
+        ? `/api/orders/${orderId}`
+        : `/api/orders/${orderId}?guest=${encodeURIComponent(guestEmail)}`
+
+      const response = await fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
       })
 
       if (!response.ok) {
-        throw new Error('Sipariş bulunamadı')
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Sipariş bulunamadı')
       }
 
       const orderData = await response.json()
-      console.log('Order data received:', orderData)
-      console.log('Order items:', orderData.items)
       setOrder(orderData)
     } catch (error) {
-      console.error('Error fetching order:', error)
-      setError('Sipariş yüklenirken bir hata oluştu')
+      setError(error instanceof Error ? error.message : 'Sipariş yüklenirken bir hata oluştu')
     } finally {
       setIsLoading(false)
     }
@@ -93,14 +90,8 @@ export default function PaymentPage() {
 
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/login?redirect=/payment/' + orderId)
-        return
-      }
 
-      // Mock ödeme isteği (test için)
       const amount = order?.finalAmount ? parseFloat(order.finalAmount.toString()) : 0
-      
       const paymentData = {
         orderId,
         amount: amount,
@@ -108,17 +99,12 @@ export default function PaymentPage() {
         customerName: localStorage.getItem('userName') || '',
         customerPhone: localStorage.getItem('userPhone') || ''
       }
-      
-      console.log('Order object:', order)
-      console.log('Order finalAmount:', order?.finalAmount)
-      console.log('Amount type:', typeof (order?.finalAmount ? Number(order.finalAmount) : 0))
-      console.log('Sending Mock payment data:', paymentData)
 
       const response = await fetch('/api/payment/mock', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(paymentData)
       })

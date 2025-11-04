@@ -16,58 +16,66 @@ export async function GET(
     try {
         const resolvedParams = await params
         const token = request.headers.get('authorization')?.replace('Bearer ', '')
-        if (!token) {
-            return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
+
+        if (token) {
+            const payload = await verifyToken(token)
+            if (!payload) {
+                return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
+            }
+
+            const order = await prisma.order.findUnique({
+                where: { id: resolvedParams.id },
+                include: {
+                    user: { select: { name: true, email: true } },
+                    items: {
+                        include: {
+                            product: {
+                                include: { category: { select: { id: true, name: true } } }
+                            },
+                            variation: {
+                                include: { attributes: { include: { attributeValue: true } } }
+                            }
+                        }
+                    },
+                    shippingAddress: true,
+                    billingAddress: true,
+                    payments: { orderBy: { createdAt: 'desc' } }
+                }
+            })
+
+            if (!order) return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
+            if (payload.role !== 'ADMIN' && order.userId !== payload.userId) {
+                return NextResponse.json({ error: 'Bu siparişe erişim izniniz yok' }, { status: 403 })
+            }
+            return NextResponse.json(order)
         }
 
-        const payload = await verifyToken(token)
-        if (!payload) {
-            return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
+        // Guest access path: require matching email via query param
+        const { searchParams } = new URL(request.url)
+        const guestEmail = searchParams.get('guest')?.toLowerCase()
+        if (!guestEmail) {
+            return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
         }
 
         const order = await prisma.order.findUnique({
             where: { id: resolvedParams.id },
             include: {
-                user: {
-                    select: { name: true, email: true }
-                },
+                user: { select: { email: true, name: true } },
                 items: {
                     include: {
-                        product: {
-                            include: {
-                                category: {
-                                    select: { id: true, name: true }
-                                }
-                            }
-                        },
-                        variation: {
-                            include: {
-                                attributes: {
-                                    include: {
-                                        attributeValue: true
-                                    }
-                                }
-                            }
-                        }
+                        product: true,
+                        variation: { include: { attributes: { include: { attributeValue: true } } } }
                     }
                 },
                 shippingAddress: true,
                 billingAddress: true,
-                payments: {
-                    orderBy: { createdAt: 'desc' }
-                }
+                payments: { orderBy: { createdAt: 'desc' } }
             }
         })
-
-        if (!order) {
-            return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
-        }
-
-        // Kullanıcı sadece kendi siparişlerini görebilir (admin değilse)
-        if (payload.role !== 'ADMIN' && order.userId !== payload.userId) {
+        if (!order) return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
+        if (order.user.email.toLowerCase() !== guestEmail) {
             return NextResponse.json({ error: 'Bu siparişe erişim izniniz yok' }, { status: 403 })
         }
-
         return NextResponse.json(order)
     } catch (error) {
         console.error('Error fetching order:', error)
