@@ -99,10 +99,7 @@ export default function CheckoutPage() {
           
           if (response.ok) {
             const addresses = await response.json()
-            console.log('Fetched addresses:', addresses)
             setSavedAddresses(addresses)
-            
-            // Varsayılan adresi seç
             const defaultAddress = addresses.find((addr: Address) => addr.isDefault)
             if (defaultAddress) {
               setSelectedAddressId(defaultAddress.id || '')
@@ -116,9 +113,13 @@ export default function CheckoutPage() {
                 fullAddress: defaultAddress.fullAddress
               })
             }
+          } else if (response.status === 401) {
+            // Geçersiz/expire olmuş token: temizle ve misafir akışına geç
+            safeLocalStorage.removeItem('token')
+            safeLocalStorage.removeItem('user')
           }
         } catch (error) {
-          console.error('Error fetching addresses:', error)
+          // sessiz geç
         }
       }
       
@@ -186,15 +187,19 @@ export default function CheckoutPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Sipariş oluşturulurken bir hata oluştu')
+        let message = 'Sipariş oluşturulurken bir hata oluştu'
+        try {
+          const errorData = await response.json()
+          message = errorData.error || message
+        } catch {}
+        throw new Error(message)
       }
 
       const order = await response.json()
       router.push(`/payment/${order.id}`)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating order:', error)
-      alert('Sipariş oluşturulurken bir hata oluştu')
+      alert(error?.message || 'Sipariş oluşturulurken bir hata oluştu')
     } finally {
       setIsSubmitting(false)
     }
@@ -309,6 +314,7 @@ export default function CheckoutPage() {
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="ornek@domain.com"
+                    required={!safeLocalStorage.getItem('token')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="text-xs text-gray-500 mt-1">
