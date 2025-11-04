@@ -196,6 +196,16 @@ export default function CheckoutPage() {
       }
 
       const order = await response.json()
+
+      // Persist guest identity for payment page if not logged in
+      if (!token) {
+        try {
+          localStorage.setItem('userEmail', customerEmail)
+          localStorage.setItem('userName', `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim())
+          localStorage.setItem('userPhone', shippingAddress.phone || '')
+        } catch {}
+      }
+      
       router.push(`/payment/${order.id}`)
     } catch (error: any) {
       console.error('Error creating order:', error)
