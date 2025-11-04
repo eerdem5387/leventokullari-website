@@ -52,6 +52,8 @@ export default function PaymentPage() {
   const [expiryYear, setExpiryYear] = useState('')
   const [cvv, setCvv] = useState('')
 
+  const provider = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || 'mock'
+
   useEffect(() => {
     fetchOrder()
   }, [orderId])
@@ -233,7 +235,7 @@ export default function PaymentPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center mb-6">
               <CreditCard className="h-6 w-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-semibold text-gray-900">Kredi Kartı Bilgileri</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{provider === 'ziraat' ? 'Kredi Kartı Bilgileri' : 'Kredi Kartı Bilgileri (Test)'}</h2>
             </div>
 
             {error && (
@@ -246,11 +248,37 @@ export default function PaymentPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <CreditCard className="h-5 w-5 text-blue-600 mr-2" />
-                  <h3 className="text-sm font-medium text-blue-800">Ziraat Sanal POS</h3>
+                  <h3 className="text-sm font-medium text-blue-800">{provider === 'ziraat' ? 'Ziraat Sanal POS' : 'Test Ödeme Sistemi'}</h3>
                 </div>
                 <p className="text-sm text-blue-700 mt-2">
-                  Güvenli ödeme için bankanın 3D Secure sayfasına yönlendirileceksiniz.
+                  {provider === 'ziraat' ? 'Güvenli ödeme için bankanın 3D Secure sayfasına yönlendirileceksiniz.' : 'Bu bir test ödeme akışıdır. Gerçek kart bilgisi gerektirmez.'}
                 </p>
+              </div>
+
+              {/* Card inputs (for test UI) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-700 mb-1">Kart Numarası</label>
+                  <input value={cardNumber} onChange={(e) => setCardNumber(formatCardNumber(e.target.value))} placeholder="4242 4242 4242 4242" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Ad Soyad</label>
+                  <input value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} placeholder="Ad Soyad" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Ay</label>
+                    <input value={expiryMonth} onChange={(e) => setExpiryMonth(e.target.value)} placeholder="12" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Yıl</label>
+                    <input value={expiryYear} onChange={(e) => setExpiryYear(e.target.value)} placeholder="29" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">CVV</label>
+                    <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                </div>
               </div>
 
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -280,7 +308,9 @@ export default function PaymentPage() {
                       customerPhone: localStorage.getItem('userPhone') || ''
                     }
 
-                    const res = await fetch('/api/payment/ziraat', {
+                    const endpoint = provider === 'ziraat' ? '/api/payment/ziraat' : '/api/payment/mock'
+
+                    const res = await fetch(endpoint, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -310,7 +340,7 @@ export default function PaymentPage() {
                 ) : (
                   <>
                     <Lock className="h-5 w-5 mr-2" />
-                    Ziraat ile Öde
+                    {provider === 'ziraat' ? 'Ziraat ile Öde' : 'Ödemeyi Tamamla (Test)'}
                   </>
                 )}
               </button>
