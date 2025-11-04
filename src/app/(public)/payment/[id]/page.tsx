@@ -246,11 +246,10 @@ export default function PaymentPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <CreditCard className="h-5 w-5 text-blue-600 mr-2" />
-                  <h3 className="text-sm font-medium text-blue-800">Mock Ödeme Sistemi (Test)</h3>
+                  <h3 className="text-sm font-medium text-blue-800">Ziraat Sanal POS</h3>
                 </div>
                 <p className="text-sm text-blue-700 mt-2">
-                  Bu bir test ödeme sistemidir. Gerçek kart bilgileri kullanılmaz. 
-                  Ödeme işlemi simüle edilecektir.
+                  Güvenli ödeme için bankanın 3D Secure sayfasına yönlendirileceksiniz.
                 </p>
               </div>
 
@@ -268,11 +267,41 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-                      <button
-          onClick={handleSubmit}
-          disabled={isProcessing || !order || !order.finalAmount}
-          className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
+              <button
+                onClick={async () => {
+                  try {
+                    setIsProcessing(true)
+                    const token = localStorage.getItem('token')
+                    const payload = {
+                      orderId,
+                      amount: order.finalAmount ? Number(order.finalAmount) : 0,
+                      customerEmail: localStorage.getItem('userEmail') || '',
+                      customerName: localStorage.getItem('userName') || '',
+                      customerPhone: localStorage.getItem('userPhone') || ''
+                    }
+
+                    const res = await fetch('/api/payment/ziraat', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                      },
+                      body: JSON.stringify(payload)
+                    })
+                    const data = await res.json()
+                    if (!res.ok || !data.success || !data.redirectUrl) {
+                      throw new Error(data.error || 'Ödeme başlatılamadı')
+                    }
+                    window.location.href = data.redirectUrl
+                  } catch (err: any) {
+                    setError(err?.message || 'Ödeme başlatılamadı')
+                  } finally {
+                    setIsProcessing(false)
+                  }
+                }}
+                disabled={isProcessing || !order || !order.finalAmount}
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
                 {isProcessing ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
@@ -281,7 +310,7 @@ export default function PaymentPage() {
                 ) : (
                   <>
                     <Lock className="h-5 w-5 mr-2" />
-                    Mock Ödeme ile Test Et
+                    Ziraat ile Öde
                   </>
                 )}
               </button>
