@@ -9,18 +9,21 @@ export default function HeaderWrapper() {
 
   useEffect(() => {
     const fetchSettings = async () => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3000)
       try {
-        const response = await fetch('/api/settings')
+        const response = await fetch('/api/settings', { signal: controller.signal })
         if (response.ok) {
           const data = await response.json()
-          const siteNameSetting = data.find((setting: any) => setting.key === 'general.siteName')
+          const siteNameSetting = (data?.general && data.general.siteName) || null
           if (siteNameSetting) {
-            setSiteName(siteNameSetting.value)
+            setSiteName(siteNameSetting)
           }
         }
       } catch (error) {
-        console.error('Error fetching header settings:', error)
+        // silent fallback
       } finally {
+        clearTimeout(timeout)
         setIsLoading(false)
       }
     }

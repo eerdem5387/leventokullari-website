@@ -3,64 +3,89 @@ import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/products/ProductDetailClient'
 import ProductCard from '@/components/products/ProductCard'
 
+export const revalidate = 120
+
 interface ProductPageProps {
   params: Promise<{
     slug: string
   }>
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms)
+    promise
+      .then((value) => {
+        clearTimeout(timer)
+        resolve(value)
+      })
+      .catch(() => {
+        clearTimeout(timer)
+        resolve(fallback)
+      })
+  })
+}
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
   
   // Direct database access - Server-side optimization
-  const productData = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      category: true,
-      variations: {
-        include: {
-          attributes: {
-            include: {
-              attributeValue: true
+  const productData = await withTimeout(
+    prisma.product.findUnique({
+      where: { slug },
+      include: {
+        category: true,
+        variations: {
+          include: {
+            attributes: {
+              include: {
+                attributeValue: true
+              }
             }
           }
-        }
-      },
-      reviews: {
-        include: {
-          user: {
-            select: { name: true }
-          }
         },
-        where: { isApproved: true },
-        orderBy: { createdAt: 'desc' }
-      },
-      _count: {
-        select: { reviews: true }
+        reviews: {
+          include: {
+            user: {
+              select: { name: true }
+            }
+          },
+          where: { isApproved: true },
+          orderBy: { createdAt: 'desc' }
+        },
+        _count: {
+          select: { reviews: true }
+        }
       }
-    }
-  })
+    }),
+    5000,
+    null
+  )
 
   if (!productData || !productData.isActive) {
     notFound()
   }
 
   // Fetch similar products from the same category
-  const similarProductsData = await prisma.product.findMany({
-    where: {
-      categoryId: productData.categoryId,
-      id: { not: productData.id },
-      isActive: true
-    },
-    include: {
-      category: true,
-      _count: {
-        select: { reviews: true }
-      }
-    },
-    take: 4,
-    orderBy: { createdAt: 'desc' }
-  })
+  const similarProductsData = await withTimeout(
+    prisma.product.findMany({
+      where: {
+        categoryId: productData.categoryId,
+        id: { not: productData.id },
+        isActive: true
+      },
+      include: {
+        category: true,
+        _count: {
+          select: { reviews: true }
+        }
+      },
+      take: 4,
+      orderBy: { createdAt: 'desc' }
+    }),
+    5000,
+    [] as any[]
+  )
 
   // Convert Decimal to Number for client compatibility
   const product = {

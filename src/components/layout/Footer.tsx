@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'                                               
 
 // Client-side settings fetch
 function useFooterSettings() {
@@ -19,37 +19,30 @@ function useFooterSettings() {
 
   useEffect(() => {
     const fetchSettings = async () => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3000)
       try {
-        const response = await fetch('/api/settings')
+        const response = await fetch('/api/settings', { signal: controller.signal })
         if (response.ok) {
           const data = await response.json()
-          const settingsMap: Record<string, any> = {}
-          
-          data.forEach((setting: any) => {
-            const keyParts = setting.key.split('.')
-            const category = keyParts[0]
-            const field = keyParts[1]
-            
-            if (!settingsMap[category]) {
-              settingsMap[category] = {}
-            }
-            
-            settingsMap[category][field] = setting.value
-          })
+          const general = data?.general || {}
+          const social = data?.social || {}
 
           setSettings({
-            siteName: settingsMap.general?.siteName || 'Levent Kolej',
-            siteDescription: settingsMap.general?.siteDescription || 'Levent Kolej, Hizmet ve Satış Platformu',
-            phone: settingsMap.general?.contactPhone || '(0464) 217 15 55',
-            email: settingsMap.general?.contactEmail || 'info@leventokullari.com',
-            address: settingsMap.general?.address || 'Rize, Türkiye',
-            facebook: settingsMap.social?.facebook || '#',
-            twitter: settingsMap.social?.twitter || '#',
-            instagram: settingsMap.social?.instagram || 'rizelevent'
+            siteName: general.siteName || 'Levent Kolej',
+            siteDescription: general.siteDescription || 'Levent Kolej, Hizmet ve Satış Platformu',
+            phone: general.contactPhone || '(0464) 217 15 55',
+            email: general.contactEmail || 'info@leventokullari.com',
+            address: general.address || 'Rize, Türkiye',
+            facebook: social.facebook || '#',
+            twitter: social.twitter || '#',
+            instagram: social.instagram || 'rizelevent'
           })
         }
       } catch (error) {
-        console.log('Footer settings error:', error)
+        // silent fallback
+      } finally {
+        clearTimeout(timeout)
       }
     }
 

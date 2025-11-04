@@ -3,6 +3,8 @@ import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
 import Banner from '@/components/ui/Banner'
 
+export const revalidate = 60
+
 interface ProductsPageProps {
   searchParams: Promise<{
     category?: string
@@ -11,6 +13,21 @@ interface ProductsPageProps {
     maxPrice?: string
     page?: string
   }>
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms)
+    promise
+      .then((value) => {
+        clearTimeout(timer)
+        resolve(value)
+      })
+      .catch(() => {
+        clearTimeout(timer)
+        resolve(fallback)
+      })
+  })
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
@@ -51,51 +68,52 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     if (params.maxPrice) where.price.lte = parseFloat(params.maxPrice)
   }
 
-  // Fetch data in parallel - Server-side optimization
+  // Fetch data in parallel with timeout fallbacks (lighter includes)
   const [productsData, total, categories] = await Promise.all([
-    (prisma.product as any).findMany({
-      where,
-      include: {
-        category: true,
-        variations: {
-          include: {
-            attributes: {
-              include: {
-                attributeValue: true
-              }
-            }
-          }
+    withTimeout(
+      (prisma.product as any).findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          price: true,
+          comparePrice: true,
+          images: true,
+          productType: true,
+          stock: true,
+          category: { select: { name: true } },
+          _count: { select: { reviews: true } }
         },
-        _count: {
-          select: { reviews: true }
-        }
-      },
-      skip,
-      take: limit,
-      orderBy: [
-        { sortOrder: 'asc' },
-        { createdAt: 'desc' }
-      ]
-    }),
-    prisma.product.count({ where }),
-    prisma.category.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' }
-    })
+        skip,
+        take: limit,
+        orderBy: [
+          { sortOrder: 'asc' },
+          { createdAt: 'desc' }
+        ]
+      }),
+      5000,
+      [] as any[]
+    ),
+    withTimeout(prisma.product.count({ where }), 5000, 0),
+    withTimeout(
+      prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' }
+      }),
+      5000,
+      [] as any[]
+    )
   ])
 
   // Convert Decimal to Number for client compatibility
-  const products = productsData.map((product: any) => ({
+  const products = (productsData as any[]).map((product: any) => ({
     ...product,
     price: Number(product.price),
-    comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
-    variations: product.variations.map((variation: any) => ({
-      ...variation,
-      price: Number(variation.price)
-    }))
+    comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined
   }))
 
-  const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.ceil((total as number) / limit)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,7 +125,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Ürünler</h1>
           <p className="text-gray-600 mt-2">
-            {total} ürün bulundu
+            {total as number} ürün bulundu
           </p>
         </div>
 
@@ -115,7 +133,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {/* Filters Sidebar */}
           <div className="lg:w-64">
             <ProductFilters 
-              categories={categories}
+              categories={categories as any[]}
               currentCategory={params.category}
               currentSearch={params.search}
               currentMinPrice={params.minPrice}
@@ -184,8 +202,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             ) : (
               <div className="text-center py-12">
                 <div className="text-gray-500">
-                  <p className="text-lg font-medium">Ürün bulunamadı</p>
-                  <p className="mt-2">Arama kriterlerinizi değiştirmeyi deneyin.</p>
+                  <p className="text-lg font-medium">Ürünler yüklenemedi veya bulunamadı</p>
+                  <p className="mt-2">Lütfen kısa bir süre sonra tekrar deneyin.</p>
                 </div>
               </div>
             )}
