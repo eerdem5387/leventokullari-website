@@ -36,9 +36,6 @@ export function middleware(request: NextRequest) {
         ].join('; ')
     )
 
-    // Admin route protection - JWT token kontrolü client-side'da yapılıyor
-    // Middleware'de sadece güvenlik header'ları ekliyoruz
-
     // Rate limiting for API routes
     if (pathname.startsWith('/api/')) {
         const ip = request.headers.get('x-forwarded-for') ||
@@ -78,13 +75,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - public folder
-         */
-        '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+        '/api/:path*',
+        '/admin/:path*'
     ],
 } 

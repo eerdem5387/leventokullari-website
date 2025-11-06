@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
 import Banner from '@/components/ui/Banner'
+import { Suspense } from 'react'
 
 export const revalidate = 60
 
@@ -28,6 +29,52 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
         resolve(fallback)
       })
   })
+}
+
+// Critical: Products data (must load fast)
+async function getProducts(where: any, skip: number, limit: number) {
+  return withTimeout(
+    (prisma.product as any).findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        comparePrice: true,
+        images: true,
+        productType: true,
+        stock: true,
+        category: { select: { name: true } },
+        _count: { select: { reviews: true } }
+      },
+      skip,
+      take: limit,
+      orderBy: [
+        { sortOrder: 'asc' },
+        { createdAt: 'desc' }
+      ]
+    }),
+    2000, // Reduced timeout: 2 seconds
+    [] as any[]
+  )
+}
+
+// Non-critical: Total count (can load later)
+async function getTotal(where: any) {
+  return withTimeout(prisma.product.count({ where }), 2000, 0)
+}
+
+// Non-critical: Categories (can load later)
+async function getCategories() {
+  return withTimeout(
+    prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' }
+    }),
+    2000,
+    [] as any[]
+  )
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
@@ -68,52 +115,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     if (params.maxPrice) where.price.lte = parseFloat(params.maxPrice)
   }
 
-  // Fetch data in parallel with timeout fallbacks (lighter includes)
-  const [productsData, total, categories] = await Promise.all([
-    withTimeout(
-      (prisma.product as any).findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          price: true,
-          comparePrice: true,
-          images: true,
-          productType: true,
-          stock: true,
-          category: { select: { name: true } },
-          _count: { select: { reviews: true } }
-        },
-        skip,
-        take: limit,
-        orderBy: [
-          { sortOrder: 'asc' },
-          { createdAt: 'desc' }
-        ]
-      }),
-      5000,
-      [] as any[]
-    ),
-    withTimeout(prisma.product.count({ where }), 5000, 0),
-    withTimeout(
-      prisma.category.findMany({
-        where: { isActive: true },
-        orderBy: { name: 'asc' }
-      }),
-      5000,
-      [] as any[]
-    )
-  ])
-
-  // Convert Decimal to Number for client compatibility
+  // CRITICAL: Load products immediately (blocking)
+  const productsData = await getProducts(where, skip, limit)
   const products = (productsData as any[]).map((product: any) => ({
     ...product,
     price: Number(product.price),
     comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined
   }))
 
-  const totalPages = Math.ceil((total as number) / limit)
+  // NON-CRITICAL: Load total and categories in parallel (non-blocking with Suspense)
+  const totalPromise = getTotal(where)
+  const categoriesPromise = getCategories()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,24 +136,26 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Ürünler</h1>
-          <p className="text-gray-600 mt-2">
-            {total as number} ürün bulundu
-          </p>
+          <Suspense fallback={<p className="text-gray-600 mt-2">Yükleniyor...</p>}>
+            <ProductCount totalPromise={totalPromise} />
+          </Suspense>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
+          {/* Filters Sidebar - Non-critical, load with Suspense */}
           <div className="lg:w-64">
-            <ProductFilters 
-              categories={categories as any[]}
-              currentCategory={params.category}
-              currentSearch={params.search}
-              currentMinPrice={params.minPrice}
-              currentMaxPrice={params.maxPrice}
-            />
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
+              <ProductFiltersWrapper 
+                categoriesPromise={categoriesPromise}
+                currentCategory={params.category}
+                currentSearch={params.search}
+                currentMinPrice={params.minPrice}
+                currentMaxPrice={params.maxPrice}
+              />
+            </Suspense>
           </div>
 
-          {/* Products Grid */}
+          {/* Products Grid - Critical, render immediately */}
           <div className="flex-1">
             {products.length > 0 ? (
               <>
@@ -151,53 +165,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center">
-                    <nav className="flex items-center space-x-2">
-                      {page > 1 && (
-                        <a
-                          href={`/products?${new URLSearchParams({
-                            ...params,
-                            page: (page - 1).toString()
-                          })}`}
-                          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
-                          Önceki
-                        </a>
-                      )}
-                      
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                        <a
-                          key={pageNum}
-                          href={`/products?${new URLSearchParams({
-                            ...params,
-                            page: pageNum.toString()
-                          })}`}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                            pageNum === page
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {pageNum}
-                        </a>
-                      ))}
-                      
-                      {page < totalPages && (
-                        <a
-                          href={`/products?${new URLSearchParams({
-                            ...params,
-                            page: (page + 1).toString()
-                          })}`}
-                          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
-                          Sonraki
-                        </a>
-                      )}
-                    </nav>
-                  </div>
-                )}
+                {/* Pagination - Non-critical, load with Suspense */}
+                <Suspense fallback={<div className="mt-8 h-10 bg-gray-100 rounded-lg animate-pulse" />}>
+                  <Pagination 
+                    totalPromise={totalPromise}
+                    page={page}
+                    params={params}
+                    limit={limit}
+                  />
+                </Suspense>
               </>
             ) : (
               <div className="text-center py-12">
@@ -210,6 +186,101 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Suspense components for non-critical data
+async function ProductCount({ totalPromise }: { totalPromise: Promise<number> }) {
+  const total = await totalPromise
+  return <p className="text-gray-600 mt-2">{total} ürün bulundu</p>
+}
+
+async function ProductFiltersWrapper({ 
+  categoriesPromise, 
+  currentCategory, 
+  currentSearch, 
+  currentMinPrice, 
+  currentMaxPrice 
+}: { 
+  categoriesPromise: Promise<any[]>
+  currentCategory?: string
+  currentSearch?: string
+  currentMinPrice?: string
+  currentMaxPrice?: string
+}) {
+  const categories = await categoriesPromise
+  return (
+    <ProductFilters 
+      categories={categories}
+      currentCategory={currentCategory}
+      currentSearch={currentSearch}
+      currentMinPrice={currentMinPrice}
+      currentMaxPrice={currentMaxPrice}
+    />
+  )
+}
+
+async function Pagination({ 
+  totalPromise, 
+  page, 
+  params, 
+  limit 
+}: { 
+  totalPromise: Promise<number>
+  page: number
+  params: any
+  limit: number
+}) {
+  const total = await totalPromise
+  const totalPages = Math.ceil(total / limit)
+  
+  if (totalPages <= 1) return null
+  
+  return (
+    <div className="mt-8 flex justify-center">
+      <nav className="flex items-center space-x-2">
+        {page > 1 && (
+          <a
+            href={`/products?${new URLSearchParams({
+              ...params,
+              page: (page - 1).toString()
+            })}`}
+            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Önceki
+          </a>
+        )}
+        
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+          <a
+            key={pageNum}
+            href={`/products?${new URLSearchParams({
+              ...params,
+              page: pageNum.toString()
+            })}`}
+            className={`px-3 py-2 text-sm font-medium rounded-lg ${
+              pageNum === page
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            {pageNum}
+          </a>
+        ))}
+        
+        {page < totalPages && (
+          <a
+            href={`/products?${new URLSearchParams({
+              ...params,
+              page: (page + 1).toString()
+            })}`}
+            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Sonraki
+          </a>
+        )}
+      </nav>
     </div>
   )
 } 

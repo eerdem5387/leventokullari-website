@@ -1,8 +1,5 @@
 'use client'
 
-// KALICI ÇÖZÜM: Static generation'ı kapat
-export const dynamic = 'force-dynamic'
-
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { CreditCard, Lock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'

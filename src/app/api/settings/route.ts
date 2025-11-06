@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-export const dynamic = 'force-dynamic'
 import { z } from 'zod'
 
 const updateSettingsSchema = z.object({
@@ -15,23 +13,17 @@ const updateSettingsSchema = z.object({
 
 export async function GET(request: NextRequest) {
     try {
-        console.log('Settings API called')
-
         const { searchParams } = new URL(request.url)
         const category = searchParams.get('category')
 
         const where = category ? { category } : {}
-        console.log('Where clause:', where)
 
         const settings = await prisma.settings.findMany({
             where,
             orderBy: { category: 'asc' }
-        }).catch((error) => {
-            console.log('Settings table not found, returning empty array')
+        }).catch(() => {
             return []
         })
-
-        console.log('Found settings:', settings.length)
 
         // Ayarları kategorilere göre grupla
         const groupedSettings = settings.reduce((acc, setting) => {
@@ -61,11 +53,11 @@ export async function GET(request: NextRequest) {
             return acc
         }, {} as Record<string, any>)
 
-        console.log('Grouped settings:', groupedSettings)
-
-        return NextResponse.json(groupedSettings)
+        const res = NextResponse.json(groupedSettings)
+        // CDN cache: 5 dakika, SWR 1 gün
+        res.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=86400')
+        return res
     } catch (error) {
-        console.error('Error fetching settings:', error)
         return NextResponse.json({ error: 'Ayarlar getirilirken bir hata oluştu' }, { status: 500 })
     }
 }
@@ -101,9 +93,8 @@ export async function PUT(request: NextRequest) {
         })
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Geçersiz veri formatı', details: error.issues }, { status: 400 })
+            return NextResponse.json({ error: 'Geçersiz veri formatı', details: (error as any).issues }, { status: 400 })
         }
-        console.error('Error updating settings:', error)
         return NextResponse.json({ error: 'Ayarlar güncellenirken bir hata oluştu' }, { status: 500 })
     }
 } 

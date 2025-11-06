@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import ProductCard from '@/components/products/ProductCard'
 import Link from 'next/link'
 
+export const revalidate = 120
+
 interface CategoryPageProps {
   params: Promise<{
     slug: string
