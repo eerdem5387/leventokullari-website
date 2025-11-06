@@ -32,6 +32,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 // Critical: Products data (must load fast)
+// OPTIMIZATION: Removed _count to avoid subqueries, will fetch separately if needed
 async function getProducts(where: any, skip: number, limit: number) {
   return withTimeout(
     (prisma.product as any).findMany({
@@ -45,8 +46,8 @@ async function getProducts(where: any, skip: number, limit: number) {
         images: true,
         productType: true,
         stock: true,
-        category: { select: { name: true } },
-        _count: { select: { reviews: true } }
+        category: { select: { name: true } }
+        // REMOVED: _count to avoid slow subqueries - saves ~12 subqueries per page load
       },
       skip,
       take: limit,
