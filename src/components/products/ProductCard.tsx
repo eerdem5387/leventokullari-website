@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Star, ShoppingCart, Search } from 'lucide-react'
+import { ShoppingCart, Search } from 'lucide-react'
 import { safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
 interface ProductCardProps {
@@ -15,9 +15,6 @@ interface ProductCardProps {
     images: string[]
     category?: {
       name: string
-    }
-    _count: {
-      reviews: number
     }
     productType: 'SIMPLE' | 'VARIABLE'
   }
@@ -149,17 +146,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
         )}
-        
-        <div className="flex items-center mb-4">
-          <div className="flex text-yellow-400">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} className="h-4 w-4 fill-current" />
-            ))}
-          </div>
-          <span className="text-sm text-gray-600 ml-2 font-medium">
-            ({product._count.reviews} değerlendirme)
-          </span>
-        </div>
         
         <div className="space-y-4">
           <div>

@@ -94,11 +94,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             slug: true
           }
         },
-        _count: {
-          select: {
-            reviews: true
-          }
-        }
         // REMOVED: variations, attributes - saves massive query time
       },
       skip,

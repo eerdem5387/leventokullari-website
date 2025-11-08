@@ -49,7 +49,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     }
 
     // OPTIMIZATION: Load all data in parallel with error handling
-    const [variationsResult, reviewsResult, similarProductsResult] = await Promise.allSettled([
+    const [variationsResult, similarProductsResult] = await Promise.allSettled([
       // Load variations (only if product has variations)
       productData.productType === 'VARIABLE' 
         ? prisma.productVariation.findMany({
@@ -80,25 +80,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           })
         : Promise.resolve([]),
       
-      // Load reviews (limit to 10 most recent)
-      prisma.review.findMany({
-        where: { 
-          productId: productData.id,
-          isApproved: true 
-        },
-        select: {
-          id: true,
-          rating: true,
-          comment: true,
-          createdAt: true,
-          user: {
-            select: { name: true }
-          }
-        },
-        take: 10,
-        orderBy: { createdAt: 'desc' }
-      }),
-      
       // Fetch similar products (lazy load - can be moved to client side if needed)
       productData.categoryId
         ? prisma.product.findMany({
@@ -122,11 +103,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
               name: true,
               slug: true
             }
-          },
-          _count: {
-            select: {
-              reviews: true
-            }
           }
         },
         take: 4,
@@ -137,15 +113,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     // Extract data from results, handling errors gracefully
     const variationsData = variationsResult.status === 'fulfilled' ? variationsResult.value : []
-    const reviewsData = reviewsResult.status === 'fulfilled' ? reviewsResult.value : []
     const similarProductsData = similarProductsResult.status === 'fulfilled' ? similarProductsResult.value : []
 
     // Log errors if any (but don't fail the page)
     if (variationsResult.status === 'rejected') {
       console.error('Error loading variations:', variationsResult.reason)
-    }
-    if (reviewsResult.status === 'rejected') {
-      console.error('Error loading reviews:', reviewsResult.reason)
     }
     if (similarProductsResult.status === 'rejected') {
       console.error('Error loading similar products:', similarProductsResult.reason)
@@ -177,17 +149,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             : []
         }))
       : [],
-    reviews: Array.isArray(reviewsData) 
-      ? reviewsData.map((review: any) => ({
-          ...review,
-          createdAt: review.createdAt instanceof Date 
-            ? review.createdAt 
-            : new Date(review.createdAt)
-        }))
-      : [],
-    _count: {
-      reviews: Array.isArray(reviewsData) ? reviewsData.length : 0
-    }
+    reviews: []
   }
 
   const similarProducts = Array.isArray(similarProductsData)
@@ -197,7 +159,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           ...p,
           price: Number(p.price) || 0,
           comparePrice: p.comparePrice ? Number(p.comparePrice) : undefined,
-          _count: p._count || { reviews: 0 },
           category: p.category || { name: '', slug: '', id: '' }
         }))
     : []

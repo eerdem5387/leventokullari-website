@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Star, ShoppingCart, Heart, Share2, ChevronDown } from 'lucide-react'
+import { ShoppingCart, Heart, Share2, ChevronDown } from 'lucide-react'
 import { safeSessionStorage, safeWindow, safeDocument, isClient } from '@/lib/browser-utils'
 
 interface ProductDetailClientProps {
@@ -34,15 +34,6 @@ interface ProductDetailClientProps {
           value: string
         }
       }>
-    }>
-    reviews: Array<{
-      id: string
-      rating: number
-      comment: string | null
-      user: {
-        name: string
-      }
-      createdAt: Date
     }>
   }
 }
@@ -265,10 +256,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     }
   }, [])
 
-  const averageRating = product.reviews.length > 0 
-    ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length 
-    : 0
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -318,21 +305,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             {product.category && (
               <p className="text-lg text-gray-600">{product.category.name}</p>
             )}
-          </div>
-
-          {/* Rating */}
-          <div className="flex items-center space-x-2">
-            <div className="flex text-yellow-400">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`h-5 w-5 ${star <= averageRating ? 'fill-current' : ''}`}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-gray-600">
-              ({product.reviews.length} değerlendirme)
-            </span>
           </div>
 
           {/* Price */}
@@ -605,37 +577,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         </div>
       </div>
 
-      {/* Reviews Section */}
-      {product.reviews.length > 0 && (
-        <div className="border-t p-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">
-            Müşteri Değerlendirmeleri ({product.reviews.length})
-          </h3>
-          <div className="space-y-6">
-            {product.reviews.map((review) => (
-              <div key={review.id} className="border-b pb-6 last:border-b-0">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex text-yellow-400">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-4 w-4 ${star <= review.rating ? 'fill-current' : ''}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">{review.user.name}</span>
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {new Date(review.createdAt).toLocaleDateString('tr-TR')}
-                  </span>
-                </div>
-                <p className="text-gray-600">{review.comment}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 } 
