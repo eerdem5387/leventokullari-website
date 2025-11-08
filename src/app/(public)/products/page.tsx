@@ -6,8 +6,6 @@ interface ProductsPageProps {
   searchParams: Promise<{
     category?: string
     search?: string
-    minPrice?: string
-    maxPrice?: string
     page?: string
   }>
 }
@@ -15,10 +13,10 @@ interface ProductsPageProps {
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await searchParams
   const page = parseInt(params.page || '1')
-  const limit = 12
+  const limit = 8 // Reduced from 12 to 8 for better performance
   const skip = (page - 1) * limit
 
-  // Build filter conditions
+  // Build filter conditions - simplified (no price range)
   const where: {
     isActive: boolean
     category?: { slug: string }
@@ -27,7 +25,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       description?: { contains: string; mode: 'insensitive' }
       sku?: { contains: string; mode: 'insensitive' }
     }>
-    price?: { gte?: number; lte?: number }
   } = {
     isActive: true
   }
@@ -42,12 +39,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       { description: { contains: params.search, mode: 'insensitive' } },
       { sku: { contains: params.search, mode: 'insensitive' } }
     ]
-  }
-
-  if (params.minPrice || params.maxPrice) {
-    where.price = {}
-    if (params.minPrice) where.price.gte = parseFloat(params.minPrice)
-    if (params.maxPrice) where.price.lte = parseFloat(params.maxPrice)
   }
 
   // Fetch data in parallel - Server-side optimization
@@ -114,8 +105,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               categories={categories}
               currentCategory={params.category}
               currentSearch={params.search}
-              currentMinPrice={params.minPrice}
-              currentMaxPrice={params.maxPrice}
             />
           </div>
 
@@ -129,53 +118,37 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center">
-                    <nav className="flex items-center space-x-2">
-                      {page > 1 && (
-                        <a
-                          href={`/products?${new URLSearchParams({
-                            ...params,
-                            page: (page - 1).toString()
-                          })}`}
-                          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
-                          Önceki
-                        </a>
-                      )}
-                      
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                        <a
-                          key={pageNum}
-                          href={`/products?${new URLSearchParams({
-                            ...params,
-                            page: pageNum.toString()
-                          })}`}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                            pageNum === page
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {pageNum}
-                        </a>
-                      ))}
-                      
-                      {page < totalPages && (
-                        <a
-                          href={`/products?${new URLSearchParams({
-                            ...params,
-                            page: (page + 1).toString()
-                          })}`}
-                          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
-                          Sonraki
-                        </a>
-                      )}
-                    </nav>
-                  </div>
-                )}
+                {/* Simple Previous/Next Navigation */}
+                <div className="mt-8 flex justify-center items-center space-x-4">
+                  {page > 1 && (
+                    <a
+                      href={`/products?${new URLSearchParams({
+                        ...(params.category ? { category: params.category } : {}),
+                        ...(params.search ? { search: params.search } : {}),
+                        page: (page - 1).toString()
+                      })}`}
+                      className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      ← Önceki
+                    </a>
+                  )}
+                  
+                  <span className="text-sm text-gray-600">
+                    Sayfa {page} / {totalPages}
+                  </span>
+                  
+                  {page < totalPages && (
+                    <a
+                      href={`/products?${new URLSearchParams({
+                        ...(params.category ? { category: params.category } : {}),
+                        page: (page + 1).toString()
+                      })}`}
+                      className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Sonraki →
+                    </a>
+                  )}
+                </div>
               </>
             ) : (
               <div className="text-center py-12">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Filter, X } from 'lucide-react'
+import { Search, Filter } from 'lucide-react'
 
 interface ProductFiltersProps {
   categories: {
@@ -11,53 +11,27 @@ interface ProductFiltersProps {
   }[]
   currentCategory?: string
   currentSearch?: string
-  currentMinPrice?: string
-  currentMaxPrice?: string
 }
 
 export default function ProductFilters({
   categories,
   currentCategory,
-  currentSearch,
-  currentMinPrice,
-  currentMaxPrice
+  currentSearch
 }: ProductFiltersProps) {
   const [search, setSearch] = useState(currentSearch || '')
-  const [minPrice, setMinPrice] = useState(currentMinPrice || '')
-  const [maxPrice, setMaxPrice] = useState(currentMaxPrice || '')
-
-  const buildQueryString = (params: Record<string, string>) => {
-    const searchParams = new URLSearchParams()
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) searchParams.set(key, value)
-    })
-    return searchParams.toString()
-  }
 
   const handleSearch = () => {
-    const params = {
-      search,
-      minPrice,
-      maxPrice,
-      category: currentCategory || ''
-    }
-    const queryString = buildQueryString(params)
-    window.location.href = `/products?${queryString}`
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (currentCategory) params.set('category', currentCategory)
+    window.location.href = `/products?${params.toString()}`
   }
 
   const handleCategoryChange = (categorySlug: string) => {
-    const params = {
-      search,
-      minPrice,
-      maxPrice,
-      category: categorySlug
-    }
-    const queryString = buildQueryString(params)
-    window.location.href = `/products?${queryString}`
-  }
-
-  const clearFilters = () => {
-    window.location.href = '/products'
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (categorySlug) params.set('category', categorySlug)
+    window.location.href = `/products?${params.toString()}`
   }
 
   return (
@@ -78,6 +52,7 @@ export default function ProductFilters({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Ürün ara..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
@@ -91,7 +66,7 @@ export default function ProductFilters({
       </div>
 
       {/* Categories */}
-      <div className="mb-6">
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Kategoriler
         </label>
@@ -100,7 +75,7 @@ export default function ProductFilters({
             onClick={() => handleCategoryChange('')}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
               !currentCategory
-                ? 'bg-blue-100 text-blue-700'
+                ? 'bg-blue-100 text-blue-700 font-medium'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
@@ -112,7 +87,7 @@ export default function ProductFilters({
               onClick={() => handleCategoryChange(category.slug)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                 currentCategory === category.slug
-                  ? 'bg-blue-100 text-blue-700'
+                  ? 'bg-blue-100 text-blue-700 font-medium'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
@@ -121,46 +96,6 @@ export default function ProductFilters({
           ))}
         </div>
       </div>
-
-      {/* Price Range */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Fiyat Aralığı
-        </label>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Min Fiyat</label>
-            <input
-              type="number"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              placeholder="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Max Fiyat</label>
-            <input
-              type="number"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              placeholder="1000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Clear Filters */}
-      {(currentCategory || currentSearch || currentMinPrice || currentMaxPrice) && (
-        <button
-          onClick={clearFilters}
-          className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <X className="h-4 w-4 mr-2" />
-          Filtreleri Temizle
-        </button>
-      )}
     </div>
   )
-} 
+}
