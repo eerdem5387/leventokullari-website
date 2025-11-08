@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
+import { unstable_cache } from 'next/cache'
 
-export const revalidate = 60 // ISR: Cache for 60 seconds
+export const revalidate = 300 // ISR: Cache for 5 minutes (increased for better performance)
+export const dynamic = 'force-dynamic' // Force dynamic rendering for search params
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -45,6 +47,34 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   // CRITICAL OPTIMIZATION: Use select instead of include - only fetch what we need
   // Removed variations, attributes, _count - not needed for product listing
+  
+  // Cache categories (they don't change often)
+  const getCachedCategories = unstable_cache(
+    async () => {
+      return prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          slug: true
+        }
+      })
+    },
+    ['categories-active'],
+    { revalidate: 3600 } // Cache for 1 hour
+  )
+
+  // Create cache key for count query based on where clause
+  const countCacheKey = JSON.stringify(where)
+  const getCachedCount = unstable_cache(
+    async (whereClause: any) => {
+      return prisma.product.count({ where: whereClause })
+    },
+    ['products-count', countCacheKey],
+    { revalidate: 300 } // Cache for 5 minutes
+  )
+
   const [productsData, total, categories] = await Promise.all([
     (prisma.product as any).findMany({
       where,
@@ -63,8 +93,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             name: true,
             slug: true
           }
+        },
+        _count: {
+          select: {
+            reviews: true
+          }
         }
-        // REMOVED: variations, attributes, _count - saves massive query time
+        // REMOVED: variations, attributes - saves massive query time
       },
       skip,
       take: limit,
@@ -73,11 +108,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         { createdAt: 'desc' }
       ]
     }),
-    prisma.product.count({ where }),
-    prisma.category.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' }
-    })
+    // Use cached count for better performance
+    getCachedCount(where),
+    getCachedCategories()
   ])
 
   // Convert Decimal to Number for client compatibility

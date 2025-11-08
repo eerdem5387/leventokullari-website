@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/products/ProductDetailClient'
 import ProductCard from '@/components/products/ProductCard'
 
-export const revalidate = 120
+export const revalidate = 300 // Cache for 5 minutes
+export const dynamic = 'force-dynamic'
 
 interface ProductPageProps {
   params: Promise<{
@@ -11,64 +12,50 @@ interface ProductPageProps {
   }>
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(fallback), ms)
-    promise
-      .then((value) => {
-        clearTimeout(timer)
-        resolve(value)
-      })
-      .catch(() => {
-        clearTimeout(timer)
-        resolve(fallback)
-      })
-  })
-}
+// Removed withTimeout - using Promise.all for better performance
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
   
-  // CRITICAL OPTIMIZATION: Fetch only essential data first, variations later if needed
-  const productData = await withTimeout(
-    prisma.product.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        price: true,
-        comparePrice: true,
-        images: true,
-        productType: true,
-        stock: true,
-        sku: true,
-        isActive: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true
-          }
-        },
-        categoryId: true
-        // REMOVED: variations, reviews, _count - will load separately if needed
-      }
-    }),
-    2000, // Reduced timeout: 2 seconds
-    null
-  )
+  // CRITICAL OPTIMIZATION: Fetch product data first (no timeout for main query)
+  const productData = await prisma.product.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      price: true,
+      comparePrice: true,
+      images: true,
+      productType: true,
+      stock: true,
+      sku: true,
+      isActive: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true
+        }
+      },
+      categoryId: true
+    }
+  })
 
   if (!productData || !productData.isActive) {
     notFound()
   }
 
-  // Load variations separately (only if product has variations)
-  const variationsData = productData.productType === 'VARIABLE' 
-    ? await withTimeout(
-        prisma.productVariation.findMany({
-          where: { productId: productData.id },
+  // OPTIMIZATION: Load all data in parallel instead of sequential with timeouts
+  const [variationsData, reviewsData, similarProductsData] = await Promise.all([
+    // Load variations (only if product has variations)
+    productData.productType === 'VARIABLE' 
+      ? prisma.productVariation.findMany({
+          where: { 
+            productId: productData.id,
+            isActive: true 
+          },
           select: {
             id: true,
             price: true,
@@ -86,14 +73,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
               }
             }
           }
-        }),
-        2000,
-        []
-      )
-    : []
-
-  // Load reviews separately (limit to 10 most recent)
-  const reviewsData = await withTimeout(
+        })
+      : Promise.resolve([]),
+    
+    // Load reviews (limit to 10 most recent)
     prisma.review.findMany({
       where: { 
         productId: productData.id,
@@ -108,15 +91,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
           select: { name: true }
         }
       },
-      take: 10, // Limit to 10 reviews
+      take: 10,
       orderBy: { createdAt: 'desc' }
     }),
-    2000,
-    []
-  )
-
-  // Fetch similar products - OPTIMIZED: use select instead of include
-  const similarProductsData = await withTimeout(
+    
+    // Fetch similar products (lazy load - can be moved to client side if needed)
     prisma.product.findMany({
       where: {
         categoryId: productData.categoryId,
@@ -139,14 +118,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
             slug: true
           }
         }
-        // REMOVED: _count - not needed for listing
       },
       take: 4,
-      orderBy: { createdAt: 'desc' }
-    }),
-    2000,
-    [] as any[]
-  )
+      orderBy: { sortOrder: 'asc', createdAt: 'desc' }
+    })
+  ])
 
   // Convert Decimal to Number for client compatibility
   const product = {

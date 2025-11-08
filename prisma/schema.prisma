@@ -126,6 +126,10 @@ model Product {
   orderItems   OrderItem[]
   reviews      Review[]
 
+  // Performance indexes for common queries
+  @@index([isActive, categoryId, sortOrder])
+  @@index([isActive, sortOrder, createdAt])
+  @@index([categoryId, isActive])
   @@map("products")
 }
 

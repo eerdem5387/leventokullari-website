@@ -105,12 +105,15 @@ export default function ProductCard({ product }: ProductCardProps) {
               src={product.images[0]} 
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             <img
               src="/placeholder-product.svg"
               alt="Ürün görseli yok"
               className="w-full h-full object-cover opacity-60"
+              loading="lazy"
             />
           )}
           {/* Overlay */}
