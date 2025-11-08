@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
 
+export const revalidate = 60 // ISR: Cache for 60 seconds
+
 interface ProductsPageProps {
   searchParams: Promise<{
     category?: string
@@ -41,24 +43,28 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     ]
   }
 
-  // Fetch data in parallel - Server-side optimization
+  // CRITICAL OPTIMIZATION: Use select instead of include - only fetch what we need
+  // Removed variations, attributes, _count - not needed for product listing
   const [productsData, total, categories] = await Promise.all([
     (prisma.product as any).findMany({
       where,
-      include: {
-        category: true,
-        variations: {
-          include: {
-            attributes: {
-              include: {
-                attributeValue: true
-              }
-            }
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        comparePrice: true,
+        images: true,
+        productType: true,
+        stock: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
           }
-        },
-        _count: {
-          select: { reviews: true }
         }
+        // REMOVED: variations, attributes, _count - saves massive query time
       },
       skip,
       take: limit,
@@ -78,11 +84,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const products = productsData.map((product: any) => ({
     ...product,
     price: Number(product.price),
-    comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
-    variations: product.variations.map((variation: any) => ({
-      ...variation,
-      price: Number(variation.price)
-    }))
+    comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined
   }))
 
   const totalPages = Math.ceil(total / limit)
