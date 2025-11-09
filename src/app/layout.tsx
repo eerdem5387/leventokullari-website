@@ -15,14 +15,14 @@ const lexendDeca = Lexend_Deca({
 
 export const metadata: Metadata = {
   title: {
-    default: 'E-Ticaret Mağazası',
-    template: '%s | E-Ticaret Mağazası'
+    default: 'Levent Kolej Ürün Hizmeti',
+    template: '%s | Levent Kolej Ürün Hizmeti'
   },
   description: 'Modern ve güvenilir e-ticaret deneyimi. Kaliteli ürünler, hızlı teslimat ve müşteri memnuniyeti garantisi.',
   keywords: ['e-ticaret', 'online alışveriş', 'elektronik', 'giyim', 'ev', 'bahçe', 'spor'],
-  authors: [{ name: 'E-Ticaret Mağazası' }],
-  creator: 'E-Ticaret Mağazası',
-  publisher: 'E-Ticaret Mağazası',
+  authors: [{ name: 'Levent Kolej Ürün Hizmeti' }],
+  creator: 'Levent Kolej Ürün Hizmeti',
+  publisher: 'Levent Kolej Ürün Hizmeti',
   formatDetection: {
     email: false,
     address: false,
@@ -33,24 +33,21 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   icons: {
-    icon: [
-      { url: '/uploads/levent-akademik-logo.png', sizes: 'any' },
-      { url: '/icon.png', sizes: 'any' },
-    ],
-    apple: '/uploads/levent-akademik-logo.png',
-    shortcut: '/uploads/levent-akademik-logo.png',
+    icon: '/icon.png',
+    apple: '/icon.png',
+    shortcut: '/icon.png',
   },
   openGraph: {
     type: 'website',
     locale: 'tr_TR',
     url: 'https://ecommerce-store.com',
-    title: 'E-Ticaret Mağazası',
+    title: 'Levent Kolej Ürün Hizmeti',
     description: 'Modern ve güvenilir e-ticaret deneyimi. Kaliteli ürünler, hızlı teslimat ve müşteri memnuniyeti garantisi.',
-    siteName: 'E-Ticaret Mağazası',
+    siteName: 'Levent Kolej Ürün Hizmeti',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'E-Ticaret Mağazası',
+    title: 'Levent Kolej Ürün Hizmeti',
     description: 'Modern ve güvenilir e-ticaret deneyimi.',
   },
   robots: {

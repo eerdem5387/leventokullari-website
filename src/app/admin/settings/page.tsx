@@ -30,9 +30,14 @@ interface SettingsData {
     paypalClientId?: string
     paypalSecret?: string
     ziraatEnabled?: boolean
-    ziraatMerchantId?: string
-    ziraatPassword?: string
+    ziraatClientId?: string
+    ziraat3dUrl?: string
+    ziraatProvUsername?: string
     ziraatStoreKey?: string
+    ziraatStoreType?: string
+    ziraatTerminalId?: string
+    ziraatApiUrl?: string
+    ziraatProvPassword?: string
     ziraatTestMode?: boolean
   }
   shipping?: {
@@ -551,9 +556,9 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium text-gray-900">Ziraat Bankası Sanal POS</h4>
+              <div className="border rounded-lg p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h4 className="text-base sm:text-lg font-medium text-gray-900">Ziraat POS (3D Pay Hosting)</h4>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -564,56 +569,113 @@ export default function AdminSettingsPage() {
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Sol Sütun */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Merchant ID
+                      Merchant ID (ClientId)
                     </label>
                     <input
                       type="text"
-                      value={settings.payment?.ziraatMerchantId || ''}
-                      onChange={(e) => updateSetting('payment', 'ziraatMerchantId', e.target.value)}
+                      value={settings.payment?.ziraatClientId || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraatClientId', e.target.value)}
+                      placeholder="Merchant ID (ClientId)"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
+                  {/* Sağ Sütun */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Şifre
+                      Terminal ID
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.payment?.ziraatTerminalId || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraatTerminalId', e.target.value)}
+                      placeholder="Terminal ID"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
+                    />
+                  </div>
+                  {/* Sol Sütun */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      3D URL (est3Dgate)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.payment?.ziraat3dUrl || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraat3dUrl', e.target.value)}
+                      placeholder="3D URL (est3Dgate)"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
+                    />
+                  </div>
+                  {/* Sağ Sütun */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      API URL (/fim/api)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.payment?.ziraatApiUrl || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraatApiUrl', e.target.value)}
+                      placeholder="API URL (/fim/api)"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
+                    />
+                  </div>
+                  {/* Sol Sütun */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prov Kullanıcı Adı
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.payment?.ziraatProvUsername || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraatProvUsername', e.target.value)}
+                      placeholder="Prov Kullanıcı Adı"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
+                    />
+                  </div>
+                  {/* Sağ Sütun */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prov Şifre
                     </label>
                     <input
                       type="password"
-                      value={settings.payment?.ziraatPassword || ''}
-                      onChange={(e) => updateSetting('payment', 'ziraatPassword', e.target.value)}
+                      value={settings.payment?.ziraatProvPassword || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraatProvPassword', e.target.value)}
+                      placeholder="Prov Şifre"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
+                  {/* Sol Sütun */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Store Key
+                      Store Key (Mağaza Anahtarı)
                     </label>
                     <input
                       type="password"
                       value={settings.payment?.ziraatStoreKey || ''}
                       onChange={(e) => updateSetting('payment', 'ziraatStoreKey', e.target.value)}
+                      placeholder="Store Key (Mağaza Anahtarı)"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
+                  {/* Sol Sütun */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Test Modu
+                      Store Type (örn: 3d_pay_hosting)
                     </label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={settings.payment?.ziraatTestMode || false}
-                        onChange={(e) => updateSetting('payment', 'ziraatTestMode', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <input
+                      type="text"
+                      value={settings.payment?.ziraatStoreType || ''}
+                      onChange={(e) => updateSetting('payment', 'ziraatStoreType', e.target.value)}
+                      placeholder="Store Type (örn: 3d_pay_hosting)"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
+                    />
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-0 sm:flex sm:gap-2">
                   <button
                     onClick={handleTestZiraat}
                     disabled={isSaving}
@@ -624,7 +686,7 @@ export default function AdminSettingsPage() {
                   <button
                     onClick={handleTestMock}
                     disabled={isSaving}
-                    className="w-full sm:w-auto bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-2 mt-2 sm:mt-0 touch-manipulation min-h-[44px]"
+                    className="w-full sm:w-auto bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
                   >
                     Mock Ödeme Test Et
                   </button>

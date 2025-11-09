@@ -130,7 +130,7 @@ export default function AdminHeader() {
       <div className="flex justify-between items-center">
         <div className="flex-1 min-w-0">
           <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">Admin Panel</h1>
-          <p className="text-xs sm:text-sm text-gray-200 hidden sm:block">E-Mağaza Yönetim Paneli</p>
+          <p className="text-xs sm:text-sm text-gray-200 hidden sm:block">Levent Kolej Ürün Hizmeti Yönetim Paneli</p>
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">

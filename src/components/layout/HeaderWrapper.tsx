@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Header from './Header'
 
 export default function HeaderWrapper() {
-  const [siteName, setSiteName] = useState('E-Mağaza')
+  const [siteName, setSiteName] = useState('Levent Kolej Ürün Hizmeti')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function HeaderWrapper() {
   }, [])
 
   if (isLoading) {
-    return <Header siteName="E-Mağaza" />
+    return <Header siteName="Levent Kolej Ürün Hizmeti" />
   }
   
   return <Header siteName={siteName} />

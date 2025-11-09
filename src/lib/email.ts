@@ -156,7 +156,7 @@ class EmailService {
 
         <p>Siparişinizin durumunu takip etmek için <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}" style="color: #2563eb;">buraya tıklayın</a>.</p>
         
-        <p>Teşekkürler,<br>${this.settings?.fromName || 'E-Ticaret Mağazası'}</p>
+        <p>Teşekkürler,<br>${this.settings?.fromName || 'Levent Kolej Ürün Hizmeti'}</p>
       </div>
     `
 
@@ -248,7 +248,7 @@ class EmailService {
 
         <p>Siparişinizin detaylarını görmek için <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}" style="color: #2563eb;">buraya tıklayın</a>.</p>
         
-        <p>Teşekkürler,<br>${this.settings?.fromName || 'E-Ticaret Mağazası'}</p>
+        <p>Teşekkürler,<br>${this.settings?.fromName || 'Levent Kolej Ürün Hizmeti'}</p>
       </div>
     `
 

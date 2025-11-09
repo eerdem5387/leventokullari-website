@@ -10,7 +10,7 @@ interface HeaderProps {
   siteName?: string
 }
 
-export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
+export default function Header({ siteName = 'Levent Kolej Ürün Hizmeti' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const [cartItemCount, setCartItemCount] = useState(0)
