@@ -1,8 +1,5 @@
 'use client'
 
-// KALICI ÇÖZÜM: Static generation'ı kapat
-export const dynamic = 'force-dynamic'
-
 import { useState, useEffect } from 'react'
 import { User, Mail, Phone, MapPin, Edit, Save, X, LogOut, Package } from 'lucide-react'
 import Link from 'next/link'
