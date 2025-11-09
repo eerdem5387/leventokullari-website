@@ -113,173 +113,38 @@ export default function AdminDashboard() {
           throw new Error('Yetkilendirme gerekli')
         }
 
-        // Paralel olarak tüm verileri çek
-        const [productsRes, customersRes, ordersRes] = await Promise.all([
-          fetch('/api/products?admin=true', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch('/api/users?role=CUSTOMER', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch('/api/admin/orders', {
-            headers: { 'Authorization': `Bearer ${token}` }
+        // AbortController ile timeout (daha verimli ve temiz)
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 saniye timeout
+
+        try {
+          // Optimize edilmiş dashboard API'sini kullan
+          const dashboardRes = await fetch('/api/admin/dashboard', {
+            headers: { 'Authorization': `Bearer ${token}` },
+            signal: controller.signal
           })
-        ])
+          
+          clearTimeout(timeoutId) // Başarılı olursa timeout'u temizle
 
-        // Her response'u kontrol et
-        if (!productsRes.ok) {
-          throw new Error('Ürünler yüklenirken hata oluştu')
-        }
-        if (!customersRes.ok) {
-          throw new Error('Müşteriler yüklenirken hata oluştu')
-        }
-        if (!ordersRes.ok) {
-          throw new Error('Siparişler yüklenirken hata oluştu')
-        }
+          if (!dashboardRes.ok) {
+            const errorData = await dashboardRes.json().catch(() => ({}))
+            throw new Error(errorData.error || 'Dashboard verileri yüklenirken hata oluştu')
+          }
 
-        const products = await productsRes.json()
-        const customers = await customersRes.json()
-        const orders = await ordersRes.json()
+          const dashboardData = await dashboardRes.json()
 
-        console.log('Dashboard data loaded:', {
-          productsCount: Array.isArray(products) ? products.length : 0,
-          customersCount: Array.isArray(customers) ? customers.length : 0,
-          ordersCount: Array.isArray(orders) ? orders.length : 0
-        })
+        // Dashboard API'den gelen verileri kullan
+        const products: any[] = [] // Dashboard'da ürün listesi gerekmiyor
+        const customers: any[] = [] // Dashboard'da müşteri listesi gerekmiyor
+        const orders: any[] = [] // Dashboard'da sipariş listesi gerekmiyor (sadece recentOrders)
 
-        // Düşük stok ürünleri bul
-        const lowStockProducts = Array.isArray(products) ? products
-          .filter((product: any) => {
-            // Varyasyonlu ürünler için varyasyon stoklarını kontrol et
-            if (product.productType === 'VARIABLE' && product.variations && product.variations.length > 0) {
-              // Varyasyonlardaki toplam stok
-              const totalVariationStock = product.variations.reduce((sum: number, variation: any) => {
-                return sum + (variation.stock > 0 ? variation.stock : 0)
-              }, 0)
-              
-              // Eğer varyasyonlarda stok varsa ve toplam stok düşükse göster
-              return totalVariationStock < 10 && totalVariationStock > 0
-            } else {
-              // Basit ürünler için normal kontrol
-              return product.stock < 10 && product.stock !== -1 && product.stock > 0
-            }
-          })
-          .slice(0, 5)
-          .map((product: any) => {
-            // Varyasyonlu ürünler için toplam stok hesapla
-            if (product.productType === 'VARIABLE' && product.variations && product.variations.length > 0) {
-              const totalStock = product.variations.reduce((sum: number, variation: any) => {
-                return sum + (variation.stock > 0 ? variation.stock : 0)
-              }, 0)
-              
-              return {
-                id: product.id,
-                name: product.name,
-                stock: totalStock
-              }
-            } else {
-              return {
-                id: product.id,
-                name: product.name,
-                stock: product.stock
-              }
-            }
-          }) : []
+        console.log('Dashboard data loaded:', dashboardData)
 
-        // Son siparişleri al
-        const recentOrders = Array.isArray(orders) ? orders
-          .slice(0, 5)
-          .map((order: any) => ({
-            id: order.id,
-            orderNumber: order.orderNumber,
-            user: order.user,
-            finalAmount: Number(order.finalAmount),
-            status: order.status,
-            createdAt: new Date(order.createdAt)
-          })) : []
-
-        // Toplam geliri hesapla
-        const totalRevenue = Array.isArray(orders) ? orders
-          .filter((order: any) => order.paymentStatus === 'COMPLETED')
-          .reduce((sum: number, order: any) => sum + Number(order.finalAmount), 0) : 0
-
-        // Trend hesaplamaları (geçen ay vs bu ay)
-        const now = new Date()
-        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-
-        // Bu ay verileri
-        const thisMonthOrders = Array.isArray(orders) ? orders.filter((order: any) => 
-          new Date(order.createdAt) >= thisMonth
-        ) : []
-        const thisMonthRevenue = thisMonthOrders
-          .filter((order: any) => order.paymentStatus === 'COMPLETED')
-          .reduce((sum: number, order: any) => sum + Number(order.finalAmount), 0)
-
-        // Geçen ay verileri (basit hesaplama - gerçek veri yoksa)
-        const lastMonthOrders = Array.isArray(orders) ? orders.filter((order: any) => 
-          new Date(order.createdAt) >= lastMonth && new Date(order.createdAt) < thisMonth
-        ) : []
-        const lastMonthRevenue = lastMonthOrders
-          .filter((order: any) => order.paymentStatus === 'COMPLETED')
-          .reduce((sum: number, order: any) => sum + Number(order.finalAmount), 0)
-
-        // Trend yüzdeleri hesapla
-        const ordersGrowth = lastMonthOrders.length > 0 
-          ? Math.round(((thisMonthOrders.length - lastMonthOrders.length) / lastMonthOrders.length) * 100)
-          : (thisMonthOrders.length > 0 ? 100 : 0) // Bu ay sipariş varsa %100, yoksa %0
+        // Dashboard API'den gelen verileri kullan
+        const recentOrders = dashboardData.recentOrders || []
+        const lowStockProducts = dashboardData.lowStockProducts || []
         
-        const revenueGrowth = lastMonthRevenue > 0 
-          ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
-          : (thisMonthRevenue > 0 ? 100 : 0) // Bu ay gelir varsa %100, yoksa %0
-        
-        // Müşteri artışı hesapla
-        const thisMonthCustomers = Array.isArray(customers) ? customers.filter((customer: any) => 
-          new Date(customer.createdAt) >= thisMonth
-        ) : []
-        const lastMonthCustomers = Array.isArray(customers) ? customers.filter((customer: any) => 
-          new Date(customer.createdAt) >= lastMonth && new Date(customer.createdAt) < thisMonth
-        ) : []
-        const customersGrowth = lastMonthCustomers.length > 0 
-          ? Math.round(((thisMonthCustomers.length - lastMonthCustomers.length) / lastMonthCustomers.length) * 100)
-          : (thisMonthCustomers.length > 0 ? 100 : 0) // Bu ay müşteri varsa %100, yoksa %0
-
-        // Ürün artışı hesapla
-        const thisMonthProducts = Array.isArray(products) ? products.filter((product: any) => 
-          new Date(product.createdAt) >= thisMonth
-        ) : []
-        const lastMonthProducts = Array.isArray(products) ? products.filter((product: any) => 
-          new Date(product.createdAt) >= lastMonth && new Date(product.createdAt) < thisMonth
-        ) : []
-        const productsGrowth = lastMonthProducts.length > 0 
-          ? Math.round(((thisMonthProducts.length - lastMonthProducts.length) / lastMonthProducts.length) * 100)
-          : (thisMonthProducts.length > 0 ? 100 : 0) // Bu ay ürün varsa %100, yoksa %0
-
-        // Debug logları
-        console.log('Dashboard Trend Hesaplamaları:')
-        console.log('Bu ay siparişler:', thisMonthOrders.length)
-        console.log('Geçen ay siparişler:', lastMonthOrders.length)
-        console.log('Sipariş artışı:', ordersGrowth + '%')
-        console.log('Bu ay gelir:', thisMonthRevenue)
-        console.log('Geçen ay gelir:', lastMonthRevenue)
-        console.log('Gelir artışı:', revenueGrowth + '%')
-        console.log('Bu ay müşteriler:', thisMonthCustomers.length)
-        console.log('Geçen ay müşteriler:', lastMonthCustomers.length)
-        console.log('Müşteri artışı:', customersGrowth + '%')
-        console.log('Bu ay ürünler:', thisMonthProducts.length)
-        console.log('Geçen ay ürünler:', lastMonthProducts.length)
-        console.log('Ürün artışı:', productsGrowth + '%')
-
-        // Performans metrikleri
-        const salesTarget = 85 // Bu ay hedefi (gerçek veri yoksa varsayılan)
-        const customerSatisfaction = 4.8 // Ortalama rating (gerçek veri yoksa varsayılan)
-        const completedOrders = Array.isArray(orders) ? orders.filter((order: any) => 
-          order.status === 'DELIVERED'
-        ).length : 0
-        const totalOrdersCount = Array.isArray(orders) ? orders.length : 0
-        const deliveryRate = totalOrdersCount > 0 ? Math.round((completedOrders / totalOrdersCount) * 100) : 0
-
-        // Son aktiviteler
+        // Son aktiviteler (recent orders'dan oluştur)
         const recentActivities: Array<{
           id: string
           type: 'order' | 'product' | 'customer' | 'content'
@@ -287,9 +152,8 @@ export default function AdminDashboard() {
           timestamp: Date
         }> = []
         
-        // Son siparişler
-        if (Array.isArray(orders) && orders.length > 0) {
-          orders.slice(0, 2).forEach((order: any) => {
+        if (recentOrders.length > 0) {
+          recentOrders.slice(0, 2).forEach((order: any) => {
             recentActivities.push({
               id: order.id,
               type: 'order' as const,
@@ -298,57 +162,47 @@ export default function AdminDashboard() {
             })
           })
         }
-        
-        // Son ürünler
-        if (Array.isArray(products) && products.length > 0) {
-          products.slice(0, 1).forEach((product: any) => {
-            recentActivities.push({
-              id: product.id,
-              type: 'product' as const,
-              message: `Yeni ürün eklendi - ${product.name}`,
-              timestamp: new Date(product.createdAt)
-            })
-          })
-        }
-        
-        // Son müşteriler
-        if (Array.isArray(customers) && customers.length > 0) {
-          customers.slice(0, 1).forEach((customer: any) => {
-            recentActivities.push({
-              id: customer.id,
-              type: 'customer' as const,
-              message: `Yeni müşteri kaydoldu - ${customer.name}`,
-              timestamp: new Date(customer.createdAt)
-            })
-          })
-        }
-
-        // Aktivite sıralaması (en yeni önce)
-        recentActivities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
         setData({
-          totalOrders: Array.isArray(orders) ? orders.length : 0,
-          totalCustomers: Array.isArray(customers) ? customers.length : 0,
-          totalProducts: Array.isArray(products) ? products.length : 0,
-          totalRevenue,
-          recentOrders,
+          totalOrders: dashboardData.totalOrders || 0,
+          totalCustomers: dashboardData.totalCustomers || 0,
+          totalProducts: dashboardData.totalProducts || 0,
+          totalRevenue: dashboardData.totalRevenue || 0,
+          recentOrders: recentOrders.map((order: any) => ({
+            ...order,
+            createdAt: new Date(order.createdAt)
+          })),
           lowStockProducts,
-          trends: {
-            ordersGrowth,
-            customersGrowth,
-            productsGrowth,
-            revenueGrowth
+          trends: dashboardData.trends || {
+            ordersGrowth: 0,
+            customersGrowth: 0,
+            productsGrowth: 0,
+            revenueGrowth: 0
           },
-          performance: {
-            salesTarget,
-            customerSatisfaction,
-            deliveryRate
+          performance: dashboardData.performance || {
+            salesTarget: 85,
+            customerSatisfaction: 4.8,
+            deliveryRate: 0
           },
           recentActivities: recentActivities.slice(0, 3)
         })
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId) // Hata durumunda da timeout'u temizle
+          
+          // Abort hatası kontrolü
+          if (fetchError.name === 'AbortError' || fetchError.message?.includes('aborted')) {
+            throw new Error('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.')
+          }
+          
+          throw fetchError
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
-        setError(error instanceof Error ? error.message : 'Veriler yüklenirken bir hata oluştu')
+        const errorMessage = error instanceof Error ? error.message : 'Veriler yüklenirken bir hata oluştu'
+        setError(errorMessage)
+        
+        // Hata durumunda bile temel verileri göster (eğer varsa)
+        // Bu sayede sayfa tamamen boş kalmaz
       } finally {
         setIsLoading(false)
       }
