@@ -89,15 +89,40 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       })
     ])
 
-    // Handle errors gracefully
+    // Handle errors gracefully - don't throw, show empty state instead
+    let productsData: any[] = []
+    let total = 0
+    let categories: any[] = []
+    let hasDatabaseError = false
+    let errorMessage = ''
+
     if (productsResult.status === 'rejected') {
-      console.error('Error fetching products:', productsResult.reason)
-      throw new Error('Ürünler yüklenirken bir hata oluştu')
+      const error = productsResult.reason
+      console.error('Error fetching products:', error)
+      
+      // Check for database quota errors
+      if (error?.message?.includes('data transfer quota') || error?.message?.includes('quota')) {
+        hasDatabaseError = true
+        errorMessage = 'Veritabanı kotası aşıldı. Lütfen daha sonra tekrar deneyin.'
+      } else if (error?.code === 'P1001' || error?.code === 'P1008') {
+        hasDatabaseError = true
+        errorMessage = 'Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin.'
+      }
+    } else {
+      productsData = productsResult.value || []
     }
 
-    const productsData = productsResult.status === 'fulfilled' ? productsResult.value : []
-    const total = totalResult.status === 'fulfilled' ? totalResult.value : 0
-    const categories = categoriesResult.status === 'fulfilled' ? categoriesResult.value : []
+    if (totalResult.status === 'fulfilled') {
+      total = totalResult.value || 0
+    } else {
+      console.error('Error counting products:', totalResult.reason)
+    }
+
+    if (categoriesResult.status === 'fulfilled') {
+      categories = categoriesResult.value || []
+    } else {
+      console.error('Error fetching categories:', categoriesResult.reason)
+    }
 
     // Convert Decimal to Number for client compatibility
     const products = Array.isArray(productsData) ? productsData.map((product: any) => ({
@@ -115,10 +140,29 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {/* Page Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-            {total} ürün bulundu
-          </p>
+          {!hasDatabaseError && (
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+              {total} ürün bulundu
+            </p>
+          )}
         </div>
+
+        {/* Database Error Banner */}
+        {hasDatabaseError && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700 font-medium">{errorMessage || 'Veritabanı bağlantı sorunu'}</p>
+                <p className="mt-1 text-xs text-yellow-600">Lütfen birkaç dakika sonra tekrar deneyin.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
           {/* Filters Sidebar - Mobile: Hidden by default, can be toggled */}
@@ -176,8 +220,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             ) : (
               <div className="text-center py-12">
                 <div className="text-gray-500">
-                  <p className="text-lg font-medium">Ürün bulunamadı</p>
-                  <p className="mt-2">Arama kriterlerinizi değiştirmeyi deneyin.</p>
+                  {hasDatabaseError ? (
+                    <>
+                      <p className="text-lg font-medium">Ürünler şu anda yüklenemiyor</p>
+                      <p className="mt-2">Lütfen birkaç dakika sonra tekrar deneyin.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-lg font-medium">Ürün bulunamadı</p>
+                      <p className="mt-2">Arama kriterlerinizi değiştirmeyi deneyin.</p>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -186,9 +239,36 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       </div>
     </div>
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error('Products page error:', error)
-    // Re-throw to let Next.js error boundary handle it
+    
+    // Check for database quota errors
+    if (error?.message?.includes('data transfer quota') || error?.message?.includes('quota')) {
+      // Return error page instead of throwing
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-yellow-800">Veritabanı Kotası Aşıldı</h3>
+                  <p className="mt-2 text-sm text-yellow-700">
+                    Veritabanı transfer kotası aşıldı. Lütfen birkaç dakika sonra tekrar deneyin.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    
+    // For other errors, re-throw to let Next.js error boundary handle it
     throw error
   }
 }
