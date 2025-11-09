@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { CreditCard, Lock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
+import { CreditCard, Lock, CheckCircle, AlertCircle, ArrowLeft, User } from 'lucide-react'
 
 interface Order {
   id: string
@@ -211,83 +211,137 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => router.push('/checkout')}
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors font-medium"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Teslimat Bilgilerine Geri Dön
             </button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Ödeme</h1>
-          <p className="text-gray-600">Sipariş #{order.orderNumber}</p>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="bg-green-600 p-3 rounded-full">
+              <CreditCard className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Ödeme</h1>
+              <p className="text-gray-600 mt-1">Sipariş #{order.orderNumber}</p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Payment Form */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center mb-6">
-              <CreditCard className="h-6 w-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-semibold text-gray-900">{provider === 'ziraat' ? 'Kredi Kartı Bilgileri' : 'Kredi Kartı Bilgileri (Test)'}</h2>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+            <div className="flex items-center mb-6 pb-4 border-b border-gray-200">
+              <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                <CreditCard className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{provider === 'ziraat' ? 'Kredi Kartı Bilgileri' : 'Kredi Kartı Bilgileri (Test)'}</h2>
+                <p className="text-sm text-gray-500 mt-1">Güvenli ödeme işlemi</p>
+              </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
-                {error}
+              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+                <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
+                <p className="text-sm font-medium">{error}</p>
               </div>
             )}
 
             <div className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <CreditCard className="h-5 w-5 text-blue-600 mr-2" />
-                  <h3 className="text-sm font-medium text-blue-800">{provider === 'ziraat' ? 'Ziraat Sanal POS' : 'Test Ödeme Sistemi'}</h3>
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-5">
+                <div className="flex items-center mb-2">
+                  <Lock className="h-5 w-5 text-blue-600 mr-2" />
+                  <h3 className="text-sm font-bold text-blue-900">{provider === 'ziraat' ? 'Ziraat Sanal POS' : 'Test Ödeme Sistemi'}</h3>
                 </div>
-                <p className="text-sm text-blue-700 mt-2">
+                <p className="text-sm text-blue-800">
                   {provider === 'ziraat' ? 'Güvenli ödeme için bankanın 3D Secure sayfasına yönlendirileceksiniz.' : 'Bu bir test ödeme akışıdır. Gerçek kart bilgisi gerektirmez.'}
                 </p>
               </div>
 
               {/* Card inputs (for test UI) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-700 mb-1">Kart Numarası</label>
-                  <input value={cardNumber} onChange={(e) => setCardNumber(formatCardNumber(e.target.value))} placeholder="4242 4242 4242 4242" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                </div>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Ad Soyad</label>
-                  <input value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} placeholder="Ad Soyad" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <CreditCard className="h-4 w-4 mr-1 text-gray-500" />
+                    Kart Numarası
+                  </label>
+                  <input 
+                    value={cardNumber} 
+                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))} 
+                    placeholder="4242 4242 4242 4242" 
+                    maxLength={19}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-lg tracking-wider" 
+                  />
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <User className="h-4 w-4 mr-1 text-gray-500" />
+                    Kart Üzerindeki İsim
+                  </label>
+                  <input 
+                    value={cardHolder} 
+                    onChange={(e) => setCardHolder(e.target.value.toUpperCase())} 
+                    placeholder="AD SOYAD" 
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all uppercase" 
+                  />
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-sm text-gray-700 mb-1">Ay</label>
-                    <input value={expiryMonth} onChange={(e) => setExpiryMonth(e.target.value)} placeholder="12" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Ay</label>
+                    <input 
+                      value={expiryMonth} 
+                      onChange={(e) => setExpiryMonth(e.target.value.replace(/\D/g, '').slice(0, 2))} 
+                      placeholder="12" 
+                      maxLength={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center" 
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-1">Yıl</label>
-                    <input value={expiryYear} onChange={(e) => setExpiryYear(e.target.value)} placeholder="29" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Yıl</label>
+                    <input 
+                      value={expiryYear} 
+                      onChange={(e) => setExpiryYear(e.target.value.replace(/\D/g, '').slice(0, 2))} 
+                      placeholder="29" 
+                      maxLength={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center" 
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-1">CVV</label>
-                    <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
+                    <input 
+                      type="password"
+                      value={cvv} 
+                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))} 
+                      placeholder="123" 
+                      maxLength={3}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center" 
+                    />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-800 mb-2">Ödeme Bilgileri</h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Toplam Tutar:</span>
-                    <span className="font-medium">₺{order.finalAmount.toLocaleString('tr-TR')}</span>
+              <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-5">
+                <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                  Ödeme Bilgileri
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Toplam Tutar:</span>
+                    <span className="font-bold text-lg text-blue-600">₺{order.finalAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Sipariş No:</span>
-                    <span className="font-medium">{order.orderNumber}</span>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="text-gray-600">Sipariş No:</span>
+                    <span className="font-semibold text-gray-900">{order.orderNumber}</span>
                   </div>
                 </div>
               </div>
@@ -296,6 +350,7 @@ export default function PaymentPage() {
                 onClick={async () => {
                   try {
                     setIsProcessing(true)
+                    setError('')
                     const token = localStorage.getItem('token')
                     const payload = {
                       orderId,
@@ -327,7 +382,7 @@ export default function PaymentPage() {
                   }
                 }}
                 disabled={isProcessing || !order || !order.finalAmount}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
               >
                 {isProcessing ? (
                   <>
@@ -343,17 +398,17 @@ export default function PaymentPage() {
               </button>
             </div>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center text-sm text-gray-600">
-                <Lock className="h-4 w-4 mr-2" />
-                <span>Ödeme bilgileriniz güvenli şekilde şifrelenerek işlenir.</span>
+            <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-100 rounded-xl">
+              <div className="flex items-center text-sm text-blue-800">
+                <Lock className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="font-medium">Ödeme bilgileriniz SSL ile şifrelenerek güvenli şekilde işlenir.</span>
               </div>
             </div>
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Sipariş Özeti</h2>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Sipariş Özeti</h2>
             
             {/* Order Items */}
             <div className="space-y-4 mb-6">

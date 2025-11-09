@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, Menu, X, ShoppingCart } from 'lucide-react'
+import { Search, Menu, X, ShoppingCart, User, LogIn, LogOut, Settings, Package } from 'lucide-react'
 import DynamicMenu from './DynamicMenu'
 import { safeLocalStorage, safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
 
@@ -14,10 +14,28 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const [cartItemCount, setCartItemCount] = useState(0)
+  const [user, setUser] = useState<any>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
     
+    // Kullanıcı bilgisini yükle
+    const loadUser = () => {
+      if (!isClient) return
+      const userStr = safeLocalStorage.getItem('user')
+      if (userStr) {
+        try {
+          setUser(JSON.parse(userStr))
+        } catch (error) {
+          console.error('User parse error:', error)
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
+    }
+
     // Sepet sayısını güncelle
     const updateCartCount = () => {
       const cart = safeLocalStorage.getItem('cart')
@@ -35,12 +53,15 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
       }
     }
 
+    loadUser()
     updateCartCount()
 
     // Storage değişikliklerini dinle
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'cart') {
         updateCartCount()
+      } else if (e.key === 'user' || e.key === 'token') {
+        loadUser()
       }
     }
 
@@ -48,12 +69,23 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
     
     // Custom event dinle (aynı tab içinde)
     window.addEventListener('cartUpdated', updateCartCount)
+    window.addEventListener('userUpdated', loadUser)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('cartUpdated', updateCartCount)
+      window.removeEventListener('userUpdated', loadUser)
     }
-  }, [])
+  }, [isClient])
+
+  const handleLogout = () => {
+    if (!isClient) return
+    safeLocalStorage.removeItem('token')
+    safeLocalStorage.removeItem('user')
+    setUser(null)
+    setUserMenuOpen(false)
+    safeWindow.location.href = '/'
+  }
 
   
 
@@ -102,7 +134,7 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                     <ul className="flex items-center space-x-4">
                       {/* Cart Icon */}
                       <li>
-                        <Link href="/checkout" className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        <Link href="/cart" className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                           <ShoppingCart className="h-6 w-6" />
                           {cartItemCount > 0 && (
                             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -111,6 +143,73 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                           )}
                         </Link>
                       </li>
+
+                      {/* User Menu */}
+                      {user ? (
+                        <li className="relative">
+                          <button
+                            onClick={() => setUserMenuOpen(!userMenuOpen)}
+                            className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                          >
+                            <User className="h-6 w-6" />
+                            <span className="ml-2 text-sm font-medium hidden sm:inline">{user.name}</span>
+                          </button>
+                          
+                          {/* Dropdown Menu */}
+                          {userMenuOpen && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={() => setUserMenuOpen(false)}
+                              />
+                              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                                <div className="px-4 py-3 border-b border-gray-200">
+                                  <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                </div>
+                                
+                                <Link
+                                  href="/profile"
+                                  onClick={() => setUserMenuOpen(false)}
+                                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                >
+                                  <User className="h-4 w-4 mr-3" />
+                                  Profilim
+                                </Link>
+                                
+                                <Link
+                                  href="/orders"
+                                  onClick={() => setUserMenuOpen(false)}
+                                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                >
+                                  <Package className="h-4 w-4 mr-3" />
+                                  Siparişlerim
+                                </Link>
+                                
+                                <div className="border-t border-gray-200 my-1" />
+                                
+                                <button
+                                  onClick={handleLogout}
+                                  className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <LogOut className="h-4 w-4 mr-3" />
+                                  Çıkış Yap
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </li>
+                      ) : (
+                        <li>
+                          <Link
+                            href="/login"
+                            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <LogIn className="h-5 w-5 mr-2" />
+                            <span className="hidden sm:inline">Giriş Yap</span>
+                          </Link>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </nav>
@@ -164,7 +263,7 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                     <ul className="space-y-4">
                       {/* Mobile Cart */}
                       <li>
-                        <Link href="/checkout" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <Link href="/cart" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <span className="flex items-center text-gray-700">
                             <ShoppingCart className="h-5 w-5 mr-3" />
                             Sepetim
@@ -176,6 +275,46 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                           )}
                         </Link>
                       </li>
+
+                      {/* Mobile User Menu */}
+                      {user ? (
+                        <>
+                          <li>
+                            <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              <User className="h-5 w-5 mr-3 text-gray-700" />
+                              <div className="flex-1">
+                                <p className="text-gray-900 font-medium">{user.name}</p>
+                                <p className="text-xs text-gray-500">Profilim</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              <Package className="h-5 w-5 mr-3 text-gray-700" />
+                              <span className="text-gray-700">Siparişlerim</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => {
+                                handleLogout()
+                                setMobileMenuOpen(false)
+                              }}
+                              className="w-full flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors text-red-600"
+                            >
+                              <LogOut className="h-5 w-5 mr-3" />
+                              Çıkış Yap
+                            </button>
+                          </li>
+                        </>
+                      ) : (
+                        <li>
+                          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <LogIn className="h-5 w-5 mr-2" />
+                            Giriş Yap
+                          </Link>
+                        </li>
+                      )}
                     </ul>
                   </div>
 
