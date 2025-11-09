@@ -74,12 +74,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <AdminHeader />
       <div className="flex">
         <AdminSidebar />
-        <main className="flex-1 p-3 sm:p-4 lg:p-8 ml-0 lg:ml-64 mt-16 pb-20 lg:pb-8">
-          {children}
+        <main className="flex-1 p-3 sm:p-4 lg:p-8 ml-0 lg:ml-64 mt-16 pb-20 lg:pb-8 w-0 min-w-0">
+          <div className="max-w-full overflow-x-hidden">
+            {children}
+          </div>
         </main>
       </div>
     </div>

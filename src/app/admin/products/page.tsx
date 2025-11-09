@@ -437,7 +437,7 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Toast Notification */}
       {notification && (
         <div className={`fixed top-20 sm:top-4 right-4 z-50 p-3 sm:p-4 rounded-lg shadow-lg max-w-[calc(100vw-2rem)] ${
@@ -567,9 +567,12 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Products Table - Desktop */}
-      <div className="bg-white rounded-lg shadow-sm border hidden lg:block">
-        <div className="overflow-x-auto" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-          <table className="w-full">
+      <div className="bg-white rounded-lg shadow-sm border hidden lg:block overflow-hidden relative">
+        <div 
+          className="admin-table-scroll overflow-x-auto overflow-y-auto bg-white" 
+          style={{ maxHeight: '600px' }}
+        >
+          <table className="w-full min-w-[1200px] bg-white">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
