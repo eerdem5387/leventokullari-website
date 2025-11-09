@@ -329,30 +329,31 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Ayarlar</h1>
-        <p className="text-gray-600">Mağaza ayarlarını yapılandırın</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ayarlar</h1>
+        <p className="text-sm sm:text-base text-gray-600">Mağaza ayarlarını yapılandırın</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+      <div className="border-b border-gray-200 overflow-x-auto">
+        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max sm:min-w-0">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center ${
+                className={`py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center touch-manipulation min-h-[44px] whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <Icon className="h-4 w-4 mr-2" />
-                {tab.name}
+                <Icon className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                <span className="hidden sm:inline">{tab.name}</span>
+                <span className="sm:hidden">{tab.name.split(' ')[0]}</span>
               </button>
             )
           })}
@@ -362,9 +363,9 @@ export default function AdminSettingsPage() {
       {/* Tab Content */}
       <div className="bg-white rounded-lg shadow-sm border">
         {activeTab === 'general' && (
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Genel Ayarlar</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Genel Ayarlar</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Site Adı
@@ -373,7 +374,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={settings.general?.siteName || ''}
                   onChange={(e) => updateSetting('general', 'siteName', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -384,7 +385,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={settings.general?.siteDescription || ''}
                   onChange={(e) => updateSetting('general', 'siteDescription', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -395,7 +396,7 @@ export default function AdminSettingsPage() {
                   type="email"
                   value={settings.general?.contactEmail || ''}
                   onChange={(e) => updateSetting('general', 'contactEmail', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -406,7 +407,7 @@ export default function AdminSettingsPage() {
                   type="tel"
                   value={settings.general?.contactPhone || ''}
                   onChange={(e) => updateSetting('general', 'contactPhone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div className="md:col-span-2">
@@ -417,7 +418,7 @@ export default function AdminSettingsPage() {
                   value={settings.general?.address || ''}
                   onChange={(e) => updateSetting('general', 'address', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
             </div>
@@ -436,7 +437,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={settings.email?.smtpHost || ''}
                   onChange={(e) => updateSetting('email', 'smtpHost', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -447,7 +448,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   value={settings.email?.smtpPort || ''}
                   onChange={(e) => updateSetting('email', 'smtpPort', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -458,7 +459,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={settings.email?.smtpUser || ''}
                   onChange={(e) => updateSetting('email', 'smtpUser', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -469,7 +470,7 @@ export default function AdminSettingsPage() {
                   type="password"
                   value={settings.email?.smtpPassword || ''}
                   onChange={(e) => updateSetting('email', 'smtpPassword', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -480,7 +481,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={settings.email?.fromName || ''}
                   onChange={(e) => updateSetting('email', 'fromName', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -491,7 +492,7 @@ export default function AdminSettingsPage() {
                   type="email"
                   value={settings.email?.fromEmail || ''}
                   onChange={(e) => updateSetting('email', 'fromEmail', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
             </div>
@@ -499,7 +500,7 @@ export default function AdminSettingsPage() {
               <button
                 onClick={handleTestEmail}
                 disabled={isSaving}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
               >
                 E-posta Ayarlarını Test Et
               </button>
@@ -533,7 +534,7 @@ export default function AdminSettingsPage() {
                       type="text"
                       value={settings.payment?.stripePublishableKey || ''}
                       onChange={(e) => updateSetting('payment', 'stripePublishableKey', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
                   <div>
@@ -544,7 +545,7 @@ export default function AdminSettingsPage() {
                       type="password"
                       value={settings.payment?.stripeSecretKey || ''}
                       onChange={(e) => updateSetting('payment', 'stripeSecretKey', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
                 </div>
@@ -572,7 +573,7 @@ export default function AdminSettingsPage() {
                       type="text"
                       value={settings.payment?.ziraatMerchantId || ''}
                       onChange={(e) => updateSetting('payment', 'ziraatMerchantId', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
                   <div>
@@ -583,7 +584,7 @@ export default function AdminSettingsPage() {
                       type="password"
                       value={settings.payment?.ziraatPassword || ''}
                       onChange={(e) => updateSetting('payment', 'ziraatPassword', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
                   <div>
@@ -594,7 +595,7 @@ export default function AdminSettingsPage() {
                       type="password"
                       value={settings.payment?.ziraatStoreKey || ''}
                       onChange={(e) => updateSetting('payment', 'ziraatStoreKey', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     />
                   </div>
                   <div>
@@ -616,14 +617,14 @@ export default function AdminSettingsPage() {
                   <button
                     onClick={handleTestZiraat}
                     disabled={isSaving}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
                   >
                     Ziraat Ayarlarını Test Et
                   </button>
                   <button
                     onClick={handleTestMock}
                     disabled={isSaving}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+                    className="w-full sm:w-auto bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-2 mt-2 sm:mt-0 touch-manipulation min-h-[44px]"
                   >
                     Mock Ödeme Test Et
                   </button>
@@ -645,7 +646,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   value={settings.shipping?.freeShippingThreshold || 0}
                   onChange={(e) => updateSetting('shipping', 'freeShippingThreshold', Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -657,7 +658,7 @@ export default function AdminSettingsPage() {
                   step="0.01"
                   value={settings.shipping?.defaultShippingCost || 0}
                   onChange={(e) => updateSetting('shipping', 'defaultShippingCost', Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div>
@@ -668,7 +669,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   value={settings.shipping?.maxShippingDays || 0}
                   onChange={(e) => updateSetting('shipping', 'maxShippingDays', Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 />
               </div>
               <div className="flex items-center">
@@ -709,11 +710,11 @@ export default function AdminSettingsPage() {
         )}
 
         {/* Save Button */}
-        <div className="px-6 py-4 border-t bg-gray-50">
+        <div className="px-4 sm:px-6 py-4 border-t bg-gray-50">
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="w-full sm:w-auto bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center touch-manipulation min-h-[44px]"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}

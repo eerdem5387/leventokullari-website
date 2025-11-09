@@ -79,26 +79,26 @@ export default function NewCategoryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Link
             href="/admin/categories"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
+            className="text-gray-600 hover:text-gray-900 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Yeni Kategori</h1>
-            <p className="text-gray-600">Yeni bir kategori oluşturun</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Yeni Kategori</h1>
+            <p className="text-sm sm:text-base text-gray-600">Yeni bir kategori oluşturun</p>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -111,7 +111,7 @@ export default function NewCategoryPage() {
               value={formData.name}
               onChange={handleNameChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation text-base"
               placeholder="Kategori adını girin"
             />
           </div>
@@ -127,7 +127,7 @@ export default function NewCategoryPage() {
               name="slug"
               value={formData.slug}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation text-base"
               placeholder="kategori-adi"
             />
             <p className="text-sm text-gray-500 mt-1">
@@ -136,7 +136,7 @@ export default function NewCategoryPage() {
           </div>
 
           {/* Status Checkboxes */}
-          <div className="flex space-x-6">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -144,9 +144,9 @@ export default function NewCategoryPage() {
                 name="isActive"
                 checked={formData.isActive}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded touch-manipulation"
               />
-              <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900 touch-manipulation cursor-pointer">
                 Kategori aktif
               </label>
             </div>
@@ -157,26 +157,26 @@ export default function NewCategoryPage() {
                 name="isPopular"
                 checked={formData.isPopular}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded touch-manipulation"
               />
-              <label htmlFor="isPopular" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="isPopular" className="ml-2 block text-sm text-gray-900 touch-manipulation cursor-pointer">
                 Popüler kategori
               </label>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4 border-t border-gray-200">
             <Link
               href="/admin/categories"
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="w-full sm:w-auto px-4 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
             >
               İptal
             </Link>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center"
+              className="w-full sm:w-auto px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center touch-manipulation min-h-[44px]"
             >
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? 'Kaydediliyor...' : 'Kaydet'}

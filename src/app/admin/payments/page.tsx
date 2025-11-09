@@ -115,35 +115,35 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Ödemeler</h1>
-        <p className="text-gray-600">Tüm ödeme işlemlerini görüntüleyin ve yönetin</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ödemeler</h1>
+        <p className="text-sm sm:text-base text-gray-600">Tüm ödeme işlemlerini görüntüleyin ve yönetin</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CreditCard className="h-6 w-6 text-blue-600" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-blue-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Ödeme</p>
-              <p className="text-2xl font-bold text-gray-900">{payments.length}</p>
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Toplam</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{payments.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Gelir</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Gelir</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 ₺{payments
                   .filter(p => p.status === 'COMPLETED')
                   .reduce((sum, p) => sum + p.amount, 0)
@@ -153,28 +153,28 @@ export default function AdminPaymentsPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-yellow-600" />
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-yellow-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Bekleyen</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Bekleyen</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {payments.filter(p => p.status === 'PENDING').length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-red-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-red-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Başarısız</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Başarısız</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {payments.filter(p => p.status === 'FAILED').length}
               </p>
             </div>
@@ -182,8 +182,8 @@ export default function AdminPaymentsPage() {
         </div>
       </div>
 
-      {/* Payments Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      {/* Payments Table - Desktop */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -257,6 +257,51 @@ export default function AdminPaymentsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Payments Card View - Mobile */}
+      <div className="lg:hidden space-y-3">
+        {payments && payments.length > 0 ? (
+          payments.map((payment) => (
+            <div key={payment.id} className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
+                    {payment.order.orderNumber}
+                  </h3>
+                  <p className="text-xs text-gray-500 truncate">{payment.order.user.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{payment.order.user.email}</p>
+                </div>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 flex-shrink-0 ${getStatusColor(payment.status)}`}>
+                  {getStatusText(payment.status)}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3 pt-3 border-t border-gray-200">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Tutar</p>
+                  <p className="text-sm font-semibold text-gray-900">₺{payment.amount.toLocaleString('tr-TR')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Yöntem</p>
+                  <p className="text-sm text-gray-900">{getMethodText(payment.method)}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-500 mb-1">Tarih</p>
+                  <p className="text-sm text-gray-900">{new Date(payment.createdAt).toLocaleDateString('tr-TR')}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-500 mb-1">Ödeme ID</p>
+                  <p className="text-xs font-mono text-gray-600">{payment.id.slice(0, 8)}...</p>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm border p-6 text-center text-gray-500">
+            Henüz ödeme bulunmuyor.
+          </div>
+        )}
       </div>
     </div>
   )

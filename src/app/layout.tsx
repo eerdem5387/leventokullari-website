@@ -32,6 +32,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: [
+      { url: '/uploads/levent-akademik-logo.png', sizes: 'any' },
+      { url: '/icon.png', sizes: 'any' },
+    ],
+    apple: '/uploads/levent-akademik-logo.png',
+    shortcut: '/uploads/levent-akademik-logo.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'tr_TR',

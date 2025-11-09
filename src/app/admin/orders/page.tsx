@@ -217,17 +217,15 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Siparişler</h1>
-          <p className="text-gray-600">Tüm siparişleri yönetin</p>
-        </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Siparişler</h1>
+        <p className="text-sm sm:text-base text-gray-600">Tüm siparişleri yönetin</p>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      {/* Orders Table - Desktop */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -343,28 +341,101 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ShoppingCart className="h-6 w-6 text-blue-600" />
+      {/* Orders Card View - Mobile */}
+      <div className="lg:hidden space-y-3">
+        {orders && orders.length > 0 ? (
+          orders.map((order) => (
+            <div key={order.id} className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
+                    {order.items && order.items.length > 0 ? (
+                      order.items.length === 1 ? (
+                        order.items[0].product.name
+                      ) : (
+                        `${order.items[0].product.name} ve ${order.items.length - 1} ürün daha`
+                      )
+                    ) : (
+                      'Ürün bilgisi yok'
+                    )}
+                  </h3>
+                  <p className="text-xs text-gray-500">{order.orderNumber}</p>
+                  <p className="text-xs text-gray-500 mt-1">{order.user.name}</p>
+                </div>
+                <div className="ml-2 flex flex-col items-end gap-2 flex-shrink-0">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                    {getStatusText(order.status)}
+                  </span>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
+                    {getPaymentStatusText(order.paymentStatus)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3 pt-3 border-t border-gray-200">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Tutar</p>
+                  <p className="text-sm font-semibold text-gray-900">₺{Number(order.finalAmount).toLocaleString('tr-TR')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Tarih</p>
+                  <p className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString('tr-TR')}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-500 mb-1">Ürün Sayısı</p>
+                  <p className="text-sm text-gray-900">{order._count?.items || order.items?.length || 0} ürün</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleStatusUpdate(order.id, order.status)
+                  }}
+                  className="flex-1 bg-green-50 text-green-600 px-3 py-2 rounded-lg hover:bg-green-100 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] text-sm font-medium"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Durum Güncelle
+                </button>
+                <a
+                  href={`/admin/orders/${order.id}`}
+                  className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] text-sm font-medium"
+                >
+                  Detay
+                </a>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Sipariş</p>
-              <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm border p-6 text-center text-gray-500">
+            Henüz sipariş bulunmuyor.
+          </div>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-blue-600" />
+            </div>
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Toplam</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{orders.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Gelir</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Gelir</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 ₺{orders
                   .filter(o => o.paymentStatus === 'COMPLETED')
                   .reduce((sum, o) => sum + Number(o.finalAmount), 0)
@@ -374,28 +445,28 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Package className="h-6 w-6 text-yellow-600" />
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <Package className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-yellow-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Bekleyen</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Bekleyen</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {orders.filter(o => o.status === 'PENDING').length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Eye className="h-6 w-6 text-purple-600" />
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0 mb-2 sm:mb-0">
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-purple-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Teslim Edilen</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="sm:ml-3 lg:ml-4 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Teslim</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                 {orders.filter(o => o.status === 'DELIVERED').length}
               </p>
             </div>
@@ -405,9 +476,9 @@ export default function AdminOrdersPage() {
 
       {/* Durum Güncelleme Modal */}
       {showStatusModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 safe-area-inset">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
               Sipariş Durumu Güncelle
             </h3>
             
@@ -430,7 +501,7 @@ export default function AdminOrdersPage() {
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 >
                   <option value="PENDING">Beklemede</option>
                   <option value="CONFIRMED">Onaylandı</option>
@@ -441,11 +512,11 @@ export default function AdminOrdersPage() {
               </div>
             </div>
 
-            <div className="flex space-x-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <button
                 onClick={handleStatusSave}
                 disabled={isUpdating}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 touch-manipulation min-h-[44px]"
               >
                 {isUpdating ? 'Güncelleniyor...' : 'Güncelle'}
               </button>
@@ -456,7 +527,7 @@ export default function AdminOrdersPage() {
                   setNewStatus('')
                 }}
                 disabled={isUpdating}
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+                className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50 touch-manipulation min-h-[44px]"
               >
                 İptal
               </button>

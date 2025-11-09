@@ -381,11 +381,11 @@ export default function NewProductPage() {
       )}
 
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <Link
             href="/admin/products"
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 hover:text-gray-900 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -397,9 +397,9 @@ export default function NewProductPage() {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Product Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -411,7 +411,7 @@ export default function NewProductPage() {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 placeholder="Ürün adını girin"
               />
             </div>
@@ -426,7 +426,7 @@ export default function NewProductPage() {
                 name="sku"
                 value={formData.sku}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                 placeholder="Boş bırakırsanız otomatik oluşturulur"
               />
             </div>
@@ -445,7 +445,7 @@ export default function NewProductPage() {
                   required
                   step="0.01"
                   min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                   placeholder="0.00"
                 />
               </div>
@@ -464,7 +464,7 @@ export default function NewProductPage() {
                   onChange={handleInputChange}
                   step="0.01"
                   min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                   placeholder="0.00"
                 />
               </div>
@@ -484,7 +484,7 @@ export default function NewProductPage() {
                       type="checkbox"
                       checked={isUnlimitedStock}
                       onChange={(e) => setIsUnlimitedStock(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded touch-manipulation"
                     />
                     <span className="ml-2 text-sm text-gray-700">
                       Sınırsız stok (Stokta gösterilecek)
@@ -501,7 +501,7 @@ export default function NewProductPage() {
                     onChange={handleInputChange}
                     required
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                     placeholder="0"
                   />
                 )}
@@ -527,7 +527,7 @@ export default function NewProductPage() {
                 value={formData.categoryId}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
               >
                 <option value="">Kategori seçin</option>
                 {categories.map((category) => (
@@ -548,7 +548,7 @@ export default function NewProductPage() {
                 value={formData.productType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
               >
                 <option value="SIMPLE">Basit Ürün</option>
                 <option value="VARIABLE">Varyasyonlu Ürün</option>
@@ -567,7 +567,7 @@ export default function NewProductPage() {
               onChange={handleInputChange}
               required
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
               placeholder="Ürün açıklamasını girin"
             />
           </div>
@@ -694,7 +694,7 @@ export default function NewProductPage() {
                               type="text"
                               value={variation.sku}
                               onChange={(e) => updateVariation(variationIndex, 'sku', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                               placeholder="Varyasyon SKU"
                             />
                           </div>
@@ -709,7 +709,7 @@ export default function NewProductPage() {
                               step="0.01"
                               min="0"
                               required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                               placeholder="0.00"
                             />
                           </div>
@@ -723,7 +723,7 @@ export default function NewProductPage() {
                               onChange={(e) => updateVariation(variationIndex, 'stock', e.target.value)}
                               min="0"
                               required
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
                               placeholder="0"
                             />
                           </div>
@@ -828,17 +828,17 @@ export default function NewProductPage() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
             <Link
               href="/admin/products"
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors touch-manipulation min-h-[44px] flex items-center justify-center text-center"
             >
               İptal
             </Link>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 touch-manipulation min-h-[44px]"
             >
               {isLoading ? 'Ekleniyor...' : 'Ürün Ekle'}
             </button>

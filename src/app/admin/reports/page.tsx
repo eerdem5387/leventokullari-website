@@ -449,19 +449,19 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Raporlar</h1>
-          <p className="text-gray-600">Mağaza performansı ve satış analizleri (sadece ödemesi tamamlanan siparişler)</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Raporlar</h1>
+          <p className="text-sm sm:text-base text-gray-600">Mağaza performansı ve satış analizleri</p>
         </div>
         
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
           >
             <option value="week">Bu Hafta</option>
             <option value="month">Bu Ay</option>
@@ -471,7 +471,7 @@ export default function AdminReportsPage() {
           
           <button 
             onClick={exportToExcel}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center touch-manipulation min-h-[44px]"
           >
             <Download className="h-4 w-4 mr-2" />
             Rapor İndir
@@ -480,13 +480,13 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Filtreler */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
         <div className="flex items-center mb-4">
           <Filter className="h-5 w-5 mr-2 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filtreler</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Filtreler</h3>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Kategori
@@ -494,7 +494,7 @@ export default function AdminReportsPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
             >
               <option value="all">Tüm Kategoriler</option>
               {categories.map((category) => (
@@ -513,7 +513,7 @@ export default function AdminReportsPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
             />
           </div>
           
@@ -525,18 +525,18 @@ export default function AdminReportsPage() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation text-base"
             />
           </div>
           
-          <div className="flex items-end">
+          <div className="flex items-end sm:col-span-2 lg:col-span-1">
             <button
               onClick={() => {
                 setSelectedCategory('all')
                 setStartDate('')
                 setEndDate('')
               }}
-              className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              className="w-full bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors touch-manipulation min-h-[44px]"
             >
               Filtreleri Temizle
             </button>
@@ -545,105 +545,105 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Toplam Satış</p>
-              <p className="text-2xl font-bold text-gray-900">₺{reportData.sales.current.toLocaleString('tr-TR')}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Satış</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">₺{reportData.sales.current.toLocaleString('tr-TR')}</p>
             </div>
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
+            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0 ml-2">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
             {reportData.sales.change.startsWith('+') ? (
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+              <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 mr-1 flex-shrink-0" />
             )}
             <span className={reportData.sales.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
               {reportData.sales.change}
             </span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Toplam Sipariş</p>
-              <p className="text-2xl font-bold text-gray-900">{reportData.orders.current}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Sipariş</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{reportData.orders.current}</p>
             </div>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0 ml-2">
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-blue-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
             {reportData.orders.change.startsWith('+') ? (
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+              <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 mr-1 flex-shrink-0" />
             )}
             <span className={reportData.orders.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
               {reportData.orders.change}
             </span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Yeni Müşteri</p>
-              <p className="text-2xl font-bold text-gray-900">{reportData.customers.current}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Yeni Müşteri</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{reportData.customers.current}</p>
             </div>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Users className="h-6 w-6 text-purple-600" />
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0 ml-2">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-purple-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
             {reportData.customers.change.startsWith('+') ? (
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+              <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 mr-1 flex-shrink-0" />
             )}
             <span className={reportData.customers.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
               {reportData.customers.change}
             </span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Ortalama Sipariş</p>
-              <p className="text-2xl font-bold text-gray-900">₺{reportData.averageOrder.current.toFixed(2)}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Ortalama Sipariş</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">₺{reportData.averageOrder.current.toFixed(2)}</p>
             </div>
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <BarChart3 className="h-6 w-6 text-yellow-600" />
+            <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0 ml-2">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-yellow-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
             {reportData.averageOrder.change.startsWith('+') ? (
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+              <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 mr-1 flex-shrink-0" />
             )}
             <span className={reportData.averageOrder.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
               {reportData.averageOrder.change}
             </span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
       </div>
 
       {/* Charts & Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Sales Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Aylık Satışlar</h3>
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Aylık Satışlar</h3>
           <div className="space-y-4">
             {monthlyData.map((data, index) => (
               <div key={index} className="flex items-center justify-between">
@@ -658,9 +658,10 @@ export default function AdminReportsPage() {
         </div>
 
         {/* Top Products */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">En Çok Satan Ürünler</h3>
-          <div className="overflow-x-auto">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">En Çok Satan Ürünler</h3>
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -698,19 +699,42 @@ export default function AdminReportsPage() {
               </tbody>
             </table>
           </div>
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-3">
+            {topProducts.map((product, index) => (
+              <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">{product.name}</h4>
+                    <p className="text-xs text-gray-500 mt-1">{product.category || 'Bilinmeyen'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-gray-500">Satış</p>
+                    <p className="font-medium text-gray-900">{product.sales}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Gelir</p>
+                    <p className="font-medium text-gray-900">₺{product.revenue.toLocaleString('tr-TR')}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Top Categories */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">En Çok Satan Kategoriler</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">En Çok Satan Kategoriler</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {topCategories.map((category, index) => (
-            <div key={index} className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-900">{category.name}</h4>
+            <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-sm sm:text-base font-medium text-gray-900 truncate">{category.name}</h4>
               <div className="mt-2 space-y-1">
-                <p className="text-sm text-gray-600">{category.sales} sipariş</p>
-                <p className="text-sm font-medium text-gray-900">₺{category.revenue.toLocaleString('tr-TR')}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{category.sales} sipariş</p>
+                <p className="text-sm sm:text-base font-medium text-gray-900">₺{category.revenue.toLocaleString('tr-TR')}</p>
               </div>
             </div>
           ))}
@@ -719,33 +743,34 @@ export default function AdminReportsPage() {
 
       {/* Kategori Detay Raporu */}
       {categoryReport && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
             {categoryReport.categoryName} - Kategori Detay Raporu
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-900">Toplam Ürün Satışı</h4>
-              <p className="text-2xl font-bold text-blue-600">{categoryReport.totalSales}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-blue-900">Toplam Satış</h4>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">{categoryReport.totalSales}</p>
             </div>
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <h4 className="font-medium text-orange-900">Toplam Sipariş</h4>
-              <p className="text-2xl font-bold text-orange-600">{categoryReport.totalOrders}</p>
+            <div className="bg-orange-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-orange-900">Toplam Sipariş</h4>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">{categoryReport.totalOrders}</p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="font-medium text-green-900">Toplam Gelir</h4>
-              <p className="text-2xl font-bold text-green-600">₺{categoryReport.totalRevenue.toLocaleString('tr-TR')}</p>
+            <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-green-900">Toplam Gelir</h4>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">₺{categoryReport.totalRevenue.toLocaleString('tr-TR')}</p>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <h4 className="font-medium text-purple-900">Ürün Çeşidi</h4>
-              <p className="text-2xl font-bold text-purple-600">{categoryReport.products.length}</p>
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-purple-900">Ürün Çeşidi</h4>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600">{categoryReport.products.length}</p>
             </div>
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-900 mb-4">Ürün Detayları</h4>
-            <div className="overflow-x-auto">
+            <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-4">Ürün Detayları</h4>
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -776,6 +801,24 @@ export default function AdminReportsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {categoryReport.products.map((product, index) => (
+                <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                  <h5 className="text-sm font-medium text-gray-900 truncate mb-2">{product.name}</h5>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-500">Satış</p>
+                      <p className="font-medium text-gray-900">{product.quantity}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Gelir</p>
+                      <p className="font-medium text-gray-900">₺{product.revenue.toLocaleString('tr-TR')}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
