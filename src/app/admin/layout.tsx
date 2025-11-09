@@ -78,7 +78,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <AdminHeader />
       <div className="flex">
         <AdminSidebar />
-        <main className="flex-1 p-8 ml-64 mt-16">
+        <main className="flex-1 p-3 sm:p-4 lg:p-8 ml-0 lg:ml-64 mt-16 pb-20 lg:pb-8">
           {children}
         </main>
       </div>

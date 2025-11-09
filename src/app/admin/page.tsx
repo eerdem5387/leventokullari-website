@@ -263,91 +263,92 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Mağaza genel durumu ve istatistikler</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-sm sm:text-base text-gray-600">Mağaza genel durumu ve istatistikler</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-blue-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Sipariş</p>
-              <p className="text-2xl font-bold text-gray-900">{data.totalOrders.toLocaleString('tr-TR')}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Sipariş</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{data.totalOrders.toLocaleString('tr-TR')}</p>
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             <span className="text-green-600">+{data.trends.ordersGrowth}%</span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Users className="h-6 w-6 text-green-600" />
+            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Müşteri</p>
-              <p className="text-2xl font-bold text-gray-900">{data.totalCustomers.toLocaleString('tr-TR')}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Müşteri</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{data.totalCustomers.toLocaleString('tr-TR')}</p>
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             <span className="text-green-600">+{data.trends.customersGrowth}%</span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Package className="h-6 w-6 text-purple-600" />
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+              <Package className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-purple-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Ürün</p>
-              <p className="text-2xl font-bold text-gray-900">{data.totalProducts.toLocaleString('tr-TR')}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Ürün</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{data.totalProducts.toLocaleString('tr-TR')}</p>
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             <span className="text-green-600">+{data.trends.productsGrowth}%</span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-yellow-600" />
+            <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-yellow-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Toplam Gelir</p>
-              <p className="text-2xl font-bold text-gray-900">₺{data.totalRevenue.toLocaleString('tr-TR')}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Gelir</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">₺{data.totalRevenue.toLocaleString('tr-TR')}</p>
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
             <span className="text-green-600">+{data.trends.revenueGrowth}%</span>
-            <span className="text-gray-500 ml-1">geçen aya göre</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
           </div>
         </div>
       </div>
 
       {/* Recent Orders & Low Stock */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Son Siparişler</h3>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Son Siparişler</h3>
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -402,13 +403,44 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {/* Mobile Card View */}
+          <div className="lg:hidden divide-y divide-gray-200">
+            {data.recentOrders.length > 0 ? (
+              data.recentOrders.map((order) => (
+                <div key={order.id} className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{order.orderNumber}</p>
+                      <p className="text-xs text-gray-500 mt-1">{order.user.name}</p>
+                    </div>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 flex-shrink-0 ${
+                      order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
+                      order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                      order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getStatusText(order.status)}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900">₺{order.finalAmount.toLocaleString('tr-TR')}</p>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">
+                Henüz sipariş bulunmuyor.
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Düşük Stok Ürünler</h3>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Düşük Stok Ürünler</h3>
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -457,60 +489,89 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {/* Mobile Card View */}
+          <div className="lg:hidden divide-y divide-gray-200">
+            {data.lowStockProducts.length > 0 ? (
+              data.lowStockProducts.map((product) => (
+                <div key={product.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">Stok: {product.stock}</p>
+                    </div>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 flex-shrink-0 ${
+                      product.stock === 0 
+                        ? 'bg-red-100 text-red-800' 
+                        : product.stock < 5
+                        ? 'bg-orange-100 text-orange-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {product.stock === 0 ? 'Tükendi' : 
+                       product.stock < 5 ? 'Kritik' : 'Düşük'}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">
+                Düşük stok ürün bulunmuyor.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Hızlı İşlemler</h3>
-          <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Hızlı İşlemler</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:gap-3">
             <button 
               onClick={() => router.push('/admin/products/new')}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-blue-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
             >
               Yeni Ürün Ekle
             </button>
             <button 
               onClick={() => router.push('/admin/orders')}
-              className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              className="bg-green-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-green-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
             >
               Sipariş Görüntüle
             </button>
             <button 
               onClick={() => router.push('/admin/content/new')}
-              className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              className="bg-purple-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-purple-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
             >
-              Yeni İçerik Oluştur
+              Yeni İçerik
             </button>
             <button 
               onClick={() => router.push('/admin/categories/new')}
-              className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+              className="bg-orange-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-orange-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
             >
-              Yeni Kategori Ekle
+              Yeni Kategori
             </button>
             <button 
               onClick={() => router.push('/admin/reports')}
-              className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="bg-indigo-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base col-span-2 sm:col-span-1"
             >
               Rapor Oluştur
             </button>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Son Aktiviteler</h3>
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Son Aktiviteler</h3>
           <div className="space-y-3">
             {data.recentActivities.length > 0 ? (
               data.recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-center text-sm">
-                  <div className={`w-2 h-2 rounded-full mr-3 ${
+                  <div className={`w-2 h-2 rounded-full mr-3 flex-shrink-0 ${
                     activity.type === 'order' ? 'bg-green-500' :
                     activity.type === 'product' ? 'bg-blue-500' :
                     activity.type === 'customer' ? 'bg-purple-500' :
                     'bg-gray-500'
                   }`}></div>
-                  <span>{activity.message}</span>
+                  <span className="break-words">{activity.message}</span>
                 </div>
               ))
             ) : (

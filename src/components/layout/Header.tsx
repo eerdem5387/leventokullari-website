@@ -35,7 +35,7 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
         setUser(null)
       }
     }
-
+    
     // Sepet sayısını güncelle
     const updateCartCount = () => {
       const cart = safeLocalStorage.getItem('cart')

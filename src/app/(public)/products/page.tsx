@@ -15,69 +15,82 @@ interface ProductsPageProps {
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   try {
-    const params = await searchParams
+  const params = await searchParams
     const page = parseInt(params.page || '1', 10)
-    const limit = 8 // Reduced from 12 to 8 for better performance
-    const skip = (page - 1) * limit
+  const limit = 6 // Optimized: Reduced to 6 products per page for faster loading
+  const skip = (page - 1) * limit
 
-    // Build filter conditions - simplified (no price range)
-    const where: {
-      isActive: boolean
-      category?: { slug: string }
-      OR?: Array<{
-        name?: { contains: string; mode: 'insensitive' }
-        description?: { contains: string; mode: 'insensitive' }
-        sku?: { contains: string; mode: 'insensitive' }
-      }>
-    } = {
-      isActive: true
-    }
+  // Build filter conditions - simplified (no price range)
+  const where: {
+    isActive: boolean
+    category?: { slug: string }
+    OR?: Array<{
+      name?: { contains: string; mode: 'insensitive' }
+      description?: { contains: string; mode: 'insensitive' }
+      sku?: { contains: string; mode: 'insensitive' }
+    }>
+  } = {
+    isActive: true
+  }
 
-    if (params.category) {
-      where.category = { slug: params.category }
-    }
+  if (params.category) {
+    where.category = { slug: params.category }
+  }
 
-    if (params.search) {
-      where.OR = [
-        { name: { contains: params.search, mode: 'insensitive' } },
-        { description: { contains: params.search, mode: 'insensitive' } },
-        { sku: { contains: params.search, mode: 'insensitive' } }
-      ]
-    }
+  if (params.search) {
+    where.OR = [
+      { name: { contains: params.search, mode: 'insensitive' } },
+      { description: { contains: params.search, mode: 'insensitive' } },
+      { sku: { contains: params.search, mode: 'insensitive' } }
+    ]
+  }
 
-    // CRITICAL OPTIMIZATION: Use select instead of include - only fetch what we need
-    // Removed variations, attributes, _count - not needed for product listing
+  // CRITICAL OPTIMIZATION: Use select instead of include - only fetch what we need
+  // Removed variations, attributes, _count - not needed for product listing
     
-    // Fetch all data in parallel with error handling
-    const [productsResult, totalResult, categoriesResult] = await Promise.allSettled([
-      prisma.product.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          price: true,
-          comparePrice: true,
-          images: true,
-          productType: true,
-          stock: true,
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true
-            }
-          },
-          // REMOVED: variations, attributes - saves massive query time
+    // OPTIMIZATION: Fetch products first (critical path), then count and categories in parallel
+    // This way users see products faster even if count is slow
+    const productsPromise = prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        comparePrice: true,
+        images: true,
+        productType: true,
+        stock: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
         },
-        skip,
-        take: limit,
-        orderBy: [
-          { sortOrder: 'asc' },
-          { createdAt: 'desc' }
-        ]
-      }),
-      prisma.product.count({ where }),
+        // REMOVED: variations, attributes - saves massive query time
+      },
+      skip,
+      take: limit,
+      orderBy: [
+        { sortOrder: 'asc' },
+        { createdAt: 'desc' }
+      ]
+    })
+
+    // Fetch products first (critical path)
+    const productsResult = await Promise.allSettled([productsPromise]).then(results => results[0])
+    
+    // Then fetch count and categories in parallel (non-critical)
+    const [totalResult, categoriesResult] = await Promise.allSettled([
+      // Count query with timeout protection - if it's too slow, we'll use estimated count
+      Promise.race([
+        prisma.product.count({ where }),
+        new Promise<number>((resolve) => {
+          setTimeout(() => resolve(0), 5000) // 5 second timeout for count
+        })
+      ]) as Promise<number>,
+      // Categories - cache this if possible
       prisma.category.findMany({
         where: { isActive: true },
         orderBy: { name: 'asc' },
@@ -114,8 +127,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
     if (totalResult.status === 'fulfilled') {
       total = totalResult.value || 0
+      // If count timed out (0 returned), estimate based on products fetched
+      if (total === 0 && productsData.length > 0) {
+        // Estimate: if we got a full page, there are likely more
+        total = productsData.length === limit ? (page * limit) + 1 : page * limit
+      }
     } else {
       console.error('Error counting products:', totalResult.reason)
+      // Fallback: estimate total based on current page
+      if (productsData.length > 0) {
+        total = productsData.length === limit ? (page * limit) + 1 : page * limit
+      }
     }
 
     if (categoriesResult.status === 'fulfilled') {
@@ -124,15 +146,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       console.error('Error fetching categories:', categoriesResult.reason)
     }
 
-    // Convert Decimal to Number for client compatibility
+  // Convert Decimal to Number for client compatibility
     const products = Array.isArray(productsData) ? productsData.map((product: any) => ({
-      ...product,
+    ...product,
       price: product.price ? Number(product.price) : 0,
       comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
       category: product.category || null
     })) : []
 
-    const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.ceil(total / limit)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
@@ -142,8 +164,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
           {!hasDatabaseError && (
             <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-              {total} ürün bulundu
-            </p>
+            {total} ürün bulundu
+          </p>
           )}
         </div>
 
@@ -184,37 +206,75 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   ))}
                 </div>
 
-                {/* Simple Previous/Next Navigation */}
-                <div className="mt-8 flex justify-center items-center space-x-4">
-                  {page > 1 && (
-                    <a
-                      href={`/products?${new URLSearchParams({
-                        ...(params.category ? { category: params.category } : {}),
-                        ...(params.search ? { search: params.search } : {}),
-                        page: (page - 1).toString()
-                      })}`}
-                      className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      ← Önceki
-                    </a>
-                  )}
+                {/* Enhanced Pagination */}
+                <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                  <div className="flex items-center space-x-2">
+                    {page > 1 && (
+                      <a
+                        href={`/products?${new URLSearchParams({
+                          ...(params.category ? { category: params.category } : {}),
+                          ...(params.search ? { search: params.search } : {}),
+                          page: (page - 1).toString()
+                        })}`}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                      >
+                        ← Önceki
+                      </a>
+                    )}
+                    
+                    {/* Page Numbers - Show max 5 pages around current */}
+                    {totalPages > 1 && (
+                      <div className="hidden sm:flex items-center space-x-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum: number
+                          if (totalPages <= 5) {
+                            pageNum = i + 1
+                          } else if (page <= 3) {
+                            pageNum = i + 1
+                          } else if (page >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i
+                          } else {
+                            pageNum = page - 2 + i
+                          }
+                          
+                          return (
+                            <a
+                              key={pageNum}
+                              href={`/products?${new URLSearchParams({
+                                ...(params.category ? { category: params.category } : {}),
+                                ...(params.search ? { search: params.search } : {}),
+                                page: pageNum.toString()
+                              })}`}
+                              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center ${
+                                pageNum === page
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {pageNum}
+                            </a>
+                          )
+                        })}
+                      </div>
+                    )}
+                    
+                    {page < totalPages && (
+                      <a
+                        href={`/products?${new URLSearchParams({
+                          ...(params.category ? { category: params.category } : {}),
+                          ...(params.search ? { search: params.search } : {}),
+                          page: (page + 1).toString()
+                        })}`}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                      >
+                        Sonraki →
+                      </a>
+                    )}
+                  </div>
                   
                   <span className="text-sm text-gray-600">
-                    Sayfa {page} / {totalPages}
+                    Sayfa {page} / {totalPages > 0 ? totalPages : '?'}
                   </span>
-                  
-                  {page < totalPages && (
-                    <a
-                      href={`/products?${new URLSearchParams({
-                        ...(params.category ? { category: params.category } : {}),
-                        ...(params.search ? { search: params.search } : {}),
-                        page: (page + 1).toString()
-                      })}`}
-                      className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Sonraki →
-                    </a>
-                  )}
                 </div>
               </>
             ) : (
@@ -227,8 +287,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     </>
                   ) : (
                     <>
-                      <p className="text-lg font-medium">Ürün bulunamadı</p>
-                      <p className="mt-2">Arama kriterlerinizi değiştirmeyi deneyin.</p>
+                  <p className="text-lg font-medium">Ürün bulunamadı</p>
+                  <p className="mt-2">Arama kriterlerinizi değiştirmeyi deneyin.</p>
                     </>
                   )}
                 </div>
@@ -261,11 +321,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     Veritabanı transfer kotası aşıldı. Lütfen birkaç dakika sonra tekrar deneyin.
                   </p>
                 </div>
-              </div>
-            </div>
           </div>
         </div>
-      )
+      </div>
+    </div>
+  )
     }
     
     // For other errors, re-throw to let Next.js error boundary handle it

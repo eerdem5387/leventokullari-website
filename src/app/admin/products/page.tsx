@@ -437,10 +437,10 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Toast Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        <div className={`fixed top-20 sm:top-4 right-4 z-50 p-3 sm:p-4 rounded-lg shadow-lg max-w-[calc(100vw-2rem)] ${
           notification.type === 'success' 
             ? 'bg-green-500 text-white' 
             : 'bg-red-500 text-white'
@@ -450,14 +450,14 @@ export default function AdminProductsPage() {
       )}
 
       {/* Page Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Ürünler</h1>
-          <p className="text-gray-600">Tüm ürünleri yönetin</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
+          <p className="text-sm sm:text-base text-gray-600">Tüm ürünleri yönetin</p>
         </div>
         <Link
           href="/admin/products/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
           Yeni Ürün Ekle
@@ -465,8 +465,8 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {/* Arama */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
@@ -566,8 +566,8 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-lg shadow-sm border">
+      {/* Products Table - Desktop */}
+      <div className="bg-white rounded-lg shadow-sm border hidden lg:block">
         <div className="overflow-x-auto" style={{ maxHeight: '600px', overflowY: 'auto' }}>
           <table className="w-full">
             <thead className="bg-gray-50 sticky top-0 z-10">
@@ -719,11 +719,116 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
+      {/* Products Card View - Mobile */}
+      <div className="lg:hidden space-y-3">
+        {currentProducts && currentProducts.length > 0 ? (
+          currentProducts.map((product) => (
+            <div key={product.id} className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="h-16 w-16 flex-shrink-0">
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      className="h-16 w-16 rounded-lg object-cover"
+                      src={product.images[0]}
+                      alt={product.name}
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <span className="text-xs text-gray-500">Resim</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</h3>
+                  <p className="text-xs text-gray-500 truncate">{product.sku}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      product.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {product.isActive ? 'Aktif' : 'Pasif'}
+                    </span>
+                    {product.isFeatured && (
+                      <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        <Star className="h-3 w-3 mr-1 fill-current" />
+                        Öne Çıkan
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3 pt-3 border-t border-gray-200">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Kategori</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{product.category?.name || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Fiyat</p>
+                  <p className="text-sm font-medium text-gray-900">₺{Number(product.price).toLocaleString('tr-TR')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Stok</p>
+                  {product.stock === -1 ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Sınırsız
+                    </span>
+                  ) : (
+                    <p className={`text-sm font-medium ${product.stock === 0 ? 'text-red-600' : product.stock < 10 ? 'text-orange-600' : 'text-gray-900'}`}>
+                      {product.stock}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Sıra</p>
+                  <input
+                    type="number"
+                    value={product.sortOrder}
+                    onChange={(e) => handleSortOrderChange(product.id, parseInt(e.target.value) || 0)}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
+                <Link
+                  href={`/products/${product.slug}`}
+                  className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] text-sm font-medium"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Görüntüle
+                </Link>
+                <Link
+                  href={`/admin/products/${product.id}/edit`}
+                  className="flex-1 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] text-sm font-medium"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Düzenle
+                </Link>
+                <button
+                  className="bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  onClick={() => handleDeleteProduct(product.id)}
+                  aria-label="Sil"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm border p-6 text-center text-gray-500">
+            Henüz ürün bulunmuyor.
+          </div>
+        )}
+      </div>
+
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+        <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+            <div className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
               <span className="font-medium">{indexOfFirstProduct + 1}</span>
               {' - '}
               <span className="font-medium">
@@ -734,12 +839,12 @@ export default function AdminProductsPage() {
               {' ürün gösteriliyor'}
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               {/* Önceki Sayfa */}
               <button
                 onClick={() => handlePageChange(adjustedCurrentPage - 1)}
                 disabled={adjustedCurrentPage === 1}
-                className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                className={`px-3 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px] ${
                   adjustedCurrentPage === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -791,7 +896,7 @@ export default function AdminProductsPage() {
                     key={index}
                     onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
                     disabled={typeof page !== 'number'}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                    className={`px-3 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px] min-w-[44px] ${
                       typeof page === 'number' && adjustedCurrentPage === page
                         ? 'bg-blue-600 text-white'
                         : typeof page === 'number'
@@ -808,7 +913,7 @@ export default function AdminProductsPage() {
               <button
                 onClick={() => handlePageChange(adjustedCurrentPage + 1)}
                 disabled={adjustedCurrentPage === totalPages}
-                className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                className={`px-3 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px] ${
                   adjustedCurrentPage === totalPages
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'

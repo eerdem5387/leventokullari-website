@@ -85,11 +85,11 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-
+        
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
+          {error && (
               <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg flex items-center">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
@@ -97,78 +97,78 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <p className="ml-3 text-sm font-medium">{error}</p>
-              </div>
-            )}
-            
+            </div>
+          )}
+          
             <div className="space-y-5">
-              <div>
+            <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                   E-posta Adresi
-                </label>
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 placeholder-gray-400"
-                    placeholder="ornek@email.com"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Şifre
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 placeholder-gray-400"
-                    placeholder="Şifrenizi girin"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center hover:text-gray-600 transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
+                  placeholder="ornek@email.com"
+                />
               </div>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
+            
+            <div>
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                Şifre
+              </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 placeholder-gray-400"
+                  placeholder="Şifrenizi girin"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 cursor-pointer">
-                  Beni hatırla
-                </label>
+                <button
+                  type="button"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center hover:text-gray-600 transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
               </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+              />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                Beni hatırla
+              </label>
+            </div>
 
               <Link 
                 href="/forgot-password" 
@@ -176,7 +176,7 @@ export default function LoginPage() {
               >
                 Şifremi unuttum
               </Link>
-            </div>
+          </div>
 
             <button
               type="submit"
@@ -203,7 +203,7 @@ export default function LoginPage() {
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white text-gray-500">Hesabınız yok mu?</span>
               </div>
-            </div>
+          </div>
 
             <Link
               href="/register"
@@ -211,7 +211,7 @@ export default function LoginPage() {
             >
               Yeni Hesap Oluştur
             </Link>
-          </form>
+        </form>
         </div>
       </div>
     </div>

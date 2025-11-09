@@ -16,8 +16,8 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    const { slug } = await params
-    
+  const { slug } = await params
+  
     // CRITICAL OPTIMIZATION: Fetch product data first (no timeout for main query)
     const productData = await prisma.product.findUnique({
       where: { slug },
@@ -44,9 +44,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       }
     })
 
-    if (!productData || !productData.isActive) {
-      notFound()
-    }
+  if (!productData || !productData.isActive) {
+    notFound()
+  }
 
     // OPTIMIZATION: Load all data in parallel with error handling
     const [variationsResult, similarProductsResult] = await Promise.allSettled([
@@ -57,55 +57,55 @@ export default async function ProductPage({ params }: ProductPageProps) {
               productId: productData.id,
               isActive: true 
             },
-            select: {
-              id: true,
-              price: true,
-              stock: true,
-              sku: true,
-              attributes: {
-                select: {
+          select: {
+            id: true,
+            price: true,
+            stock: true,
+            sku: true,
+            attributes: {
+              select: {
                   id: true,
                   variationId: true,
                   attributeValueId: true,
-                  attributeValue: {
-                    select: {
-                      id: true,
-                      attributeId: true,
-                      value: true
-                    }
+                attributeValue: {
+                  select: {
+                    id: true,
+                    attributeId: true,
+                    value: true
                   }
                 }
               }
             }
+          }
           })
         : Promise.resolve([]),
       
       // Fetch similar products (lazy load - can be moved to client side if needed)
       productData.categoryId
         ? prisma.product.findMany({
-            where: {
-              categoryId: productData.categoryId,
-              id: { not: productData.id },
-              isActive: true
-            },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          price: true,
-          comparePrice: true,
-          images: true,
-          productType: true,
-          stock: true,
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true
-            }
+      where: {
+        categoryId: productData.categoryId,
+        id: { not: productData.id },
+        isActive: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        comparePrice: true,
+        images: true,
+        productType: true,
+        stock: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
           }
-        },
-        take: 4,
+        }
+      },
+      take: 4,
         orderBy: { sortOrder: 'asc', createdAt: 'desc' }
           })
         : Promise.resolve([])
@@ -132,7 +132,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     variations: Array.isArray(variationsData) 
       ? variationsData.map((variation: any) => ({
           id: variation.id,
-          price: Number(variation.price),
+      price: Number(variation.price),
           stock: variation.stock,
           sku: variation.sku || undefined,
           attributes: Array.isArray(variation.attributes)
@@ -140,12 +140,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 id: attr.id,
                 variationId: attr.variationId || variation.id,
                 attributeValueId: attr.attributeValueId || attr.attributeValue?.id,
-                attributeValue: {
+        attributeValue: {
                   id: attr.attributeValue?.id,
                   attributeId: attr.attributeValue?.attributeId,
                   value: attr.attributeValue?.value
-                }
-              }))
+        }
+      }))
             : []
         }))
       : [],
@@ -156,37 +156,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ? similarProductsData
         .filter((p: any) => p && p.id) // Filter out any invalid products
         .map((p: any) => ({
-          ...p,
+    ...p,
           price: Number(p.price) || 0,
           comparePrice: p.comparePrice ? Number(p.comparePrice) : undefined,
           category: p.category || { name: '', slug: '', id: '' }
-        }))
+  }))
     : []
 
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <ProductDetailClient product={product} />
-        
-        {/* Similar Products Section */}
-        {similarProducts.length > 0 && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 flex items-center">
-                <span className="w-1 h-10 bg-blue-600 mr-4 rounded-full"></span>
-                Benzer Ürünler
-              </h2>
-              <p className="text-gray-600 mt-2 ml-5">Aynı kategorideki diğer ürünler</p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {similarProducts.map((similarProduct) => (
-                <ProductCard key={similarProduct.id} product={similarProduct} />
-              ))}
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <ProductDetailClient product={product} />
+      
+      {/* Similar Products Section */}
+      {similarProducts.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 flex items-center">
+              <span className="w-1 h-10 bg-blue-600 mr-4 rounded-full"></span>
+              Benzer Ürünler
+            </h2>
+            <p className="text-gray-600 mt-2 ml-5">Aynı kategorideki diğer ürünler</p>
           </div>
-        )}
-      </div>
-    )
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {similarProducts.map((similarProduct) => (
+              <ProductCard key={similarProduct.id} product={similarProduct} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
   } catch (error) {
     console.error('Product page error:', error)
     throw error // Let Next.js error boundary handle it

@@ -126,19 +126,20 @@ export default function AdminHeader() {
   const unreadCount = notifications.filter(n => !n.read).length
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-gray-800 to-gray-900 shadow-xl border-b px-6 py-4 z-20">
+    <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-gray-800 to-gray-900 shadow-xl border-b px-3 sm:px-4 lg:px-6 py-3 sm:py-4 z-20 safe-area-inset-top">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-sm text-gray-200">E-Mağaza Yönetim Paneli</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">Admin Panel</h1>
+          <p className="text-xs sm:text-sm text-gray-200 hidden sm:block">E-Mağaza Yönetim Paneli</p>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
           {/* Notifications */}
           <div className="relative">
             <button 
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="notification-button relative p-3 text-white hover:text-gray-200 hover:bg-white/10 rounded-lg transition-colors"
+              className="notification-button relative p-2 sm:p-3 text-white hover:text-gray-200 hover:bg-white/10 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Bildirimler"
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -149,7 +150,7 @@ export default function AdminHeader() {
             </button>
 
             {isNotificationsOpen && (
-              <div className="notification-dropdown absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-2xl border z-50 max-h-96 overflow-hidden flex flex-col">
+              <div className="notification-dropdown absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[400px] bg-white rounded-lg shadow-2xl border z-50 max-h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="px-4 py-3 border-b bg-gray-50">
                   <h3 className="text-sm font-semibold text-gray-900">Bildirimler</h3>
@@ -221,25 +222,26 @@ export default function AdminHeader() {
           {/* User Menu */}
           <div className="relative">
             <button
-              className="user-button flex items-center space-x-2 p-3 text-white hover:text-gray-200 rounded-lg hover:bg-white/10 transition-colors"
+              className="user-button flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 text-white hover:text-gray-200 rounded-lg hover:bg-white/10 transition-colors touch-manipulation min-w-[44px] min-h-[44px]"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              aria-label="Kullanıcı menüsü"
             >
               <User className="h-5 w-5" />
-              <span className="text-sm font-medium">Admin</span>
+              <span className="text-sm font-medium hidden sm:inline">Admin</span>
             </button>
 
             {isDropdownOpen && (
               <div className="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-2 z-50">
                 <a
                   href="/profile"
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation min-h-[44px]"
                 >
                   <User className="h-4 w-4 mr-2" />
                   Profil
                 </a>
                 <a
                   href="/admin/settings"
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation min-h-[44px]"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Ayarlar
@@ -251,7 +253,7 @@ export default function AdminHeader() {
                     localStorage.removeItem('user')
                     window.location.href = '/login'
                   }}
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-gray-100 touch-manipulation min-h-[44px] text-left"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Çıkış Yap

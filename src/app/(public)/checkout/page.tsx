@@ -363,24 +363,24 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                       <Mail className="h-4 w-4 mr-2 text-blue-600" />
                       E-posta Adresi <span className="text-red-500 ml-1">*</span>
-                    </label>
+                  </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Mail className="h-5 w-5 text-gray-400" />
                       </div>
-                      <input
-                        type="email"
-                        value={customerEmail}
-                        onChange={(e) => setCustomerEmail(e.target.value)}
-                        placeholder="ornek@domain.com"
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="ornek@domain.com"
                         required
                         className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
+                  />
                     </div>
                     <p className="text-xs text-gray-500 mt-2">
                       Sipariş onayı ve takip bilgileri bu adrese gönderilecektir.
-                    </p>
-                  </div>
+                  </p>
+                </div>
                 )}
 
                 {/* Kayıtlı Adresler */}
@@ -426,15 +426,15 @@ export default function CheckoutPage() {
                 )}
 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Adres Başlığı <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingAddress.title}
-                        onChange={(e) => setShippingAddress(prev => ({ ...prev, title: e.target.value }))}
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.title}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Ev, İş, Ofis vb."
                         required
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -455,71 +455,71 @@ export default function CheckoutPage() {
                           value={shippingAddress.phone}
                           onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
                           placeholder="5XX XXX XX XX"
-                          required
+                      required
                           className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        />
+                    />
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                        <User className="h-4 w-4 mr-1 text-gray-500" />
-                        Ad <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingAddress.firstName}
-                        onChange={(e) => setShippingAddress(prev => ({ ...prev, firstName: e.target.value }))}
-                        placeholder="Adınız"
-                        required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Soyad <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingAddress.lastName}
-                        onChange={(e) => setShippingAddress(prev => ({ ...prev, lastName: e.target.value }))}
-                        placeholder="Soyadınız"
-                        required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                  <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <User className="h-4 w-4 mr-1 text-gray-500" />
+                        Ad <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.firstName}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, firstName: e.target.value }))}
+                        placeholder="Adınız"
+                      required
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                  
+                  <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Soyad <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.lastName}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, lastName: e.target.value }))}
+                        placeholder="Soyadınız"
+                      required
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Şehir <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingAddress.city}
-                        onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
                         placeholder="İstanbul"
-                        required
+                      required
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
-                    </div>
-                    
-                    <div>
+                    />
+                  </div>
+                  
+                  <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         İlçe <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingAddress.district}
-                        onChange={(e) => setShippingAddress(prev => ({ ...prev, district: e.target.value }))}
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.district}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, district: e.target.value }))}
                         placeholder="Kadıköy"
-                        required
+                      required
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
+                    />
                     </div>
                   </div>
                   

@@ -154,27 +154,27 @@ export default function CartPage() {
                     <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
                       Birim: <span className="font-semibold text-gray-700">{item.price.toFixed(2)} ₺</span>
                     </p>
-                    
-                    {/* Quantity Controls */}
+
+                  {/* Quantity Controls */}
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <span className="text-xs text-gray-500 font-medium hidden sm:inline">Adet:</span>
                       <div className="flex items-center border-2 border-gray-200 rounded-lg">
-                        <button
-                          onClick={() => updateQuantity(item.id, -1)}
+                    <button
+                      onClick={() => updateQuantity(item.id, -1)}
                           className="p-2 sm:p-2.5 rounded-l-lg hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-                          disabled={item.quantity <= 1}
+                      disabled={item.quantity <= 1}
                           aria-label="Azalt"
-                        >
-                          <Minus className="h-4 w-4 text-gray-600" />
-                        </button>
+                    >
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    </button>
                         <span className="w-10 sm:w-12 text-center font-bold text-gray-900 text-sm sm:text-base">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, 1)}
+                    <button
+                      onClick={() => updateQuantity(item.id, 1)}
                           className="p-2 sm:p-2.5 rounded-r-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                           aria-label="Artır"
-                        >
-                          <Plus className="h-4 w-4 text-gray-600" />
-                        </button>
+                    >
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    </button>
                       </div>
                     </div>
                   </div>
@@ -198,12 +198,12 @@ export default function CartPage() {
 
             {/* Clear Cart Button */}
             {cartItems.length > 0 && (
-              <button
-                onClick={clearCart}
+            <button
+              onClick={clearCart}
                 className="w-full py-3 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors text-sm font-semibold border-2 border-red-200 hover:border-red-300 touch-manipulation min-h-[44px]"
-              >
-                Sepeti Temizle
-              </button>
+            >
+              Sepeti Temizle
+            </button>
             )}
           </div>
 

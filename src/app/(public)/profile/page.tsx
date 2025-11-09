@@ -285,7 +285,7 @@ export default function ProfilePage() {
               <User className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Profil Bilgileri</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Profil Bilgileri</h1>
               <p className="text-gray-600 mt-1">Kişisel bilgilerinizi ve adreslerinizi yönetin</p>
             </div>
           </div>
@@ -336,13 +336,13 @@ export default function ProfilePage() {
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                           <User className="h-5 w-5 text-gray-400" />
                         </div>
-                        <input
-                          type="text"
-                          value={editData.name}
-                          onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                      <input
+                        type="text"
+                        value={editData.name}
+                        onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
                           className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                           placeholder="Adınız ve soyadınız"
-                        />
+                      />
                       </div>
                     ) : (
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
@@ -350,9 +350,9 @@ export default function ProfilePage() {
                           <User className="h-5 w-5 text-blue-600" />
                         </div>
                         <p className="text-gray-900 font-medium">{userData.name}</p>
-                      </div>
-                    )}
                   </div>
+                    )}
+                </div>
 
                   <div className="md:col-span-3">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -361,10 +361,10 @@ export default function ProfilePage() {
                     <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
                       <div className="bg-green-100 p-2 rounded-lg">
                         <Mail className="h-5 w-5 text-green-600" />
-                      </div>
+                  </div>
                       <p className="text-gray-900 font-medium">{userData.email}</p>
                       <span className="ml-auto text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">Değiştirilemez</span>
-                    </div>
+                </div>
                   </div>
 
                   <div className="md:col-span-3">
@@ -376,13 +376,13 @@ export default function ProfilePage() {
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                           <Phone className="h-5 w-5 text-gray-400" />
                         </div>
-                        <input
-                          type="tel"
-                          value={editData.phone}
-                          onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
+                      <input
+                        type="tel"
+                        value={editData.phone}
+                        onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
                           className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                           placeholder="5XX XXX XX XX"
-                        />
+                      />
                       </div>
                     ) : (
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
@@ -422,31 +422,31 @@ export default function ProfilePage() {
                           <MapPin className="h-5 w-5 text-blue-600" />
                           <h3 className="font-bold text-gray-900">{address.title}</h3>
                         </div>
-                        {address.isDefault && (
+                            {address.isDefault && (
                           <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-                            Varsayılan
-                          </span>
-                        )}
-                      </div>
+                                Varsayılan
+                              </span>
+                            )}
+                          </div>
                       <div className="space-y-2 mb-4">
                         <p className="text-gray-700 font-medium">{address.firstName} {address.lastName}</p>
                         <p className="text-gray-600 text-sm">{address.phone}</p>
                         <p className="text-gray-600 text-sm">{address.fullAddress}</p>
                         <p className="text-gray-600 text-sm">{address.district}, {address.city}</p>
-                      </div>
+                        </div>
                       <div className="flex space-x-2 pt-3 border-t border-gray-200">
-                        <button 
-                          onClick={() => handleEditAddress(address)}
+                          <button 
+                            onClick={() => handleEditAddress(address)}
                           className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          Düzenle
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteAddress(address.id)}
+                          >
+                            Düzenle
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteAddress(address.id)}
                           className="flex-1 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                        >
-                          Sil
-                        </button>
+                          >
+                            Sil
+                          </button>
                       </div>
                     </div>
                   ))}
@@ -526,9 +526,9 @@ export default function ProfilePage() {
                   </div>
                 </button>
               </div>
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 
@@ -542,8 +542,8 @@ export default function ProfilePage() {
                   <MapPin className="h-5 w-5 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">
-                  {editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}
-                </h3>
+              {editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}
+            </h3>
               </div>
               <button
                 onClick={() => {
@@ -604,13 +604,13 @@ export default function ProfilePage() {
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Phone className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input
-                    type="tel"
-                    value={addressForm.phone}
-                    onChange={(e) => setAddressForm(prev => ({ ...prev, phone: e.target.value }))}
+                <input
+                  type="tel"
+                  value={addressForm.phone}
+                  onChange={(e) => setAddressForm(prev => ({ ...prev, phone: e.target.value }))}
                     className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     placeholder="5XX XXX XX XX"
-                  />
+                />
                 </div>
               </div>
 
