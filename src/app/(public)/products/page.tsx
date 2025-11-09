@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
-import { unstable_cache } from 'next/cache'
 
 export const revalidate = 300 // ISR: Cache for 5 minutes (increased for better performance)
 export const dynamic = 'force-dynamic' // Force dynamic rendering for search params
@@ -15,43 +14,71 @@ interface ProductsPageProps {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = await searchParams
-  const page = parseInt(params.page || '1')
-  const limit = 8 // Reduced from 12 to 8 for better performance
-  const skip = (page - 1) * limit
+  try {
+    const params = await searchParams
+    const page = parseInt(params.page || '1', 10)
+    const limit = 8 // Reduced from 12 to 8 for better performance
+    const skip = (page - 1) * limit
 
-  // Build filter conditions - simplified (no price range)
-  const where: {
-    isActive: boolean
-    category?: { slug: string }
-    OR?: Array<{
-      name?: { contains: string; mode: 'insensitive' }
-      description?: { contains: string; mode: 'insensitive' }
-      sku?: { contains: string; mode: 'insensitive' }
-    }>
-  } = {
-    isActive: true
-  }
+    // Build filter conditions - simplified (no price range)
+    const where: {
+      isActive: boolean
+      category?: { slug: string }
+      OR?: Array<{
+        name?: { contains: string; mode: 'insensitive' }
+        description?: { contains: string; mode: 'insensitive' }
+        sku?: { contains: string; mode: 'insensitive' }
+      }>
+    } = {
+      isActive: true
+    }
 
-  if (params.category) {
-    where.category = { slug: params.category }
-  }
+    if (params.category) {
+      where.category = { slug: params.category }
+    }
 
-  if (params.search) {
-    where.OR = [
-      { name: { contains: params.search, mode: 'insensitive' } },
-      { description: { contains: params.search, mode: 'insensitive' } },
-      { sku: { contains: params.search, mode: 'insensitive' } }
-    ]
-  }
+    if (params.search) {
+      where.OR = [
+        { name: { contains: params.search, mode: 'insensitive' } },
+        { description: { contains: params.search, mode: 'insensitive' } },
+        { sku: { contains: params.search, mode: 'insensitive' } }
+      ]
+    }
 
-  // CRITICAL OPTIMIZATION: Use select instead of include - only fetch what we need
-  // Removed variations, attributes, _count - not needed for product listing
-  
-  // Cache categories (they don't change often)
-  const getCachedCategories = unstable_cache(
-    async () => {
-      return prisma.category.findMany({
+    // CRITICAL OPTIMIZATION: Use select instead of include - only fetch what we need
+    // Removed variations, attributes, _count - not needed for product listing
+    
+    // Fetch all data in parallel with error handling
+    const [productsResult, totalResult, categoriesResult] = await Promise.allSettled([
+      prisma.product.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          price: true,
+          comparePrice: true,
+          images: true,
+          productType: true,
+          stock: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true
+            }
+          },
+          // REMOVED: variations, attributes - saves massive query time
+        },
+        skip,
+        take: limit,
+        orderBy: [
+          { sortOrder: 'asc' },
+          { createdAt: 'desc' }
+        ]
+      }),
+      prisma.product.count({ where }),
+      prisma.category.findMany({
         where: { isActive: true },
         orderBy: { name: 'asc' },
         select: {
@@ -60,62 +87,27 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           slug: true
         }
       })
-    },
-    ['categories-active'],
-    { revalidate: 3600 } // Cache for 1 hour
-  )
+    ])
 
-  // Create cache key for count query based on where clause
-  const countCacheKey = JSON.stringify(where)
-  const getCachedCount = unstable_cache(
-    async (whereClause: any) => {
-      return prisma.product.count({ where: whereClause })
-    },
-    ['products-count', countCacheKey],
-    { revalidate: 300 } // Cache for 5 minutes
-  )
+    // Handle errors gracefully
+    if (productsResult.status === 'rejected') {
+      console.error('Error fetching products:', productsResult.reason)
+      throw new Error('Ürünler yüklenirken bir hata oluştu')
+    }
 
-  const [productsData, total, categories] = await Promise.all([
-    (prisma.product as any).findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        price: true,
-        comparePrice: true,
-        images: true,
-        productType: true,
-        stock: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true
-          }
-        },
-        // REMOVED: variations, attributes - saves massive query time
-      },
-      skip,
-      take: limit,
-      orderBy: [
-        { sortOrder: 'asc' },
-        { createdAt: 'desc' }
-      ]
-    }),
-    // Use cached count for better performance
-    getCachedCount(where),
-    getCachedCategories()
-  ])
+    const productsData = productsResult.status === 'fulfilled' ? productsResult.value : []
+    const total = totalResult.status === 'fulfilled' ? totalResult.value : 0
+    const categories = categoriesResult.status === 'fulfilled' ? categoriesResult.value : []
 
-  // Convert Decimal to Number for client compatibility
-  const products = productsData.map((product: any) => ({
-    ...product,
-    price: Number(product.price),
-    comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined
-  }))
+    // Convert Decimal to Number for client compatibility
+    const products = Array.isArray(productsData) ? productsData.map((product: any) => ({
+      ...product,
+      price: product.price ? Number(product.price) : 0,
+      comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
+      category: product.category || null
+    })) : []
 
-  const totalPages = Math.ceil(total / limit)
+    const totalPages = Math.ceil(total / limit)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
@@ -193,5 +185,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </div>
       </div>
     </div>
-  )
+    )
+  } catch (error) {
+    console.error('Products page error:', error)
+    // Re-throw to let Next.js error boundary handle it
+    throw error
+  }
 }
