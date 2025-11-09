@@ -276,8 +276,8 @@ export default function ProfilePage() {
 
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 pb-20 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
@@ -291,16 +291,16 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Profile Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900">Kişisel Bilgiler</h2>
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6 pb-4 border-b border-gray-200">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Kişisel Bilgiler</h2>
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 rounded-lg transition-colors touch-manipulation min-h-[44px] w-full sm:w-auto"
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Düzenle
@@ -309,14 +309,14 @@ export default function ProfilePage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={handleSave}
-                      className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                      className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg transition-colors touch-manipulation min-h-[44px]"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Kaydet
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors touch-manipulation min-h-[44px]"
                     >
                       <X className="h-4 w-4 mr-2" />
                       İptal
@@ -406,7 +406,7 @@ export default function ProfilePage() {
                 </div>
                 <button 
                   onClick={handleAddAddress}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                  className="flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 touch-manipulation min-h-[44px] text-sm sm:text-base w-full sm:w-auto"
                 >
                   <MapPin className="h-4 w-4 mr-2" />
                   Yeni Adres Ekle
@@ -529,8 +529,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
 
       {/* Adres Formu Modal */}
       {showAddressForm && (
@@ -569,8 +569,6 @@ export default function ProfilePage() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
               </div>
-
-            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -690,7 +688,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-    </div>
     </>
   )
 } 

@@ -118,19 +118,19 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const totalPages = Math.ceil(total / limit)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Ürünler</h1>
-          <p className="text-gray-600 mt-2">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
             {total} ürün bulundu
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-64">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
+          {/* Filters Sidebar - Mobile: Hidden by default, can be toggled */}
+          <div className="lg:w-64 hidden lg:block">
             <ProductFilters 
               categories={categories}
               currentCategory={params.category}
@@ -142,7 +142,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <div className="flex-1">
             {products.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                   {products.map((product: any) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

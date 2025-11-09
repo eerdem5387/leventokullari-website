@@ -111,66 +111,67 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 pb-20 lg:pb-0">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="bg-blue-600 p-3 rounded-full">
-              <ShoppingCart className="h-6 w-6 text-white" />
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-3 sm:mb-4">
+            <div className="bg-blue-600 p-2.5 sm:p-3 rounded-full">
+              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Sepetim</h1>
-              <p className="text-gray-600 mt-1">{cartItems.length} ürün</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sepetim</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">{cartItems.length} ürün</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             {cartItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-                <div className="flex items-center space-x-4">
+              <div key={item.id} className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-lg sm:hover:shadow-xl transition-shadow">
+                <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
                   {/* Product Image */}
-                  <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200">
+                  <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border-2 border-gray-200">
                     {item.image ? (
                       <img
                         src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-50 to-gray-100">
-                        <ShoppingCart className="h-10 w-10" />
+                        <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10" />
                       </div>
                     )}
                   </div>
 
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 truncate mb-1">{item.name}</h3>
-                    <p className="text-sm text-gray-500 mb-3">
-                      Birim Fiyat: <span className="font-semibold text-gray-700">{item.price.toFixed(2)} ₺</span>
+                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 line-clamp-2 mb-1">{item.name}</h3>
+                    <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
+                      Birim: <span className="font-semibold text-gray-700">{item.price.toFixed(2)} ₺</span>
                     </p>
                     
                     {/* Quantity Controls */}
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xs text-gray-500 font-medium">Adet:</span>
-                      <div className="flex items-center space-x-2 border-2 border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <span className="text-xs text-gray-500 font-medium hidden sm:inline">Adet:</span>
+                      <div className="flex items-center border-2 border-gray-200 rounded-lg">
                         <button
                           onClick={() => updateQuantity(item.id, -1)}
-                          className="p-2 rounded-l-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 sm:p-2.5 rounded-l-lg hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                           disabled={item.quantity <= 1}
-                          title="Azalt"
+                          aria-label="Azalt"
                         >
                           <Minus className="h-4 w-4 text-gray-600" />
                         </button>
-                        <span className="w-12 text-center font-bold text-gray-900">{item.quantity}</span>
+                        <span className="w-10 sm:w-12 text-center font-bold text-gray-900 text-sm sm:text-base">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, 1)}
-                          className="p-2 rounded-r-lg hover:bg-gray-100 transition-colors"
-                          title="Artır"
+                          className="p-2 sm:p-2.5 rounded-r-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          aria-label="Artır"
                         >
                           <Plus className="h-4 w-4 text-gray-600" />
                         </button>
@@ -179,14 +180,14 @@ export default function CartPage() {
                   </div>
 
                   {/* Price & Remove */}
-                  <div className="flex flex-col items-end space-y-3">
-                    <p className="text-xl font-bold text-blue-600">
+                  <div className="flex flex-col items-end space-y-2 sm:space-y-3">
+                    <p className="text-base sm:text-lg lg:text-xl font-bold text-blue-600 whitespace-nowrap">
                       {(item.price * item.quantity).toFixed(2)} ₺
                     </p>
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border-2 border-transparent hover:border-red-200"
-                      title="Sepetten Kaldır"
+                      className="p-2 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors border-2 border-transparent hover:border-red-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                      aria-label="Sepetten Kaldır"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -199,16 +200,16 @@ export default function CartPage() {
             {cartItems.length > 0 && (
               <button
                 onClick={clearCart}
-                className="w-full py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors text-sm font-semibold border-2 border-red-200 hover:border-red-300"
+                className="w-full py-3 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors text-sm font-semibold border-2 border-red-200 hover:border-red-300 touch-manipulation min-h-[44px]"
               >
                 Sepeti Temizle
               </button>
             )}
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary - Mobile: Sticky bottom, Desktop: Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-4 sm:p-6 sticky bottom-20 lg:bottom-auto lg:top-8 z-40 lg:z-auto">
               <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Sipariş Özeti</h2>
               
               <div className="space-y-4 mb-6">
@@ -231,10 +232,10 @@ export default function CartPage() {
 
               <button
                 onClick={() => router.push('/checkout')}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 sm:py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center touch-manipulation min-h-[52px] text-sm sm:text-base"
               >
                 Siparişi Tamamla
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </button>
 
               <Link

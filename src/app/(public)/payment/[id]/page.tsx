@@ -211,8 +211,8 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 pb-20 lg:pb-0">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <button
@@ -223,20 +223,20 @@ export default function PaymentPage() {
               Teslimat Bilgilerine Geri Dön
             </button>
           </div>
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="bg-green-600 p-3 rounded-full">
-              <CreditCard className="h-6 w-6 text-white" />
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="bg-green-600 p-2.5 sm:p-3 rounded-full">
+              <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Ödeme</h1>
-              <p className="text-gray-600 mt-1">Sipariş #{order.orderNumber}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ödeme</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Sipariş #{order.orderNumber}</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Payment Form */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-4 sm:p-6">
             <div className="flex items-center mb-6 pb-4 border-b border-gray-200">
               <div className="bg-blue-100 p-2 rounded-lg mr-3">
                 <CreditCard className="h-6 w-6 text-blue-600" />
@@ -382,7 +382,7 @@ export default function PaymentPage() {
                   }
                 }}
                 disabled={isProcessing || !order || !order.finalAmount}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 sm:py-4 px-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center touch-manipulation min-h-[52px] text-sm sm:text-base"
               >
                 {isProcessing ? (
                   <>
@@ -407,7 +407,7 @@ export default function PaymentPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-4 sm:p-6 sticky bottom-20 lg:bottom-auto lg:top-8 z-40 lg:z-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Sipariş Özeti</h2>
             
             {/* Order Items */}

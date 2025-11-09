@@ -252,8 +252,8 @@ export default function CheckoutPage() {
   const isLoggedIn = safeLocalStorage.getItem('token')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 pb-20 lg:pb-0">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -274,47 +274,47 @@ export default function CheckoutPage() {
             )}
           </div>
           
-          {/* Progress Bar */}
+          {/* Progress Bar - Mobile Optimized */}
           <div className="relative">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
               {/* Step 1 */}
               <div className="flex flex-col items-center flex-1">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all mb-2 ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center border-2 transition-all mb-1 sm:mb-2 ${
                   step >= 1 ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-gray-300 text-gray-400'
                 }`}>
-                  {step > 1 ? <CheckCircle className="h-6 w-6" /> : '1'}
+                  {step > 1 ? <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" /> : <span className="text-xs sm:text-sm lg:text-base">1</span>}
                 </div>
-                <span className={`text-sm font-medium ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-medium ${step >= 1 ? 'text-blue-600' : 'text-gray-400'} hidden sm:inline`}>
                   Teslimat
                 </span>
               </div>
               
               {/* Connector */}
-              <div className={`flex-1 h-1 mx-2 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors`} />
+              <div className={`flex-1 h-0.5 sm:h-1 mx-1 sm:mx-2 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors`} />
               
               {/* Step 2 */}
               <div className="flex flex-col items-center flex-1">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all mb-2 ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center border-2 transition-all mb-1 sm:mb-2 ${
                   step >= 2 ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-gray-300 text-gray-400'
                 }`}>
-                  {step > 2 ? <CheckCircle className="h-6 w-6" /> : '2'}
+                  {step > 2 ? <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" /> : <span className="text-xs sm:text-sm lg:text-base">2</span>}
                 </div>
-                <span className={`text-sm font-medium ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-medium ${step >= 2 ? 'text-blue-600' : 'text-gray-400'} hidden sm:inline`}>
                   Ödeme
                 </span>
               </div>
               
               {/* Connector */}
-              <div className={`flex-1 h-1 mx-2 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors`} />
+              <div className={`flex-1 h-0.5 sm:h-1 mx-1 sm:mx-2 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors`} />
               
               {/* Step 3 */}
               <div className="flex flex-col items-center flex-1">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all mb-2 ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center border-2 transition-all mb-1 sm:mb-2 ${
                   step >= 3 ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-gray-300 text-gray-400'
                 }`}>
-                  <CheckCircle className="h-6 w-6" />
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                 </div>
-                <span className={`text-sm font-medium ${step >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-medium ${step >= 3 ? 'text-blue-600' : 'text-gray-400'} hidden sm:inline`}>
                   Onay
                 </span>
               </div>
@@ -322,10 +322,10 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Checkout Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Guest Checkout Notice */}
               {!isLoggedIn && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
@@ -667,9 +667,9 @@ export default function CheckoutPage() {
             </form>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary - Mobile: Sticky bottom, Desktop: Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-4 sm:p-6 sticky bottom-20 lg:bottom-auto lg:top-8 z-40 lg:z-auto">
               <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Sipariş Özeti</h2>
               
               {/* Cart Items */}
@@ -735,17 +735,17 @@ export default function CheckoutPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+                className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 sm:py-4 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center touch-manipulation min-h-[52px] text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Sipariş Oluşturuluyor...
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
+                    <span className="truncate">Sipariş Oluşturuluyor...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    Siparişi Tamamla
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+                    <span className="truncate">Siparişi Tamamla</span>
                   </>
                 )}
               </button>

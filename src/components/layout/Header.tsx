@@ -90,17 +90,19 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
   
 
   return (
-    <header className="tg-header__style-three">
+    <>
+    <header className="tg-header__style-three sticky top-0 z-50 bg-white shadow-sm">
       {/* Main Header */}
       <div id="sticky-default" className="tg-header__area bg-white">
-        <div className="container custom-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container custom-container max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="row">
             <div className="col-12">
               {/* Mobile Nav Toggler */}
               <div className="mobile-nav-toggler d-xl-none">
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                  aria-label="Menüyü Aç"
                 >
                   <Menu className="h-6 w-6" />
                 </button>
@@ -115,7 +117,7 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                       <img 
                         src="/uploads/levent-akademik-logo.png" 
                         alt={siteName}
-                        className="h-25 w-auto max-w-[140px] object-contain"
+                        className="h-12 sm:h-16 lg:h-20 w-auto max-w-[120px] sm:max-w-[140px] object-contain"
                       />
                     </Link>
                   </div>
@@ -131,14 +133,18 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
 
                   {/* Action Buttons - Right side */}
                   <div className="tgmenu__action flex-shrink-0">
-                    <ul className="flex items-center space-x-4">
+                    <ul className="flex items-center space-x-2 sm:space-x-4">
                       {/* Cart Icon */}
                       <li>
-                        <Link href="/cart" className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                          <ShoppingCart className="h-6 w-6" />
+                        <Link 
+                          href="/cart" 
+                          className="relative p-2.5 sm:p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          aria-label={`Sepetim ${cartItemCount > 0 ? `(${cartItemCount} ürün)` : ''}`}
+                        >
+                          <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
                           {cartItemCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                              {cartItemCount}
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+                              {cartItemCount > 99 ? '99+' : cartItemCount}
                             </span>
                           )}
                         </Link>
@@ -149,10 +155,11 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                         <li className="relative">
                           <button
                             onClick={() => setUserMenuOpen(!userMenuOpen)}
-                            className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                            className="relative p-2.5 sm:p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
+                            aria-label="Kullanıcı Menüsü"
                           >
-                            <User className="h-6 w-6" />
-                            <span className="ml-2 text-sm font-medium hidden sm:inline">{user.name}</span>
+                            <User className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <span className="ml-2 text-sm font-medium hidden lg:inline">{user.name}</span>
                           </button>
                           
                           {/* Dropdown Menu */}
@@ -203,10 +210,10 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
                         <li>
                           <Link
                             href="/login"
-                            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="flex items-center px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation min-h-[44px]"
                           >
-                            <LogIn className="h-5 w-5 mr-2" />
-                            <span className="hidden sm:inline">Giriş Yap</span>
+                            <LogIn className="h-5 w-5 mr-1 sm:mr-2" />
+                            <span className="hidden lg:inline">Giriş Yap</span>
                           </Link>
                         </li>
                       )}
@@ -338,5 +345,65 @@ export default function Header({ siteName = 'E-Mağaza' }: HeaderProps) {
         </div>
       </div>
     </header>
+
+    {/* Mobile Bottom Navigation */}
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 lg:hidden safe-area-inset-bottom">
+      <div className="flex items-center justify-around h-16 px-2">
+        <Link
+          href="/products"
+          className="flex flex-col items-center justify-center flex-1 min-h-[44px] touch-manipulation active:bg-gray-50 rounded-lg transition-colors"
+          aria-label="Ürünler"
+        >
+          <svg className="h-6 w-6 text-gray-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span className="text-xs font-medium text-gray-600">Ürünler</span>
+        </Link>
+
+        <Link
+          href="/cart"
+          className="relative flex flex-col items-center justify-center flex-1 min-h-[44px] touch-manipulation active:bg-gray-50 rounded-lg transition-colors"
+          aria-label={`Sepetim ${cartItemCount > 0 ? `(${cartItemCount} ürün)` : ''}`}
+        >
+          <ShoppingCart className="h-6 w-6 text-gray-600 mb-1" />
+          {cartItemCount > 0 && (
+            <span className="absolute top-0 right-1/4 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+              {cartItemCount > 99 ? '99+' : cartItemCount}
+            </span>
+          )}
+          <span className="text-xs font-medium text-gray-600">Sepetim</span>
+        </Link>
+
+        {user ? (
+          <Link
+            href="/profile"
+            className="flex flex-col items-center justify-center flex-1 min-h-[44px] touch-manipulation active:bg-gray-50 rounded-lg transition-colors"
+            aria-label="Profilim"
+          >
+            <User className="h-6 w-6 text-gray-600 mb-1" />
+            <span className="text-xs font-medium text-gray-600">Profilim</span>
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="flex flex-col items-center justify-center flex-1 min-h-[44px] touch-manipulation active:bg-gray-50 rounded-lg transition-colors"
+            aria-label="Giriş Yap"
+          >
+            <LogIn className="h-6 w-6 text-gray-600 mb-1" />
+            <span className="text-xs font-medium text-gray-600">Giriş</span>
+          </Link>
+        )}
+
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="flex flex-col items-center justify-center flex-1 min-h-[44px] touch-manipulation active:bg-gray-50 rounded-lg transition-colors"
+          aria-label="Menü"
+        >
+          <Menu className="h-6 w-6 text-gray-600 mb-1" />
+          <span className="text-xs font-medium text-gray-600">Menü</span>
+        </button>
+      </div>
+    </nav>
+    </>
   )
 }
