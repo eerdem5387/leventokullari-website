@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
+import { Filter } from 'lucide-react'
+import { useState } from 'react'
 
 export const revalidate = 300 // ISR: Cache for 5 minutes
 
@@ -155,17 +157,34 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   const totalPages = Math.ceil(total / limit)
 
+  // Mobile filter toggle state (client-only)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Page Header */}
-        <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
-          {!hasDatabaseError && (
-            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-            {total} ürün bulundu
-          </p>
-          )}
+        <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col gap-3 sm:gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
+            {!hasDatabaseError && (
+              <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+                {total} ürün bulundu
+              </p>
+            )}
+          </div>
+
+          {/* Mobile Filter Button */}
+          <div className="lg:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileFilterOpen(true)}
+              className="inline-flex items-center px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 touch-manipulation min-h-[44px]"
+            >
+              <Filter className="h-4 w-4 mr-2 text-gray-500" />
+              Filtreleri Göster
+            </button>
+          </div>
         </div>
 
         {/* Database Error Banner */}
@@ -186,7 +205,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         )}
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
-          {/* Filters Sidebar - Mobile: Hidden by default, can be toggled */}
+          {/* Filters Sidebar - Desktop */}
           <div className="lg:w-64 hidden lg:block">
             <ProductFilters 
               categories={categories}
@@ -296,8 +315,37 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </div>
         </div>
       </div>
+
+      {/* Mobile Filters Drawer */}
+      {isMobileFilterOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+            onClick={() => setIsMobileFilterOpen(false)}
+          />
+          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl z-50 lg:hidden flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-900">Filtreler</h2>
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg touch-manipulation"
+              >
+                Kapat
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              <ProductFilters
+                categories={categories}
+                currentCategory={params.category}
+                currentSearch={params.search}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
-    )
+  )
   } catch (error: any) {
     console.error('Products page error:', error)
     

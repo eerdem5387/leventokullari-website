@@ -115,9 +115,10 @@ export default function AdminCustomersPage() {
         </div>
       </div>
 
-      {/* Customers Table */}
+      {/* Customers Table / Cards */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -194,6 +195,72 @@ export default function AdminCustomersPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {filteredCustomers.length > 0 ? (
+            filteredCustomers.map((customer) => (
+              <div key={customer.id} className="px-4 py-3 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                    {customer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">{customer.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(customer.email)}
+                      className="flex items-center gap-1 text-xs text-gray-600 mt-0.5"
+                    >
+                      <span className="truncate">{customer.email}</span>
+                      {copiedEmail === customer.email ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                  <span>{customer._count.orders} sipariş</span>
+                  <span>
+                    Toplam ₺
+                    {customer.orders
+                      .reduce((sum, order) => sum + Number(order.finalAmount), 0)
+                      .toLocaleString('tr-TR')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-400">
+                    {new Date(customer.createdAt).toLocaleDateString('tr-TR')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`mailto:${customer.email}`}
+                      className="p-1.5 rounded-full bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      title="E-posta Gönder"
+                    >
+                      <Mail className="h-3.5 w-3.5" />
+                    </a>
+                    <Link
+                      href={`/admin/customers/${customer.id}`}
+                      className="p-1.5 rounded-full bg-gray-50 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                      title="Profili Görüntüle"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+          )) : (
+            <div className="px-4 py-8 text-center text-gray-500">
+              <div className="flex flex-col items-center justify-center">
+                <Users className="h-10 w-10 text-gray-300 mb-3" />
+                <p>Müşteri bulunamadı.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

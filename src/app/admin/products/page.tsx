@@ -200,7 +200,23 @@ export default function AdminProductsPage() {
           setProducts(products.filter(p => p.id !== productId))
           showNotification('success', 'Ürün başarıyla silindi')
         } else {
-          showNotification('error', 'Ürün silinirken bir hata oluştu')
+          // API'den dönen hata mesajını göster
+          let errorMessage = 'Ürün silinirken bir hata oluştu'
+          try {
+            const data = await response.json()
+            if (data?.error) {
+              errorMessage = data.error
+            }
+          } catch {
+            // JSON parse edilemezse varsayılan mesajı kullan
+          }
+
+          // Siparişlere bağlı ürünler için özel durum
+          if (response.status === 409 && errorMessage === 'Ürün silinirken bir hata oluştu') {
+            errorMessage = 'Bu ürün daha önce verilen siparişlerde kullanıldığı için silinemez. Bunun yerine ürünü pasif hale getirebilirsiniz.'
+          }
+
+          showNotification('error', errorMessage)
         }
       } catch (error) {
         showNotification('error', 'Ürün silinirken bir hata oluştu')

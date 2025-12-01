@@ -194,9 +194,10 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table / Cards */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -265,8 +266,54 @@ export default function AdminOrdersPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {currentData.length > 0 ? (
+            currentData.map((order) => (
+              <button
+                key={order.id}
+                onClick={() => window.location.href = `/admin/orders/${order.id}`}
+                className="w-full text-left px-4 py-3 flex flex-col gap-2 active:bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      #{order.orderNumber}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {order._count?.items || order.items.length} ürün • ₺{Number(order.finalAmount).toLocaleString('tr-TR')}
+                    </p>
+                  </div>
+                  <StatusBadge status={order.status} />
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>{order.user.name}</span>
+                  <span>
+                    {new Date(order.createdAt).toLocaleDateString('tr-TR')}{' '}
+                    {new Date(order.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <StatusBadge status={order.paymentStatus} type="payment" />
+                  <span className="inline-flex items-center text-xs text-blue-600">
+                    Detayı Gör
+                    <Eye className="h-3 w-3 ml-1" />
+                  </span>
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="px-4 py-8 text-center text-gray-500">
+              <div className="flex flex-col items-center justify-center">
+                <ShoppingCart className="h-10 w-10 text-gray-300 mb-3" />
+                <p>Sipariş bulunamadı.</p>
               </div>
-              
+            </div>
+          )}
+        </div>
+
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex items-center justify-between">
