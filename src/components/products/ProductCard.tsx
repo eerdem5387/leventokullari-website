@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { ShoppingCart, Search } from 'lucide-react'
 import { isClient } from '@/lib/browser-utils'
 import { cartService } from '@/lib/cart-service'
+import { useToast } from '@/hooks/useToast'
+import Toast from '@/components/ui/Toast'
 
 interface ProductCardProps {
   product: {
@@ -22,6 +24,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { toasts, removeToast, success, error } = useToast()
   const handleAddToCart = () => {
     if (!isClient) return
     
@@ -44,15 +47,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         },
         1
       )
-      // Basit bir geri bildirim
-      window.alert('Ürün sepete eklendi!')
+      success('Ürün sepete eklendi!')
     } catch (error) {
       console.error('Sepete ekleme hatası:', error)
-      window.alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
+      error('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }
 
   return (
+    <>
     <div className="group bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2 active:scale-[0.98]">
       <Link href={`/products/${product.slug}`} className="block touch-manipulation">
         <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
@@ -157,5 +160,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
     </div>
+    <Toast toasts={toasts} onRemove={removeToast} />
+    </>
   )
 } 

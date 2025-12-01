@@ -4,7 +4,6 @@ import ProductDetailClient from '@/components/products/ProductDetailClient'
 import ProductCard from '@/components/products/ProductCard'
 
 export const revalidate = 300 // Cache for 5 minutes
-export const dynamic = 'force-dynamic'
 
 interface ProductPageProps {
   params: Promise<{

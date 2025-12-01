@@ -2,8 +2,7 @@ import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
 
-export const revalidate = 300 // ISR: Cache for 5 minutes (increased for better performance)
-export const dynamic = 'force-dynamic' // Force dynamic rendering for search params
+export const revalidate = 300 // ISR: Cache for 5 minutes
 
 interface ProductsPageProps {
   searchParams: Promise<{

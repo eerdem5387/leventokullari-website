@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { ShoppingCart, Heart, Share2, ChevronDown } from 'lucide-react'
 import { safeDocument, isClient } from '@/lib/browser-utils'
 import { cartService } from '@/lib/cart-service'
+import { useToast } from '@/hooks/useToast'
+import Toast from '@/components/ui/Toast'
 
 interface ProductDetailClientProps {
   product: {
@@ -45,6 +47,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [selectedVariation, setSelectedVariation] = useState<any>(null)
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
+  const { toasts, removeToast, success, error } = useToast()
 
   const handleAddToCart = () => {
     if (!isClient) return
@@ -79,12 +82,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         )
       }
       
-      // Başarı mesajı göster
-      window.alert('Ürün sepete eklendi!')
+      success('Ürün sepete eklendi!')
       
-    } catch (error) {
-      console.error('Sepete ekleme hatası:', error)
-      window.alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
+    } catch (err) {
+      console.error('Sepete ekleme hatası:', err)
+      error('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }
 
@@ -98,18 +100,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   // Varyasyon seçimi için yardımcı fonksiyonlar
   const getAvailableAttributes = () => {
-    console.log('Product variations:', product.variations)
-    
     if (!product.variations || product.variations.length === 0) {
-      console.log('No variations found')
       return {}
     }
     
     const attributes: Record<string, string[]> = {}
-    product.variations.forEach((variation, index) => {
-      console.log(`Variation ${index}:`, variation)
+    product.variations.forEach((variation) => {
       variation.attributes.forEach(attr => {
-        console.log('Attribute:', attr)
         // Attribute name'i daha kullanıcı dostu hale getir
         const attributeName = getAttributeDisplayName(attr.attributeValue?.attributeId || 'Özellik')
         const attributeValue = attr.attributeValue?.value || 'Değer'
@@ -156,35 +153,21 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     const newAttributes = { ...selectedAttributes, [attributeName]: value }
     setSelectedAttributes(newAttributes)
     
-    console.log('New attributes:', newAttributes)
-    console.log('Available variations:', product.variations)
-    
     // Seçilen varyasyonu bul
     const matchingVariation = product.variations?.find(variation => {
       const matches = variation.attributes.every(attr => {
         const attributeId = attr.attributeValue.attributeId
         const attributeValue = attr.attributeValue.value
         const selectedValue = newAttributes[getAttributeDisplayName(attributeId)]
-        
-        console.log('Comparing:', {
-          attributeId,
-          attributeValue,
-          selectedValue,
-          matches: selectedValue === attributeValue
-        })
-        
         return selectedValue === attributeValue
       })
-      console.log('Checking variation:', variation.id, 'matches:', matches)
       return matches
     })
     
-    console.log('Selected variation:', matchingVariation)
     setSelectedVariation(matchingVariation || null)
   }
 
   const toggleDropdown = (attributeName: string) => {
-    console.log('Toggle dropdown:', attributeName)
     setOpenDropdowns(prev => ({
       ...prev,
       [attributeName]: !prev[attributeName]
@@ -530,5 +513,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       </div>
 
     </div>
+    <Toast toasts={toasts} onRemove={removeToast} />
   )
 } 
