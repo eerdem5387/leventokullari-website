@@ -34,17 +34,39 @@ export async function DELETE(
 
         // Ürünün siparişlerde kullanılıp kullanılmadığını kontrol et
         if (product.orderItems.length > 0) {
-            throw new ConflictError('Bu ürün siparişlerde kullanıldığı için silinemez')
+            // Fiziksel silme yerine güvenli "katalogdan kaldırma" işlemi yap
+            const updated = await prisma.product.update({
+                where: { id: productId },
+                data: {
+                    isActive: false,
+                    isFeatured: false,
+                    stock: 0,
+                    images: [],
+                    name: product.name.includes('(silindi)')
+                        ? product.name
+                        : `${product.name} (silindi)`,
+                },
+            })
+
+            return NextResponse.json(
+                {
+                    message:
+                        'Ürün geçmiş siparişlerde kullanıldığı için tamamen silinemedi, ancak katalogdan kaldırıldı.',
+                    product: updated,
+                    softDeleted: true,
+                },
+                { status: 200 },
+            )
         }
 
         // Ürünü sil (varyasyonlar cascade ile silinecek)
         await prisma.product.delete({
-            where: { id: productId }
+            where: { id: productId },
         })
 
         return NextResponse.json(
-            { message: 'Ürün başarıyla silindi' },
-            { status: 200 }
+            { message: 'Ürün başarıyla silindi', softDeleted: false },
+            { status: 200 },
         )
 
     } catch (error) {

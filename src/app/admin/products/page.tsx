@@ -197,8 +197,19 @@ export default function AdminProductsPage() {
         })
 
         if (response.ok) {
-          setProducts(products.filter(p => p.id !== productId))
-          showNotification('success', 'Ürün başarıyla silindi')
+          const data = await response.json().catch(() => ({}))
+
+          if (data.softDeleted) {
+            // Ürünü listede de gizle
+            setProducts(products.filter(p => p.id !== productId))
+            showNotification(
+              'success',
+              'Ürün geçmiş siparişlerde kullanıldığı için tamamen silinemedi, ancak katalogdan kaldırıldı.'
+            )
+          } else {
+            setProducts(products.filter(p => p.id !== productId))
+            showNotification('success', 'Ürün başarıyla silindi')
+          }
         } else {
           // API'den dönen hata mesajını göster
           let errorMessage = 'Ürün silinirken bir hata oluştu'
