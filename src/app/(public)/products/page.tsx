@@ -17,7 +17,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   try {
   const params = await searchParams
     const page = parseInt(params.page || '1', 10)
-  const limit = 6 // Optimized: Reduced to 6 products per page for faster loading
+  const limit = 8 // 8 products per page as requested
   const skip = (page - 1) * limit
 
   // Build filter conditions - simplified (no price range)

@@ -128,6 +128,16 @@ export default function AdminDashboard() {
 
           if (!dashboardRes.ok) {
             const errorData = await dashboardRes.json().catch(() => ({}))
+            
+            // Token geçersiz veya yetkisiz erişim durumunda logout yap
+            if (dashboardRes.status === 401 || dashboardRes.status === 403) {
+              console.log('Yetkisiz erişim tespit edildi, çıkış yapılıyor...', errorData)
+              safeLocalStorage.removeItem('token')
+              safeLocalStorage.removeItem('user')
+              window.location.href = '/login?redirect=/admin'
+              return
+            }
+
             throw new Error(errorData.error || 'Dashboard verileri yüklenirken hata oluştu')
           }
 

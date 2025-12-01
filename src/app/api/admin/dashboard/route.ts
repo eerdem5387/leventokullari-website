@@ -17,10 +17,24 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.substring(7)
     const decodedToken = verifyToken(token)
+    
+    console.log('Admin Dashboard Auth Check:', {
+      hasToken: !!token,
+      decodedToken,
+      role: decodedToken?.role,
+      expectedRole: 'ADMIN'
+    })
 
     if (!decodedToken || decodedToken.role !== 'ADMIN') {
+      console.log('Admin Dashboard Auth Failed:', {
+        reason: !decodedToken ? 'Token invalid' : 'Role mismatch',
+        userRole: decodedToken?.role
+      })
       return NextResponse.json(
-        { error: 'Admin yetkisi gerekli' },
+        { 
+          error: 'Admin yetkisi gerekli', 
+          code: !decodedToken ? 'TOKEN_INVALID' : 'ROLE_MISMATCH' 
+        },
         { status: 403 }
       )
     }
