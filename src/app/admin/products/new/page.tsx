@@ -39,7 +39,6 @@ export default function NewProductPage() {
     images: [] as string[]
   })
   const [isUnlimitedStock, setIsUnlimitedStock] = useState(false)
-  const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([])
 
   // Kategorileri yükle
@@ -204,26 +203,14 @@ export default function NewProductPage() {
     setIsLoading(true)
 
     try {
-      // Resimleri base64'e çevir
-      const imagePromises = imageFiles.map(file => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = (e) => {
-            resolve(e.target?.result as string)
-          }
-          reader.readAsDataURL(file)
-        })
-      })
-
-      const uploadedImages = await Promise.all(imagePromises)
-
       const productData = {
         ...formData,
         // Varyasyonlu ürünlerde ana ürün fiyat ve stok bilgilerini gönderme
         price: formData.productType === 'SIMPLE' ? parseFloat(formData.price) : 0,
         comparePrice: formData.productType === 'SIMPLE' && formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
         stock: formData.productType === 'SIMPLE' ? (isUnlimitedStock ? -1 : parseInt(formData.stock)) : 0,
-        images: uploadedImages,
+        // Resimler artık Vercel Blob URL'leri, doğrudan formData.images içinden geliyor
+        images: formData.images,
         variations: formData.productType === 'VARIABLE' ? variations : undefined
       }
 
@@ -324,17 +311,42 @@ export default function NewProductPage() {
       showNotification('error', 'Bazı dosyalar geçersiz format veya boyutta')
     }
 
-    setImageFiles(prev => [...prev, ...validFiles])
-
-    // Dosyaları URL'e çevir (boyutlandırma olmadan)
+    // Geçerli dosyaları sırayla Vercel Blob'a yükle
     for (const file of validFiles) {
       try {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const url = e.target?.result as string
-          setImageUrls(prev => [...prev, url])
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        if (!token) {
+          showNotification('error', 'Oturum süresi doldu, lütfen tekrar giriş yapın')
+          break
         }
-        reader.readAsDataURL(file)
+
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/upload/image', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Resim upload hatası:', errorData)
+          showNotification('error', errorData.error || 'Resim yüklenirken bir hata oluştu')
+          continue
+        }
+
+        const data = await response.json() as { url: string }
+
+        // Önizleme için URL'yi kaydet
+        setImageUrls(prev => [...prev, data.url])
+        // Form verisine de ekle
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, data.url]
+        }))
       } catch (error) {
         console.error('Resim yükleme hatası:', error)
         showNotification('error', 'Resim yüklenirken bir hata oluştu')
@@ -363,8 +375,11 @@ export default function NewProductPage() {
 
   // Resim silme fonksiyonu
   const removeImage = (index: number) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index))
     setImageUrls(prev => prev.filter((_, i) => i !== index))
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }))
   }
 
   return (
