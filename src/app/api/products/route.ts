@@ -111,12 +111,27 @@ export async function GET(request: NextRequest) {
                 sku?: { contains: string; mode: 'insensitive' }
             }>
             price?: { gte?: number; lte?: number }
+            AND?: any[]
         } = {}
 
-        // Admin panel için isActive filtresini kaldır
+        // Public taraf için sadece aktif ürünler
         if (!admin) {
             where.isActive = true
         }
+
+        // Hem public hem admin tarafında "silinmiş" ürünleri gizle
+        // (DELETE endpoint'inde soft-delete yaptığımız ürünler)
+        where.AND = [
+            {
+                NOT: {
+                    isActive: false,
+                    stock: 0,
+                    images: {
+                        isEmpty: true,
+                    },
+                },
+            },
+        ]
 
         if (category) {
             where.categoryId = category
