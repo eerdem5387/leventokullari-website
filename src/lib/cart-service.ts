@@ -19,14 +19,49 @@ export interface Cart {
 const CART_STORAGE_KEY = 'cart'
 
 class CartService {
+  // Cookie yardımcı fonksiyonları (Manuel implementasyon)
+  private setCookie(name: string, value: string, days: number) {
+    if (typeof document === 'undefined') return
+    let expires = ""
+    if (days) {
+      const date = new Date()
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
+      expires = "; expires=" + date.toUTCString()
+    }
+    document.cookie = name + "=" + (encodeURIComponent(value) || "") + expires + "; path=/"
+  }
+
+  private getCookie(name: string) {
+    if (typeof document === 'undefined') return null
+    const nameEQ = name + "="
+    const ca = document.cookie.split(';')
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i]
+      while (c.charAt(0) == ' ') c = c.substring(1, c.length)
+      if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length, c.length))
+    }
+    return null
+  }
+
   getCart(): Cart {
     try {
-      const cartData = safeLocalStorage.getItem(CART_STORAGE_KEY)
+      // Önce localStorage dene
+      let cartData = safeLocalStorage.getItem(CART_STORAGE_KEY)
+      
+      // Yoksa Cookie dene (Fallback)
+      if (!cartData) {
+        cartData = this.getCookie(CART_STORAGE_KEY)
+      }
+
       if (cartData) {
         const parsed = JSON.parse(cartData)
         // Format migration (eski array formatını yeni obje formatına çevir)
         if (Array.isArray(parsed)) {
           return { items: parsed }
+        }
+        // Geçerli yapı kontrolü
+        if (!parsed.items) {
+            return { items: [] }
         }
         return parsed
       }
@@ -38,11 +73,25 @@ class CartService {
 
   saveCart(cart: Cart) {
     try {
-      safeLocalStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
-      safeWindow.dispatchEvent(new Event('cartUpdated'))
+      const cartString = JSON.stringify(cart)
+      
+      // LocalStorage kaydet
+      safeLocalStorage.setItem(CART_STORAGE_KEY, cartString)
+      
+      // Cookie kaydet (Yedek olarak, 7 gün)
+      this.setCookie(CART_STORAGE_KEY, cartString, 7)
+
+      // Event fırlat
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('cartUpdated'))
+        // Storage event'ini manuel tetikle (bazı frameworkler için)
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: CART_STORAGE_KEY,
+            newValue: cartString
+        }))
+      }
     } catch (error) {
       console.error('Cart saving error:', error)
-      // Quota exceeded handling could go here
     }
   }
 
@@ -65,7 +114,6 @@ class CartService {
           cart.items[existingItemIndex].quantity = newQuantity
       } else {
           cart.items[existingItemIndex].quantity = maxStock
-          // Optional: Throw error or return status indicating stock limit reached
       }
     } else {
       // Add new item
@@ -143,4 +191,3 @@ class CartService {
 }
 
 export const cartService = new CartService()
-
