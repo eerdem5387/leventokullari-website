@@ -25,6 +25,15 @@ export default function NewProductPage() {
     stock: string
     attributes: Array<{ name: string; value: string }>
   }>>([])
+  // Hızlı ekleme modu için state'ler
+  const [isQuickMode, setIsQuickMode] = useState(false)
+  const [quickVariations, setQuickVariations] = useState<Array<{
+    id: string
+    name: string
+    price: string
+    stock: string
+    sku: string
+  }>>([])
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -125,8 +134,32 @@ export default function NewProductPage() {
 
     if (validAttributes.length === 0) {
       setVariations([])
+      setIsQuickMode(false)
+      setQuickVariations([])
       return
     }
+
+    // Tek nitelikli varyasyonlar için hızlı mod
+    if (validAttributes.length === 1) {
+      setIsQuickMode(true)
+      // Hızlı mod için boş varyasyon listesi oluştur
+      if (quickVariations.length === 0) {
+        setQuickVariations([{
+          id: `quick-${Date.now()}`,
+          name: '',
+          price: '',
+          stock: '1',
+          sku: ''
+        }])
+      }
+      // Normal varyasyonları temizle
+      setVariations([])
+      return
+    }
+
+    // 2+ nitelik varsa normal mod
+    setIsQuickMode(false)
+    setQuickVariations([])
 
     // Tüm kombinasyonları oluştur
     const combinations = generateCombinations(validAttributes)
@@ -174,6 +207,27 @@ export default function NewProductPage() {
     setVariations(updatedVariations)
   }
 
+  // Hızlı mod fonksiyonları
+  const addQuickVariation = () => {
+    setQuickVariations([...quickVariations, {
+      id: `quick-${Date.now()}`,
+      name: '',
+      price: '',
+      stock: '1',
+      sku: ''
+    }])
+  }
+
+  const removeQuickVariation = (index: number) => {
+    setQuickVariations(quickVariations.filter((_, i) => i !== index))
+  }
+
+  const updateQuickVariation = (index: number, field: string, value: string) => {
+    const updated = [...quickVariations]
+    updated[index] = { ...updated[index], [field]: value }
+    setQuickVariations(updated)
+  }
+
   // Varyasyon özelliği ekleme
   const addVariationAttribute = (variationIndex: number) => {
     const updatedVariations = [...variations]
@@ -203,6 +257,21 @@ export default function NewProductPage() {
     setIsLoading(true)
 
     try {
+      // Hızlı modda quickVariations'ı variations formatına çevir
+      let finalVariations = variations
+      if (isQuickMode && quickVariations.length > 0 && attributes.length === 1) {
+        const attributeName = attributes[0].name || 'Öğrenci'
+        finalVariations = quickVariations
+          .filter(qv => qv.name.trim() !== '' && qv.price.trim() !== '')
+          .map(qv => ({
+            id: qv.id,
+            sku: qv.sku,
+            price: qv.price,
+            stock: qv.stock || '1',
+            attributes: [{ name: attributeName, value: qv.name }]
+          }))
+      }
+
       const productData = {
         ...formData,
         // Varyasyonlu ürünlerde ana ürün fiyat ve stok bilgilerini gönderme
@@ -211,7 +280,7 @@ export default function NewProductPage() {
         stock: formData.productType === 'SIMPLE' ? (isUnlimitedStock ? -1 : parseInt(formData.stock)) : 0,
         // Resimler artık Vercel Blob URL'leri, doğrudan formData.images içinden geliyor
         images: formData.images,
-        variations: formData.productType === 'VARIABLE' ? variations : undefined
+        variations: formData.productType === 'VARIABLE' ? finalVariations : undefined
       }
 
       console.log('Sending product data:', productData)
@@ -687,8 +756,120 @@ export default function NewProductPage() {
                 )}
               </div>
 
-              {/* Varyasyonlar Bölümü */}
-              {variations.length > 0 && (
+              {/* Hızlı Ekleme Modu - Tek Nitelikli Varyasyonlar */}
+              {isQuickMode && attributes.length === 1 && (
+                <div>
+                  <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-green-800">
+                          Hızlı Ekleme Modu Aktif
+                        </h3>
+                        <p className="mt-1 text-sm text-green-700">
+                          Tek nitelikli varyasyonlar için hızlı ekleme modu. Her satıra {attributes[0]?.name || 'öğrenci'} adı ve fiyat girin.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {attributes[0]?.name || 'Öğrenci'} Listesi ({quickVariations.length})
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={addQuickVariation}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
+                    >
+                      <span>+</span>
+                      Satır Ekle
+                    </button>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700">{attributes[0]?.name || 'Öğrenci'} Adı *</th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Fiyat (₺) *</th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Stok</th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700">SKU</th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 w-20">İşlem</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {quickVariations.map((qv, index) => (
+                            <tr key={qv.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                <input
+                                  type="text"
+                                  value={qv.name}
+                                  onChange={(e) => updateQuickVariation(index, 'name', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder={`${attributes[0]?.name || 'Öğrenci'} adı`}
+                                  required
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <input
+                                  type="number"
+                                  value={qv.price}
+                                  onChange={(e) => updateQuickVariation(index, 'price', e.target.value)}
+                                  step="0.01"
+                                  min="0"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="0.00"
+                                  required
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <input
+                                  type="number"
+                                  value={qv.stock}
+                                  onChange={(e) => updateQuickVariation(index, 'stock', e.target.value)}
+                                  min="0"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="1"
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <input
+                                  type="text"
+                                  value={qv.sku}
+                                  onChange={(e) => updateQuickVariation(index, 'sku', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Opsiyonel"
+                                />
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => removeQuickVariation(index)}
+                                  className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                  title="Satırı Sil"
+                                >
+                                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Normal Varyasyonlar Bölümü - 2+ Nitelik */}
+              {!isQuickMode && variations.length > 0 && (
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Varyasyonlar ({variations.length})</h3>
                   <div className="space-y-4">
