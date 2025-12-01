@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { User, LogOut, Settings, Bell, ChevronDown, Search } from 'lucide-react'
+import { User, LogOut, Settings, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -39,12 +39,6 @@ export default function AdminHeader() {
 
         {/* Right Side: Actions & Profile */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Notifications (Placeholder) */}
-          <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-full transition-colors relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
-
           {/* Profile Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button

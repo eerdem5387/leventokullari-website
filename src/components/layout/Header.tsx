@@ -178,6 +178,18 @@ export default function Header({ siteName = 'Levent Kolej Ürün Hizmeti' }: Hea
                                   <Package className="h-4 w-4 mr-3" />
                                   Siparişlerim
                                 </Link>
+
+                                {/* Admin Panel butonu - sadece admin kullanıcılar için */}
+                                {user?.role === 'ADMIN' && (
+                                  <Link
+                                    href="/admin"
+                                    onClick={() => setUserMenuOpen(false)}
+                                    className="flex items-center px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 transition-colors"
+                                  >
+                                    <User className="h-4 w-4 mr-3" />
+                                    Admin Paneli
+                                  </Link>
+                                )}
                                 
                                 <div className="border-t border-gray-200 my-1" />
                                 
