@@ -32,38 +32,55 @@ class ZiraatPaymentService {
    */
   async initialize(): Promise<boolean> {
     try {
+      // Veritabanında ayarlar 'payment.ziraatClientId' gibi saklanıyor.
+      // 'payment' kategorisindeki tüm ayarları çekelim.
       const paymentSettings = await prisma.settings.findMany({
         where: {
           category: 'payment',
           key: {
-            startsWith: 'payment.ziraat'
+            startsWith: 'payment.ziraat' // payment.ziraatClientId, payment.ziraatStoreKey vb.
           }
         }
       })
 
       if (paymentSettings.length === 0) {
-        console.warn('Ziraat Bankası ayarları bulunamadı')
+        console.warn('Ziraat Bankası ayarları veritabanında bulunamadı')
         return false
       }
 
       const settings: any = {
-        testMode: false
+        testMode: false,
+        storeType: '3d_pay_hosting' // Varsayılan
       }
 
+      // Key Mapping: DB Key -> Internal Settings Key
       paymentSettings.forEach(setting => {
-        const key = setting.key.split('.')[2] // payment.ziraat.merchantId -> merchantId
-        if (key) {
-            if (key === 'testMode') {
-                settings[key] = setting.value === 'true'
-            } else {
-                settings[key] = setting.value
-            }
+        const dbKey = setting.key // Örn: payment.ziraatClientId
+        
+        if (dbKey === 'payment.ziraatClientId') settings.merchantId = setting.value
+        if (dbKey === 'payment.ziraatStoreKey') settings.storeKey = setting.value
+        if (dbKey === 'payment.ziraatApiUrl') settings.posUrl = setting.value
+        if (dbKey === 'payment.ziraatStoreType') settings.storeType = setting.value
+        if (dbKey === 'payment.ziraatTestMode') settings.testMode = setting.value === 'true'
+        
+        // Eski formata göre de kontrol (payment.ziraat.merchantId gibi)
+        if (dbKey.split('.').length === 3) {
+            const subKey = dbKey.split('.')[2]
+            if (subKey === 'merchantId') settings.merchantId = setting.value
+            if (subKey === 'storeKey') settings.storeKey = setting.value
+            if (subKey === 'posUrl') settings.posUrl = setting.value
+            if (subKey === 'storeType') settings.storeType = setting.value
+            if (subKey === 'testMode') settings.testMode = setting.value === 'true'
         }
       })
 
       // Gerekli alan kontrolü
       if (!settings.merchantId || !settings.storeKey || !settings.posUrl) {
-        console.warn('Ziraat Bankası kritik ayarları eksik (merchantId, storeKey, posUrl)')
+        console.warn('Ziraat Bankası kritik ayarları eksik:', {
+            hasMerchantId: !!settings.merchantId,
+            hasStoreKey: !!settings.storeKey,
+            hasPosUrl: !!settings.posUrl
+        })
         return false
       }
 
@@ -71,7 +88,7 @@ class ZiraatPaymentService {
         merchantId: settings.merchantId,
         storeKey: settings.storeKey,
         posUrl: settings.posUrl,
-        storeType: settings.storeType || '3d_pay_hosting',
+        storeType: settings.storeType,
         testMode: settings.testMode
       }
 
@@ -122,7 +139,7 @@ class ZiraatPaymentService {
   async createPaymentRequest(data: PaymentRequest): Promise<PaymentResponse> {
     if (!this.settings) {
         const init = await this.initialize()
-        if (!init) return { success: false, error: 'Ödeme sistemi yapılandırılamadı' }
+        if (!init) return { success: false, error: 'Ödeme sistemi yapılandırılamadı (Ayarlar eksik)' }
     }
 
     try {

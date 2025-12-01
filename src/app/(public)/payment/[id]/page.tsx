@@ -49,7 +49,8 @@ export default function PaymentPage() {
   const [expiryYear, setExpiryYear] = useState('')
   const [cvv, setCvv] = useState('')
 
-  const provider = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || 'mock'
+  // Provider'ı env'den al, yoksa default ziraat olsun (gerçek projede)
+  const provider = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || 'ziraat'
 
   useEffect(() => {
     fetchOrder()
@@ -82,52 +83,65 @@ export default function PaymentPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsProcessing(true)
-    setError('')
-
+  const handlePayment = async () => {
     try {
+      setIsProcessing(true)
+      setError('')
       const token = localStorage.getItem('token')
 
-      const amount = order?.finalAmount ? parseFloat(order.finalAmount.toString()) : 0
-      const paymentData = {
+      // Ödeme başlatma isteği
+      const payload = {
         orderId,
-        amount: amount,
-        customerEmail: localStorage.getItem('userEmail') || '',
-        customerName: localStorage.getItem('userName') || '',
-        customerPhone: localStorage.getItem('userPhone') || ''
+        amount: order?.finalAmount ? Number(order.finalAmount) : 0,
+        method: 'CREDIT_CARD',
+        // Kart bilgilerini Ziraat Hosting modelinde göndermiyoruz, banka sayfasında girilecek.
+        // Eğer API modeline geçilirse burada alınır.
       }
 
-      const response = await fetch('/api/payment/mock', {
+      const res = await fetch('/api/payment/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        body: JSON.stringify(paymentData)
+        body: JSON.stringify(payload)
       })
 
-      const result = await response.json()
+      const data = await res.json()
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Ödeme işlemi başlatılamadı')
+      if (!res.ok) {
+        throw new Error(data.error || 'Ödeme başlatılamadı')
       }
 
-      if (result.success && result.redirectUrl) {
-        // Ziraat Bankası ödeme sayfasına yönlendir
-        window.location.href = result.redirectUrl
+      if (data.success && data.requiresRedirect && data.redirectUrl && data.formParams) {
+        // Ziraat Bankası Form Post İşlemi
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = data.redirectUrl
+        // form.target = '_blank' // İsteğe bağlı yeni sekme
+        form.style.display = 'none'
+
+        Object.entries(data.formParams).forEach(([key, value]) => {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = String(value)
+          form.appendChild(input)
+        })
+
+        document.body.appendChild(form)
+        form.submit()
       } else {
-        throw new Error('Ödeme sayfasına yönlendirilemedi')
+        throw new Error('Ödeme parametreleri alınamadı')
       }
-    } catch (error) {
-      console.error('Payment error:', error)
-      setError(error instanceof Error ? error.message : 'Ödeme işlemi sırasında bir hata oluştu')
-    } finally {
+
+    } catch (err: any) {
+      setError(err?.message || 'Ödeme başlatılamadı')
       setIsProcessing(false)
     }
   }
 
+  // ... Helper functions (formatCardNumber, getProductDisplayName) same as before ...
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
     const matches = v.match(/\d{4,16}/g)
@@ -144,16 +158,12 @@ export default function PaymentPage() {
   }
 
   const getProductDisplayName = (item: any) => {
-    console.log('Processing item:', item)
     if (item.variation) {
-      console.log('Item has variation:', item.variation)
       const variationDetails = item.variation.attributes.map((attr: any) => {
-        console.log('Attribute:', attr)
         return `${attr.attributeValue.attributeId}: ${attr.attributeValue.value}`
       }).join(', ')
       return `${item.product.name} - ${variationDetails}`
     }
-    console.log('Item has no variation')
     return item.product.name
   }
 
@@ -172,43 +182,23 @@ export default function PaymentPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
+            <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Hata</h1>
             <p className="text-gray-600 mb-8">{error}</p>
             <button
-              onClick={() => router.push('/')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                onClick={() => router.push('/')}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
-              Ana Sayfaya Dön
+                Ana Sayfaya Dön
             </button>
-          </div>
+            </div>
         </div>
       </div>
     )
   }
 
-  if (!order) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Sipariş Bulunamadı</h1>
-            <p className="text-gray-600 mb-8">
-              Aradığınız sipariş bulunamadı veya erişim izniniz yok.
-            </p>
-            <button
-              onClick={() => router.push('/')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Ana Sayfaya Dön
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!order) return null // Should be handled by error state above
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 pb-20 lg:pb-0">
@@ -242,8 +232,8 @@ export default function PaymentPage() {
                 <CreditCard className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{provider === 'ziraat' ? 'Kredi Kartı Bilgileri' : 'Kredi Kartı Bilgileri (Test)'}</h2>
-                <p className="text-sm text-gray-500 mt-1">Güvenli ödeme işlemi</p>
+                <h2 className="text-xl font-bold text-gray-900">Güvenli Ödeme</h2>
+                <p className="text-sm text-gray-500 mt-1">Ziraat Bankası Güvencesiyle</p>
               </div>
             </div>
 
@@ -258,129 +248,15 @@ export default function PaymentPage() {
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-5">
                 <div className="flex items-center mb-2">
                   <Lock className="h-5 w-5 text-blue-600 mr-2" />
-                  <h3 className="text-sm font-bold text-blue-900">{provider === 'ziraat' ? 'Ziraat Sanal POS' : 'Test Ödeme Sistemi'}</h3>
+                  <h3 className="text-sm font-bold text-blue-900">3D Secure ile Ödeme</h3>
                 </div>
                 <p className="text-sm text-blue-800">
-                  {provider === 'ziraat' ? 'Güvenli ödeme için bankanın 3D Secure sayfasına yönlendirileceksiniz.' : 'Bu bir test ödeme akışıdır. Gerçek kart bilgisi gerektirmez.'}
+                  Kart bilgilerinizi bankanın güvenli ödeme sayfasında gireceksiniz.
                 </p>
               </div>
 
-              {/* Card inputs (for test UI) */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <CreditCard className="h-4 w-4 mr-1 text-gray-500" />
-                    Kart Numarası
-                  </label>
-                  <input 
-                    value={cardNumber} 
-                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))} 
-                    placeholder="4242 4242 4242 4242" 
-                    maxLength={19}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-lg tracking-wider" 
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <User className="h-4 w-4 mr-1 text-gray-500" />
-                    Kart Üzerindeki İsim
-                  </label>
-                  <input 
-                    value={cardHolder} 
-                    onChange={(e) => setCardHolder(e.target.value.toUpperCase())} 
-                    placeholder="AD SOYAD" 
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all uppercase" 
-                  />
-                </div>
-                
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Ay</label>
-                    <input 
-                      value={expiryMonth} 
-                      onChange={(e) => setExpiryMonth(e.target.value.replace(/\D/g, '').slice(0, 2))} 
-                      placeholder="12" 
-                      maxLength={2}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Yıl</label>
-                    <input 
-                      value={expiryYear} 
-                      onChange={(e) => setExpiryYear(e.target.value.replace(/\D/g, '').slice(0, 2))} 
-                      placeholder="29" 
-                      maxLength={2}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
-                    <input 
-                      type="password"
-                      value={cvv} 
-                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))} 
-                      placeholder="123" 
-                      maxLength={3}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-center" 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-5">
-                <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center">
-                  <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                  Ödeme Bilgileri
-                </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Toplam Tutar:</span>
-                    <span className="font-bold text-lg text-blue-600">₺{order.finalAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-gray-600">Sipariş No:</span>
-                    <span className="font-semibold text-gray-900">{order.orderNumber}</span>
-                  </div>
-                </div>
-              </div>
-
               <button
-                onClick={async () => {
-                  try {
-                    setIsProcessing(true)
-                    setError('')
-                    const token = localStorage.getItem('token')
-                    const payload = {
-                      orderId,
-                      amount: order.finalAmount ? Number(order.finalAmount) : 0,
-                      customerEmail: localStorage.getItem('userEmail') || '',
-                      customerName: localStorage.getItem('userName') || '',
-                      customerPhone: localStorage.getItem('userPhone') || ''
-                    }
-
-                    const endpoint = provider === 'ziraat' ? '/api/payment/ziraat' : '/api/payment/mock'
-
-                    const res = await fetch(endpoint, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                      },
-                      body: JSON.stringify(payload)
-                    })
-                    const data = await res.json()
-                    if (!res.ok || !data.success || !data.redirectUrl) {
-                      throw new Error(data.error || 'Ödeme başlatılamadı')
-                    }
-                    window.location.href = data.redirectUrl
-                  } catch (err: any) {
-                    setError(err?.message || 'Ödeme başlatılamadı')
-                  } finally {
-                    setIsProcessing(false)
-                  }
-                }}
+                onClick={handlePayment}
                 disabled={isProcessing || !order || !order.finalAmount}
                 className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 sm:py-4 px-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center touch-manipulation min-h-[52px] text-sm sm:text-base"
               >
@@ -392,7 +268,7 @@ export default function PaymentPage() {
                 ) : (
                   <>
                     <Lock className="h-5 w-5 mr-2" />
-                    {provider === 'ziraat' ? 'Ziraat ile Öde' : 'Ödemeyi Tamamla (Test)'}
+                    Ödemeyi Başlat
                   </>
                 )}
               </button>
@@ -469,4 +345,4 @@ export default function PaymentPage() {
       </div>
     </div>
   )
-} 
+}
