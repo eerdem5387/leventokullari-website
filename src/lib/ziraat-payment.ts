@@ -59,7 +59,10 @@ class ZiraatPaymentService {
         
         if (dbKey === 'payment.ziraatClientId') settings.merchantId = setting.value
         if (dbKey === 'payment.ziraatStoreKey') settings.storeKey = setting.value
-        if (dbKey === 'payment.ziraatApiUrl') settings.posUrl = setting.value
+        // 3D Ödeme için kullanılacak URL, API URL DEĞİL!
+        // Öncelik: ziraat3dUrl (est3Dgate). Eğer bu yoksa, eski konfig'e uyum için ziraatApiUrl'i fallback olarak kullanıyoruz.
+        if (dbKey === 'payment.ziraat3dUrl') settings.posUrl = setting.value
+        if (!settings.posUrl && dbKey === 'payment.ziraatApiUrl') settings.posUrl = setting.value
         if (dbKey === 'payment.ziraatStoreType') settings.storeType = setting.value
         if (dbKey === 'payment.ziraatTestMode') settings.testMode = setting.value === 'true'
         
