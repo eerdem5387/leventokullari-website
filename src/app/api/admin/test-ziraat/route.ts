@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ziraatPaymentService } from '@/lib/ziraat-payment'
 import { requireAdmin, handleApiError } from '@/lib/error-handler'
-import { z } from 'zod'
-
-const testZiraatSchema = z.object({
-    amount: z.number().positive('Geçerli bir tutar giriniz'),
-    orderId: z.string().min(1, 'Sipariş ID gereklidir')
-})
 
 export async function POST(request: NextRequest) {
     try {
@@ -16,30 +10,52 @@ export async function POST(request: NextRequest) {
 
         console.log('=== TEST ZIRAAT API CALLED ===')
 
-        const body = await request.json()
-        console.log('Test Ziraat data:', body)
+        // Ziraat servisini başlat (DB'den ayarları çeker)
+        const initialized = await ziraatPaymentService.initialize()
+        if (!initialized) {
+            return NextResponse.json({
+                success: false,
+                error: 'Ziraat ayarları eksik veya yüklenemedi. Lütfen ayarlardan bilgileri kontrol edin.'
+            }, { status: 400 })
+        }
 
-        // Form verilerini doğrula
-        const { amount, orderId } = testZiraatSchema.parse(body)
+        // Sembolik bir test siparişi oluştur
+        const testOrderId = `TEST-${Date.now()}`
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://example.com'
 
-        // Test ödeme oluştur
-        const paymentResponse = await ziraatPaymentService.createTestPayment(orderId, amount)
+        // Ödeme isteği oluşturmayı dene (Hash algoritması ve ayarlar doğru mu?)
+        const response = await ziraatPaymentService.createPaymentRequest({
+            amount: 1.00, // 1 TL'lik test
+            orderId: testOrderId,
+            successUrl: `${baseUrl}/api/payment/ziraat/callback`,
+            failUrl: `${baseUrl}/api/payment/ziraat/callback`,
+            installments: '0',
+            // Test verileri
+            // customerEmail, name vs. gerekirse servise eklenebilir, 
+            // şu anki implementasyonumuzda createPaymentRequest bunları parametre olarak alıyor mu kontrol edelim.
+            // createPaymentRequest metodumuz parametre olarak sadece interface'de tanımlı alanları alıyor.
+        })
 
-        if (paymentResponse.success && paymentResponse.redirectUrl) {
+        if (response.success && response.redirectUrl && response.formParams) {
+            // Hash başarıyla üretildi ve form parametreleri hazırlandı.
+            // Bu aşamada credentials (merchantId, storeKey) doğru formatta demektir.
             return NextResponse.json({
                 success: true,
-                redirectUrl: paymentResponse.redirectUrl,
-                transactionId: paymentResponse.transactionId,
-                message: 'Ziraat Bankası test başarılı'
+                message: 'Ziraat POS konfigürasyonu başarılı! Hash üretildi ve form parametreleri hazır.',
+                debug: {
+                    redirectUrl: response.redirectUrl,
+                    params: response.formParams
+                }
             }, { status: 200 })
         } else {
             return NextResponse.json({
                 success: false,
-                error: paymentResponse.error || 'Ziraat test başarısız'
+                error: response.error || 'Test başarısız. Hash üretilemedi.'
             }, { status: 400 })
         }
 
     } catch (error) {
+        console.error('Ziraat Test Error:', error)
         return handleApiError(error)
     }
 }

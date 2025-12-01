@@ -3,45 +3,35 @@ import { prisma } from './prisma'
 
 interface ZiraatPaymentSettings {
   merchantId: string
-  password: string
   storeKey: string
+  posUrl: string // API endpoint URL
+  storeType: string
   testMode: boolean
 }
 
 interface PaymentRequest {
   amount: number
   orderId: string
-  orderNumber: string
-  customerEmail: string
-  customerName: string
-  customerPhone: string
   successUrl: string
   failUrl: string
+  installments?: string // Taksit sayısı (boş ise tek çekim)
 }
 
 interface PaymentResponse {
   success: boolean
-  redirectUrl?: string
+  redirectUrl?: string // Banka formunun post edileceği URL
+  formParams?: Record<string, string> // Bankaya post edilecek parametreler
   error?: string
-  transactionId?: string
-}
-
-interface PaymentCallback {
-  success: boolean
-  transactionId?: string
-  orderId?: string
-  amount?: number
-  error?: string
-  responseCode?: string
-  responseMessage?: string
 }
 
 class ZiraatPaymentService {
   private settings: ZiraatPaymentSettings | null = null
 
+  /**
+   * Veritabanından ayarları çeker ve servisi başlatır.
+   */
   async initialize(): Promise<boolean> {
     try {
-      // Ziraat ayarlarını veritabanından al
       const paymentSettings = await prisma.settings.findMany({
         where: {
           category: 'payment',
@@ -56,223 +46,183 @@ class ZiraatPaymentService {
         return false
       }
 
-      // Ayarları düzenle
-      const settings: ZiraatPaymentSettings = {
-        merchantId: '',
-        password: '',
-        storeKey: '',
+      const settings: any = {
         testMode: false
       }
 
       paymentSettings.forEach(setting => {
-        const key = setting.key.split('.')[1] as keyof ZiraatPaymentSettings
-        if (key in settings) {
-          if (key === 'testMode') {
-            settings[key] = setting.value === 'true'
-          } else {
-            settings[key] = setting.value
-          }
+        const key = setting.key.split('.')[2] // payment.ziraat.merchantId -> merchantId
+        if (key) {
+            if (key === 'testMode') {
+                settings[key] = setting.value === 'true'
+            } else {
+                settings[key] = setting.value
+            }
         }
       })
 
-      // Gerekli ayarların varlığını kontrol et
-      if (!settings.merchantId || !settings.password || !settings.storeKey) {
-        console.warn('Ziraat Bankası ayarları eksik')
+      // Gerekli alan kontrolü
+      if (!settings.merchantId || !settings.storeKey || !settings.posUrl) {
+        console.warn('Ziraat Bankası kritik ayarları eksik (merchantId, storeKey, posUrl)')
         return false
       }
 
-      this.settings = settings
-      console.log('Ziraat Bankası servisi başarıyla başlatıldı')
+      this.settings = {
+        merchantId: settings.merchantId,
+        storeKey: settings.storeKey,
+        posUrl: settings.posUrl,
+        storeType: settings.storeType || '3d_pay_hosting',
+        testMode: settings.testMode
+      }
+
       return true
     } catch (error) {
-      console.error('Ziraat Bankası servisi başlatılamadı:', error)
+      console.error('Ziraat servisi başlatılamadı:', error)
       return false
     }
   }
 
-  private getApiUrl(): string {
-    if (!this.settings) {
-      throw new Error('Ziraat Bankası ayarları yüklenmedi')
-    }
+  /**
+   * Ziraat v3 (3D Pay Hosting) hash oluşturma algoritması.
+   * 1. Parametre anahtarlarını case-insensitive sırala.
+   * 2. Değerlerdeki | ve \ karakterlerini escape et.
+   * 3. Değerleri | ile birleştir.
+   * 4. Sona escape edilmiş storeKey ekle.
+   * 5. SHA512 hash al ve Base64'e çevir.
+   */
+  private createHash(params: Record<string, string>): string {
+    if (!this.settings) throw new Error('Servis başlatılmadı')
 
-    return this.settings.testMode
-      ? 'https://entegrasyon.asseco-see.com.tr/fim/api' // Test URL
-      : 'https://sanalpos2.ziraatbank.com.tr/fim/api' // Production URL
-  }
-
-  private createHash(data: string): string {
-    if (!this.settings) {
-      throw new Error('Ziraat Bankası ayarları yüklenmedi')
-    }
-
-    return crypto.createHash('sha512').update(data + this.settings.storeKey).digest('hex')
-  }
-
-  async createPaymentRequest(paymentData: PaymentRequest): Promise<PaymentResponse> {
-    try {
-      if (!this.settings) {
-        const initialized = await this.initialize()
-        if (!initialized) {
-          throw new Error('Ziraat Bankası servisi başlatılamadı')
-        }
-      }
-
-      const amount = Math.round(paymentData.amount * 100) // Kuruş cinsinden
-      const currency = '949' // TRY
-      const installments = '0' // Tek çekim
-      const transactionType = 'Auth' // Yetkilendirme
-      const okUrl = paymentData.successUrl
-      const failUrl = paymentData.failUrl
-      const rnd = Date.now().toString()
-      const storeType = '3d_pay' // 3D Secure
-      const lang = 'tr'
-
-      // Hash oluştur
-      const hashStr = `${this.settings!.merchantId}${paymentData.orderId}${amount}${okUrl}${failUrl}${transactionType}${installments}${rnd}${this.settings!.password}`
-      const hash = this.createHash(hashStr)
-
-      // Form verileri
-      const formData = new URLSearchParams({
-        clientid: this.settings!.merchantId,
-        amount: amount.toString(),
-        oid: paymentData.orderId,
-        okUrl: okUrl,
-        failUrl: failUrl,
-        rnd: rnd,
-        currency: currency,
-        islemtipi: transactionType,
-        taksit: installments,
-        storetype: storeType,
-        lang: lang,
-        hash: hash,
-        email: paymentData.customerEmail,
-        tel: paymentData.customerPhone,
-        BillToName: paymentData.customerName,
-        BillToStreet1: 'Adres bilgisi',
-        BillToCity: 'Şehir',
-        BillToCountry: 'TR',
-        ShipToName: paymentData.customerName,
-        ShipToStreet1: 'Adres bilgisi',
-        ShipToCity: 'Şehir',
-        ShipToCountry: 'TR'
-      })
-
-      const apiUrl = this.getApiUrl()
-
-      // POST isteği gönder
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData.toString()
-      })
-
-      const responseText = await response.text()
-      console.log('Ziraat API Response:', responseText)
-
-      // Response'u parse et
-      const responseData = this.parseResponse(responseText)
-
-      if (responseData.Response === 'Approved') {
-        return {
-          success: true,
-          redirectUrl: responseData.redirectUrl || responseData.redirecturl,
-          transactionId: responseData.TransId || responseData.transId
-        }
-      } else {
-        return {
-          success: false,
-          error: responseData.ErrMsg || responseData.errMsg || 'Ödeme işlemi başarısız'
-        }
-      }
-
-    } catch (error) {
-      console.error('Ziraat ödeme hatası:', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Ödeme işlemi başarısız'
-      }
-    }
-  }
-
-  async processCallback(callbackData: any): Promise<PaymentCallback> {
-    try {
-      if (!this.settings) {
-        const initialized = await this.initialize()
-        if (!initialized) {
-          throw new Error('Ziraat Bankası servisi başlatılamadı')
-        }
-      }
-
-      // Hash doğrulama
-      const hashStr = `${callbackData.clientid}${callbackData.oid}${callbackData.authCode}${callbackData.procReturnCode}${callbackData.transId}${callbackData.eci}${callbackData.cavv}${callbackData.md}${this.settings!.password}`
-      const expectedHash = this.createHash(hashStr)
-
-      if (callbackData.hash !== expectedHash) {
-        return {
-          success: false,
-          error: 'Hash doğrulama başarısız'
-        }
-      }
-
-      // Response kodunu kontrol et
-      if (callbackData.procReturnCode === '00') {
-        return {
-          success: true,
-          transactionId: callbackData.transId,
-          orderId: callbackData.oid,
-          amount: parseFloat(callbackData.amount) / 100, // Kuruştan TL'ye çevir
-          responseCode: callbackData.procReturnCode,
-          responseMessage: 'İşlem başarılı'
-        }
-      } else {
-        return {
-          success: false,
-          error: callbackData.errMsg || 'İşlem başarısız',
-          responseCode: callbackData.procReturnCode,
-          responseMessage: callbackData.errMsg
-        }
-      }
-
-    } catch (error) {
-      console.error('Ziraat callback hatası:', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Callback işlemi başarısız'
-      }
-    }
-  }
-
-  private parseResponse(responseText: string): any {
-    const lines = responseText.split('\n')
-    const result: any = {}
-
-    lines.forEach(line => {
-      const [key, value] = line.split('=')
-      if (key && value) {
-        result[key.trim()] = value.trim()
-      }
+    // Hash ve encoding parametrelerini hariç tut
+    const keys = Object.keys(params).filter(k => {
+        const lk = k.toLowerCase()
+        return lk !== "hash" && lk !== "encoding"
+    }).sort((a, b) => {
+        // Case-insensitive sıralama
+        const aLower = a.toLowerCase()
+        const bLower = b.toLowerCase()
+        if (aLower !== bLower) return aLower.localeCompare(bLower, undefined, { numeric: true, sensitivity: "base" })
+        return 0
     })
 
-    return result
+    // Değerleri escape et ve birleştir
+    const escapedJoin = keys.map(k => {
+        const v = String(params[k] ?? "")
+        return v.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")
+    }).join("|") + "|" + this.settings.storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")
+
+    // SHA512 -> Base64
+    const sha512hex = crypto.createHash("sha512").update(escapedJoin, "utf8").digest("hex")
+    return Buffer.from(sha512hex, "hex").toString("base64")
   }
 
-  // Test ödeme oluştur
-  async createTestPayment(orderId: string, amount: number): Promise<PaymentResponse> {
-    const testData: PaymentRequest = {
-      amount: amount,
-      orderId: orderId,
-      orderNumber: `TEST-${orderId}`,
-      customerEmail: 'test@example.com',
-      customerName: 'Test Müşteri',
-      customerPhone: '5551234567',
-      successUrl: `${process.env.NEXTAUTH_URL}/payment/success`,
-      failUrl: `${process.env.NEXTAUTH_URL}/payment/fail`
+  /**
+   * Ödeme isteği oluşturur ve bankaya gönderilecek form verilerini hazırlar.
+   */
+  async createPaymentRequest(data: PaymentRequest): Promise<PaymentResponse> {
+    if (!this.settings) {
+        const init = await this.initialize()
+        if (!init) return { success: false, error: 'Ödeme sistemi yapılandırılamadı' }
     }
 
-    return this.createPaymentRequest(testData)
+    try {
+        const rnd = String(Date.now())
+        const amountStr = data.amount.toFixed(2) // 100.00 formatı
+        
+        // Temel parametreler
+        const baseParams: Record<string, string> = {
+            clientid: this.settings!.merchantId,
+            storetype: this.settings!.storeType,
+            hashAlgorithm: "ver3",
+            oid: data.orderId,
+            amount: amountStr,
+            currency: "949", // TRY
+            TranType: "Auth",
+            rnd: rnd,
+            okurl: data.successUrl,
+            failUrl: data.failUrl,
+            callbackUrl: data.successUrl, // Callback URL
+            lang: "tr",
+            encoding: "utf-8",
+            Instalment: data.installments || ""
+        }
+
+        // Hash hesapla
+        const hash = this.createHash(baseParams)
+        
+        // Final parametreler
+        const finalParams = {
+            ...baseParams,
+            hash: hash, // Küçük harf hash parametresi (bazı entegrasyonlarda HASH olarak da istenebilir, burada her ikisi de denenebilir ama v3 genelde hash ister)
+            HASH: hash  // Güvenlik için her ikisini de gönderiyoruz
+        }
+
+        // Banka URL'i
+        const actionUrl = this.settings!.posUrl.startsWith("http") 
+            ? this.settings!.posUrl 
+            : `https://${this.settings!.posUrl}`
+
+        return {
+            success: true,
+            redirectUrl: actionUrl, // Frontend bu URL'e POST yapacak
+            formParams: finalParams
+        }
+
+    } catch (error) {
+        console.error('Ödeme isteği hatası:', error)
+        return { success: false, error: 'Ödeme isteği oluşturulurken hata oluştu' }
+    }
+  }
+
+  /**
+   * Bankadan dönen callback isteğini doğrular.
+   */
+  async verifyCallback(data: Record<string, any>): Promise<{ success: boolean; error?: string }> {
+    if (!this.settings) {
+        await this.initialize()
+    }
+
+    try {
+        // Gelen verideki hash
+        const incomingHash = (data["HASH"] || data["hash"] || "").toString()
+        
+        if (!incomingHash) {
+            return { success: false, error: 'Hash bilgisi bulunamadı' }
+        }
+
+        // Hash doğrulama için veriyi hazırla (Gelen parametrelerle aynı algoritmayı çalıştır)
+        const verifyParams: Record<string, string> = {}
+        Object.keys(data).forEach(k => {
+            verifyParams[k] = String(data[k])
+        })
+
+        const calculatedHash = this.createHash(verifyParams)
+
+        if (calculatedHash !== incomingHash) {
+            console.error('Hash uyuşmazlığı:', { incoming: incomingHash, calculated: calculatedHash })
+            return { success: false, error: 'Güvenlik doğrulaması başarısız (Hash mismatch)' }
+        }
+
+        // İşlem sonucu kontrolü
+        const mdStatus = data["mdStatus"] || data["MdStatus"]
+        const response = data["Response"] || data["response"] || ""
+
+        // mdStatus 1: Tam doğrulama, 2,3,4: Kart saklama vs. (Genelde 1 beklenir)
+        // Response: Approved olmalı
+        if (mdStatus === "1" && response.toLowerCase() === "approved") {
+            return { success: true }
+        }
+
+        return { 
+            success: false, 
+            error: data["ErrMsg"] || data["errmsg"] || 'İşlem banka tarafından reddedildi' 
+        }
+
+    } catch (error) {
+        console.error('Callback doğrulama hatası:', error)
+        return { success: false, error: 'Doğrulama sırasında hata oluştu' }
+    }
   }
 }
 
-export const ziraatPaymentService = new ZiraatPaymentService() 
+export const ziraatPaymentService = new ZiraatPaymentService()

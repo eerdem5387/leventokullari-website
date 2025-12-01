@@ -3,206 +3,120 @@ import { ziraatPaymentService } from '@/lib/ziraat-payment'
 import { prisma } from '@/lib/prisma'
 import { emailService } from '@/lib/email'
 
-export async function POST(request: NextRequest) {
-    try {
-        console.log('=== ZIRAAT CALLBACK API CALLED ===')
+// Helper to process callback data (works for both POST formData and GET searchParams)
+async function handleCallback(data: Record<string, any>) {
+    console.log('Ziraat Callback Data:', data)
 
-        // Form verilerini al
-        const formData = await request.formData()
-        const callbackData: any = {}
+    const result = await ziraatPaymentService.verifyCallback(data)
+    const orderId = data["oid"] || data["OID"] || data["OrderId"]
 
-        // Form verilerini objeye çevir
-        for (const [key, value] of formData.entries()) {
-            callbackData[key] = value.toString()
+    if (!orderId) {
+        return { 
+            success: false, 
+            redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/fail?error=SiparisNoBulunamadi` 
         }
+    }
 
-        console.log('Callback data:', callbackData)
+    if (result.success) {
+        // Ödeme Başarılı
+        const order = await prisma.order.update({
+            where: { id: orderId },
+            data: {
+                paymentStatus: 'COMPLETED',
+                status: 'CONFIRMED', // Veya PROCESSING
+                notes: `Ziraat POS Onaylandı. AuthCode: ${data.AuthCode}, TransId: ${data.TransId}`
+            },
+            include: { user: true }
+        })
 
-        // Callback'i işle
-        const result = await ziraatPaymentService.processCallback(callbackData)
-
-        if (result.success && result.orderId) {
-            // Siparişi güncelle
-            const order = await prisma.order.update({
-                where: { id: result.orderId },
-                data: {
-                    paymentStatus: 'COMPLETED',
-                    status: 'CONFIRMED',
-                    notes: `Ödeme başarılı. Transaction ID: ${result.transactionId}`
-                },
-                include: {
-                    user: {
-                        select: { name: true, email: true }
-                    },
-                    items: {
-                        include: {
-                            product: true,
-                            variation: {
-                                include: {
-                                    attributes: {
-                                        include: {
-                                            attributeValue: {
-                                                include: {
-                                                    attribute: true
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            })
-
-            // Ödeme kaydı oluştur
+        // Ödeme kaydı (Tekrarlayan kayıtları önlemek için findFirst ile kontrol edilebilir veya işlem idempotent olmalı)
+        // Basitlik için direkt oluşturuyoruz (transactionId unique ise prisma hata fırlatabilir, try-catch içinde olmalı)
+        try {
             await prisma.payment.create({
                 data: {
-                    orderId: result.orderId,
-                    amount: result.amount || 0,
-                    method: 'BANK_TRANSFER',
+                    orderId: order.id,
+                    amount: Number(data.amount || 0),
+                    method: 'CREDIT_CARD',
                     status: 'COMPLETED',
-                    transactionId: result.transactionId || '',
-                    responseCode: result.responseCode || '',
-                    responseMessage: result.responseMessage || ''
+                    transactionId: data.TransId || `TX-${Date.now()}`,
+                    gatewayResponse: JSON.stringify(data)
                 }
             })
-
-            // E-posta bildirimleri gönder
-            try {
-                // Müşteriye ödeme onay e-postası
-                await emailService.sendOrderStatusUpdate(order, order.user.email, 'CONFIRMED')
-
-                // Admin'e ödeme bildirimi
-                await emailService.sendOrderNotificationToAdmin(order)
-            } catch (emailError) {
-                console.error('E-posta gönderilirken hata:', emailError)
-            }
-
-            // Başarılı sayfasına yönlendir
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/payment/success?orderId=${result.orderId}`)
-        } else {
-            // Siparişi güncelle (başarısız)
-            if (result.orderId) {
-                await prisma.order.update({
-                    where: { id: result.orderId },
-                    data: {
-                        paymentStatus: 'FAILED',
-                        notes: `Ödeme başarısız. Hata: ${result.error}`
-                    }
-                })
-
-                // Başarısız ödeme kaydı oluştur
-                await prisma.payment.create({
-                    data: {
-                        orderId: result.orderId,
-                        amount: result.amount || 0,
-                        method: 'BANK_TRANSFER',
-                        status: 'FAILED',
-                        transactionId: result.transactionId || '',
-                        responseCode: result.responseCode || '',
-                        responseMessage: result.error || ''
-                    }
-                })
-            }
-
-            // Başarısız sayfasına yönlendir
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/payment/fail?orderId=${result.orderId}&error=${encodeURIComponent(result.error || '')}`)
+        } catch (e) {
+            console.warn('Payment record creation failed (likely duplicate):', e)
         }
 
-    } catch (error) {
-        console.error('Ziraat callback error:', error)
+        // E-posta gönderimi (Hata oluşsa bile akışı bozmamalı)
+        try {
+            await emailService.sendOrderStatusUpdate(order, order.user.email, 'CONFIRMED')
+        } catch (e) {
+            console.error('Email send error:', e)
+        }
 
-        // Hata durumunda başarısız sayfasına yönlendir
-        return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/payment/fail?error=${encodeURIComponent('Callback işlemi başarısız')}`)
+        return {
+            success: true,
+            redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?orderId=${orderId}`
+        }
+
+    } else {
+        // Ödeme Başarısız
+        await prisma.order.update({
+            where: { id: orderId },
+            data: {
+                paymentStatus: 'FAILED',
+                notes: `Ziraat POS Hatası: ${result.error}`
+            }
+        })
+
+        try {
+            await prisma.payment.create({
+                data: {
+                    orderId: orderId,
+                    amount: Number(data.amount || 0),
+                    method: 'CREDIT_CARD',
+                    status: 'FAILED',
+                    transactionId: data.TransId, // Başarısız işlemde de dönebilir
+                    responseMessage: result.error,
+                    gatewayResponse: JSON.stringify(data)
+                }
+            })
+        } catch {}
+
+        return {
+            success: false,
+            redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/fail?orderId=${orderId}&error=${encodeURIComponent(result.error || 'OdemeBasarisiz')}`
+        }
     }
 }
 
-// GET isteği için de aynı işlemi yap (bazı bankalar GET kullanabilir)
+export async function POST(request: NextRequest) {
+    try {
+        const formData = await request.formData()
+        const data: Record<string, string> = {}
+        formData.forEach((value, key) => {
+            data[key] = value.toString()
+        })
+
+        const result = await handleCallback(data)
+        return NextResponse.redirect(result.redirectUrl, 303) // 303 See Other
+    } catch (error) {
+        console.error('Ziraat POST Callback Error:', error)
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/payment/fail?error=SistemHatasi`)
+    }
+}
+
 export async function GET(request: NextRequest) {
     try {
-        console.log('=== ZIRAAT CALLBACK GET API CALLED ===')
-
         const { searchParams } = new URL(request.url)
-        const callbackData: any = {}
+        const data: Record<string, string> = {}
+        searchParams.forEach((value, key) => {
+            data[key] = value
+        })
 
-        // Query parametrelerini objeye çevir
-        for (const [key, value] of searchParams.entries()) {
-            callbackData[key] = value
-        }
-
-        console.log('Callback data (GET):', callbackData)
-
-        // POST ile aynı işlemi yap
-        const result = await ziraatPaymentService.processCallback(callbackData)
-
-        if (result.success && result.orderId) {
-            // Siparişi güncelle
-            const order = await prisma.order.update({
-                where: { id: result.orderId },
-                data: {
-                    paymentStatus: 'COMPLETED',
-                    status: 'CONFIRMED',
-                    notes: `Ödeme başarılı. Transaction ID: ${result.transactionId}`
-                },
-                include: {
-                    user: {
-                        select: { name: true, email: true }
-                    }
-                }
-            })
-
-            // Ödeme kaydı oluştur
-            await prisma.payment.create({
-                data: {
-                    orderId: result.orderId,
-                    amount: result.amount || 0,
-                    method: 'BANK_TRANSFER',
-                    status: 'COMPLETED',
-                    transactionId: result.transactionId || '',
-                    responseCode: result.responseCode || '',
-                    responseMessage: result.responseMessage || ''
-                }
-            })
-
-            // E-posta bildirimleri gönder
-            try {
-                await emailService.sendOrderStatusUpdate(order, order.user.email, 'CONFIRMED')
-                await emailService.sendOrderNotificationToAdmin(order)
-            } catch (emailError) {
-                console.error('E-posta gönderilirken hata:', emailError)
-            }
-
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/payment/success?orderId=${result.orderId}`)
-        } else {
-            // Siparişi güncelle (başarısız)
-            if (result.orderId) {
-                await prisma.order.update({
-                    where: { id: result.orderId },
-                    data: {
-                        paymentStatus: 'FAILED',
-                        notes: `Ödeme başarısız. Hata: ${result.error}`
-                    }
-                })
-
-                await prisma.payment.create({
-                    data: {
-                        orderId: result.orderId,
-                        amount: result.amount || 0,
-                        method: 'BANK_TRANSFER',
-                        status: 'FAILED',
-                        transactionId: result.transactionId || '',
-                        responseCode: result.responseCode || '',
-                        responseMessage: result.error || ''
-                    }
-                })
-            }
-
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/payment/fail?orderId=${result.orderId}&error=${encodeURIComponent(result.error || '')}`)
-        }
-
+        const result = await handleCallback(data)
+        return NextResponse.redirect(result.redirectUrl, 303)
     } catch (error) {
-        console.error('Ziraat callback GET error:', error)
-        return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/payment/fail?error=${encodeURIComponent('Callback işlemi başarısız')}`)
+        console.error('Ziraat GET Callback Error:', error)
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/payment/fail?error=SistemHatasi`)
     }
 }
