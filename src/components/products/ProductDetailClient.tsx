@@ -322,10 +322,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   {/* Varyasyon Seçimi */}
                   {product.variations && product.variations.length > 0 && (
                     <div className="space-y-4">
-                      {Object.entries(getAvailableAttributes()).map(([attributeName, values]) => (
+                      {Object.entries(getAvailableAttributes()).map(([attributeName, values]) => {
+                        // "Özellik" yerine "Öğrenciler" göster
+                        const displayName = attributeName === 'Özellik' ? 'Öğrenciler' : attributeName
+                        return (
                         <div key={attributeName} className="space-y-2">
                           <label className="text-sm font-medium text-gray-700">
-                            {attributeName}:
+                            {displayName}:
                           </label>
                           <div className="relative dropdown-container">
                             <button
@@ -360,7 +363,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                             )}
                           </div>
                         </div>
-                      ))}
+                        )
+                      })}
                       
                       {/* Seçilen Varyasyon Bilgileri */}
                       {selectedVariation && (
