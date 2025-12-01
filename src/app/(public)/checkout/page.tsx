@@ -64,6 +64,8 @@ export default function CheckoutPage() {
   })
   const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD')
   const [notes, setNotes] = useState('')
+  const [shippingCost, setShippingCost] = useState<number>(29.99)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(500)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,6 +88,24 @@ export default function CheckoutPage() {
         }
       } else if (savedCartSession) {
         setCartItems(JSON.parse(savedCartSession))
+      }
+
+      // Kargo ayarlarını yükle
+      try {
+        const res = await fetch('/api/settings?category=shipping')
+        if (res.ok) {
+          const data = await res.json()
+          const shippingSettings = data?.shipping || {}
+          if (typeof shippingSettings.defaultShippingCost === 'number') {
+            setShippingCost(shippingSettings.defaultShippingCost)
+          }
+          if (typeof shippingSettings.freeShippingThreshold === 'number') {
+            setFreeShippingThreshold(shippingSettings.freeShippingThreshold)
+          }
+        }
+      } catch (e) {
+        // Sessizce varsayılana düş
+        console.error('Shipping settings load error:', e)
       }
 
       // Kullanıcının kayıtlı adreslerini getir
@@ -131,7 +151,13 @@ export default function CheckoutPage() {
   }, []) // Boş dependency array - sadece component mount olduğunda çalışır
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = subtotal > 500 ? 0 : 29.99
+  const shipping = (() => {
+    // Eğer eşik 0 veya geçersizse, her zaman shippingCost kullan
+    if (!isFinite(freeShippingThreshold) || freeShippingThreshold <= 0) {
+      return shippingCost
+    }
+    return subtotal >= freeShippingThreshold ? 0 : shippingCost
+  })()
   const total = subtotal + shipping
 
   const handleAddressSelect = (address: Address) => {
