@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
             throw new NotFoundError('Kullanıcı bulunamadı')
         }
 
-        // Toplam tutarı ve kargo ücretini hesapla
+        // Toplam tutarı hesapla
         let subtotal = 0
         for (const item of items) {
             if (item.variationId) {
@@ -162,7 +162,29 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        const shippingFee = subtotal > 500 ? 0 : 29.99
+        // Kargo ayarlarını Settings tablosundan oku
+        let shippingFee = 0
+        try {
+            const [shippingCostSetting, freeThresholdSetting] = await Promise.all([
+                prisma.settings.findUnique({ where: { key: 'shipping.defaultShippingCost' } }),
+                prisma.settings.findUnique({ where: { key: 'shipping.freeShippingThreshold' } })
+            ])
+
+            const defaultShippingCost = shippingCostSetting ? parseFloat(shippingCostSetting.value) : 29.99
+            const freeShippingThreshold = freeThresholdSetting ? parseFloat(freeThresholdSetting.value) : 500
+
+            // Eğer eşik 0 veya NaN ise her zaman defaultShippingCost kullan
+            if (!isFinite(freeShippingThreshold) || freeShippingThreshold <= 0) {
+                shippingFee = defaultShippingCost
+            } else {
+                shippingFee = subtotal >= freeShippingThreshold ? 0 : defaultShippingCost
+            }
+        } catch (e) {
+            // Herhangi bir ayar okunamazsa eski davranışa geri dön
+            console.error('Shipping settings read error, falling back to defaults:', e)
+            shippingFee = subtotal > 500 ? 0 : 29.99
+        }
+
         const taxAmount = 0
         const discountAmount = 0
         const finalAmount = subtotal + shippingFee - discountAmount

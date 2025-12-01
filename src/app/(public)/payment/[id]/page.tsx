@@ -88,12 +88,14 @@ export default function PaymentPage() {
       setIsProcessing(true)
       setError('')
       const token = localStorage.getItem('token')
+      const guestEmail = localStorage.getItem('userEmail') || ''
 
       // Ödeme başlatma isteği
       const payload = {
         orderId,
         amount: order?.finalAmount ? Number(order.finalAmount) : 0,
         method: 'CREDIT_CARD',
+        guestEmail: !token ? guestEmail : undefined,
         // Kart bilgilerini Ziraat Hosting modelinde göndermiyoruz, banka sayfasında girilecek.
         // Eğer API modeline geçilirse burada alınır.
       }

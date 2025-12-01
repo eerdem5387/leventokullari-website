@@ -9,27 +9,29 @@ const paymentSchema = z.object({
     amount: z.number(),
     method: z.enum(['CREDIT_CARD', 'BANK_TRANSFER', 'CASH_ON_DELIVERY']),
     // Kart bilgileri Ziraat sayfasına post edileceği için burada zorunlu değil,
-    // ancak eğer frontend'den alınıp Ziraat'e gönderilecekse tutulabilir.
     // v3 Hosting modelinde kart bilgisi banka sayfasında girilir.
-    installments: z.string().optional()
+    installments: z.string().optional(),
+    // Misafir kullanıcı için opsiyonel e-posta doğrulaması
+    guestEmail: z.string().email().optional()
 })
 
 export async function POST(request: NextRequest) {
     try {
         console.log('=== PAYMENT PROCESS API CALLED ===')
 
-        const token = request.headers.get('authorization')?.replace('Bearer ', '')
-        if (!token) {
-            return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
-        }
+        const authHeader = request.headers.get('authorization')
+        const token = authHeader?.replace('Bearer ', '')
+        let payload: any = null
 
-        const payload = verifyToken(token)
-        if (!payload) {
-            return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
+        // Token varsa doğrula, yoksa misafir akışına izin ver
+        if (token) {
+            payload = verifyToken(token)
+            if (!payload) {
+                return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
+            }
         }
 
         const body = await request.json()
-        
         const paymentData = paymentSchema.parse(body)
 
         // Siparişi kontrol et
@@ -44,9 +46,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
         }
 
-        // Yetki kontrolü
-        if (payload.role !== 'ADMIN' && order.userId !== payload.userId) {
-            return NextResponse.json({ error: 'Bu siparişe erişim izniniz yok' }, { status: 403 })
+        // Yetki / Sahiplik kontrolü
+        if (payload) {
+            // Giriş yapmış kullanıcı için: sadece kendi siparişini ödeyebilir (admin hariç)
+            if (payload.role !== 'ADMIN' && order.userId !== payload.userId) {
+                return NextResponse.json({ error: 'Bu siparişe erişim izniniz yok' }, { status: 403 })
+            }
+        } else {
+            // Misafir kullanıcı için: e-posta adresi ile basit doğrulama
+            if (!paymentData.guestEmail) {
+                return NextResponse.json({ error: 'Misafir ödemesi için e-posta gerekli' }, { status: 401 })
+            }
+            if (order.user && order.user.email.toLowerCase() !== paymentData.guestEmail.toLowerCase()) {
+                return NextResponse.json({ error: 'Bu siparişe erişim izniniz yok' }, { status: 403 })
+            }
         }
 
         if (order.paymentStatus === 'COMPLETED') {
