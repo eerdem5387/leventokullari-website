@@ -348,6 +348,43 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setQuickVariations(updated)
   }
 
+  // Toplu ekleme fonksiyonu
+  const [bulkImportText, setBulkImportText] = useState('')
+  const [showBulkImport, setShowBulkImport] = useState(false)
+
+  const handleBulkImport = () => {
+    if (!bulkImportText.trim()) {
+      showNotification('error', 'Lütfen öğrenci isimlerini girin')
+      return
+    }
+
+    // Pipe (|) ile ayır ve temizle
+    const names = bulkImportText
+      .split('|')
+      .map(name => name.trim())
+      .filter(name => name.length > 0)
+
+    if (names.length === 0) {
+      showNotification('error', 'Geçerli öğrenci ismi bulunamadı')
+      return
+    }
+
+    // Mevcut boş satırları temizle, yeni isimleri ekle
+    const existingWithNames = quickVariations.filter(qv => qv.name.trim() !== '')
+    const newVariations = names.map(name => ({
+      id: `quick-${Date.now()}-${Math.random()}`,
+      name: name.trim(),
+      price: '',
+      stock: '1',
+      sku: ''
+    }))
+
+    setQuickVariations([...existingWithNames, ...newVariations])
+    setBulkImportText('')
+    setShowBulkImport(false)
+    showNotification('success', `${names.length} öğrenci başarıyla eklendi`)
+  }
+
   // Kombinasyon oluşturma fonksiyonu
   const generateCombinations = (attrs: Array<{ name: string; values: string[] }>) => {
     if (attrs.length === 0) return []
@@ -908,15 +945,67 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     <h3 className="text-lg font-medium text-gray-900">
                       {attributes[0]?.name || 'Öğrenci'} Listesi ({quickVariations.length})
                     </h3>
-                    <button
-                      type="button"
-                      onClick={addQuickVariation}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
-                    >
-                      <span>+</span>
-                      Satır Ekle
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowBulkImport(!showBulkImport)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Toplu Ekle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={addQuickVariation}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
+                      >
+                        <span>+</span>
+                        Satır Ekle
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Toplu Ekleme Modal */}
+                  {showBulkImport && (
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Öğrenci İsimlerini Toplu Ekle (| ile ayırın)
+                        </label>
+                        <textarea
+                          value={bulkImportText}
+                          onChange={(e) => setBulkImportText(e.target.value)}
+                          placeholder="AS** S* AV** | ÖY** N** BE*** | OS*** KABA********* | ..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 text-sm font-mono"
+                          rows={6}
+                        />
+                        <p className="mt-2 text-xs text-gray-600">
+                          💡 Öğrenci isimlerini pipe (|) karakteri ile ayırarak yapıştırın. Örnek: <code className="bg-gray-100 px-1 rounded">İsim 1 | İsim 2 | İsim 3</code>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleBulkImport}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          Ekle
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowBulkImport(false)
+                            setBulkImportText('')
+                          }}
+                          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                        >
+                          İptal
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
