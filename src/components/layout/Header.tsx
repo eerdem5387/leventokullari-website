@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, Menu, X, ShoppingCart, User, LogIn, LogOut, Settings, Package } from 'lucide-react'
-import DynamicMenu from './DynamicMenu'
-import { safeLocalStorage, safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
+import { Search, Menu, X, ShoppingCart, User, LogIn, LogOut, Package } from 'lucide-react'
+import { safeLocalStorage, safeWindow } from '@/lib/browser-utils'
+import { cartService } from '@/lib/cart-service'
 
 interface HeaderProps {
   siteName?: string
@@ -22,7 +22,6 @@ export default function Header({ siteName = 'Levent Kolej Ürün Hizmeti' }: Hea
     
     // Kullanıcı bilgisini yükle
     const loadUser = () => {
-      if (!isClient) return
       const userStr = safeLocalStorage.getItem('user')
       if (userStr) {
         try {
@@ -38,56 +37,43 @@ export default function Header({ siteName = 'Levent Kolej Ürün Hizmeti' }: Hea
     
     // Sepet sayısını güncelle
     const updateCartCount = () => {
-      const cart = safeLocalStorage.getItem('cart')
-      if (cart) {
-        try {
-          const cartData = JSON.parse(cart)
-          const totalItems = cartData.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0
-          setCartItemCount(totalItems)
-        } catch (error) {
-          console.error('Cart parse error:', error)
-          setCartItemCount(0)
-        }
-      } else {
-        setCartItemCount(0)
-      }
+      setCartItemCount(cartService.getItemCount())
     }
 
-    loadUser()
-    updateCartCount()
-
-    // Storage değişikliklerini dinle
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cart') {
-        updateCartCount()
-      } else if (e.key === 'user' || e.key === 'token') {
+    if (typeof window !== 'undefined') {
         loadUser()
-      }
-    }
+        updateCartCount()
 
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Custom event dinle (aynı tab içinde)
-    window.addEventListener('cartUpdated', updateCartCount)
-    window.addEventListener('userUpdated', loadUser)
+        // Storage değişikliklerini dinle
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'cart') {
+                updateCartCount()
+            } else if (e.key === 'user' || e.key === 'token') {
+                loadUser()
+            }
+        }
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('cartUpdated', updateCartCount)
-      window.removeEventListener('userUpdated', loadUser)
+        window.addEventListener('storage', handleStorageChange)
+        
+        // Custom event dinle (aynı tab içinde)
+        window.addEventListener('cartUpdated', updateCartCount)
+        window.addEventListener('userUpdated', loadUser)
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange)
+            window.removeEventListener('cartUpdated', updateCartCount)
+            window.removeEventListener('userUpdated', loadUser)
+        }
     }
-  }, [isClient])
+  }, [])
 
   const handleLogout = () => {
-    if (!isClient) return
     safeLocalStorage.removeItem('token')
     safeLocalStorage.removeItem('user')
     setUser(null)
     setUserMenuOpen(false)
     safeWindow.location.href = '/'
   }
-
-  
 
   return (
     <>

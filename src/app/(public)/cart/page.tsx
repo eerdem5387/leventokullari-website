@@ -4,17 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, CheckCircle } from 'lucide-react'
-import { safeLocalStorage, safeWindow, isClient } from '@/lib/browser-utils'
-import Image from 'next/image'
-
-interface CartItem {
-  id: string
-  name: string
-  price: number
-  image?: string
-  quantity: number
-  stock: number
-}
+import { isClient } from '@/lib/browser-utils'
+import { cartService, CartItem } from '@/lib/cart-service'
 
 export default function CartPage() {
   const router = useRouter()
@@ -23,57 +14,36 @@ export default function CartPage() {
 
   useEffect(() => {
     loadCart()
+    
+    const handleCartUpdate = () => loadCart()
+    window.addEventListener('cartUpdated', handleCartUpdate)
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate)
   }, [])
 
   const loadCart = () => {
     if (!isClient) return
-
-    try {
-      const cartData = safeLocalStorage.getItem('cart')
-      if (cartData) {
-        const parsed = JSON.parse(cartData)
-        const items = Array.isArray(parsed) ? parsed : (parsed.items || [])
-        setCartItems(items)
-      }
-    } catch (error) {
-      console.error('Cart load error:', error)
-      setCartItems([])
-    } finally {
-      setIsLoading(false)
-    }
+    const cart = cartService.getCart()
+    setCartItems(cart.items)
+    setIsLoading(false)
   }
 
-  const updateCart = (newItems: CartItem[]) => {
-    setCartItems(newItems)
-    const cartData = { items: newItems }
-    safeLocalStorage.setItem('cart', JSON.stringify(cartData))
-    safeWindow.dispatchEvent(new Event('cartUpdated'))
+  const updateQuantity = (itemId: string, quantity: number, variationId?: string) => {
+    cartService.updateQuantity(itemId, quantity, variationId)
+    // Event listener will update state
   }
 
-  const updateQuantity = (itemId: string, delta: number) => {
-    const newItems = cartItems.map(item => {
-      if (item.id === itemId) {
-        const newQuantity = Math.max(1, item.quantity + delta)
-        return { ...item, quantity: newQuantity }
-      }
-      return item
-    })
-    updateCart(newItems)
-  }
-
-  const removeItem = (itemId: string) => {
-    const newItems = cartItems.filter(item => item.id !== itemId)
-    updateCart(newItems)
+  const removeItem = (itemId: string, variationId?: string) => {
+    cartService.removeItem(itemId, variationId)
   }
 
   const clearCart = () => {
     if (confirm('Sepeti temizlemek istediğinize emin misiniz?')) {
-      updateCart([])
+      cartService.clearCart()
     }
   }
 
   const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    return cartService.getTotalPrice()
   }
 
   if (isLoading) {
@@ -130,7 +100,7 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             {cartItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-lg sm:hover:shadow-xl transition-shadow">
+              <div key={item.variationId ? `${item.id}-${item.variationId}` : item.id} className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-lg sm:hover:shadow-xl transition-shadow">
                 <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
                   {/* Product Image */}
                   <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border-2 border-gray-200">
@@ -150,7 +120,16 @@ export default function CartPage() {
 
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 line-clamp-2 mb-1">{item.name}</h3>
+                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 line-clamp-2 mb-1">
+                        <Link href={`/products/${item.slug}`} className="hover:text-blue-600 transition-colors">
+                            {item.name}
+                        </Link>
+                    </h3>
+                    {item.variationOptions && (
+                        <p className="text-xs text-gray-500 mb-1 bg-gray-100 inline-block px-2 py-1 rounded-md">
+                            {item.variationOptions}
+                        </p>
+                    )}
                     <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
                       Birim: <span className="font-semibold text-gray-700">{item.price.toFixed(2)} ₺</span>
                     </p>
@@ -160,7 +139,7 @@ export default function CartPage() {
                       <span className="text-xs text-gray-500 font-medium hidden sm:inline">Adet:</span>
                       <div className="flex items-center border-2 border-gray-200 rounded-lg">
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1, item.variationId)}
                           className="p-2 sm:p-2.5 rounded-l-lg hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                       disabled={item.quantity <= 1}
                           aria-label="Azalt"
@@ -169,9 +148,10 @@ export default function CartPage() {
                     </button>
                         <span className="w-10 sm:w-12 text-center font-bold text-gray-900 text-sm sm:text-base">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1, item.variationId)}
                           className="p-2 sm:p-2.5 rounded-r-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                           aria-label="Artır"
+                          disabled={item.quantity >= item.stock}
                     >
                       <Plus className="h-4 w-4 text-gray-600" />
                     </button>
@@ -185,7 +165,7 @@ export default function CartPage() {
                       {(item.price * item.quantity).toFixed(2)} ₺
                     </p>
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.id, item.variationId)}
                       className="p-2 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors border-2 border-transparent hover:border-red-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                       aria-label="Sepetten Kaldır"
                     >
@@ -207,7 +187,7 @@ export default function CartPage() {
             )}
           </div>
 
-          {/* Order Summary - Mobile: Sticky bottom, Desktop: Sidebar */}
+          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-4 sm:p-6 sticky bottom-20 lg:bottom-auto lg:top-8 z-40 lg:z-auto">
               <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Sipariş Özeti</h2>
