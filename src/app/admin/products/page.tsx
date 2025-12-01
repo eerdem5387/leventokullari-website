@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Edit, Trash2, Eye, Star } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Star, Search, Filter, ArrowUpDown, CheckCircle, XCircle } from 'lucide-react'
 
 interface Product {
   id: string
@@ -39,7 +39,7 @@ export default function AdminProductsPage() {
   
   // Pagination state'leri
   const [currentPage, setCurrentPage] = useState(1)
-  const [productsPerPage] = useState(12)
+  const [productsPerPage] = useState(10)
   
   // Arama ve filtreleme state'leri
   const [searchTerm, setSearchTerm] = useState('')
@@ -52,67 +52,6 @@ export default function AdminProductsPage() {
     setNotification({ type, message })
     setTimeout(() => setNotification(null), 3000)
   }
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setError(null)
-        setIsLoading(true)
-        
-        // Token'ı localStorage'dan al
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setError('Yetkilendirme gerekli')
-          setIsLoading(false)
-          return
-        }
-
-        const response = await fetch('/api/products?admin=true', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          console.log('Products data received:', data)
-          // API'den gelen veriyi kontrol et
-          if (Array.isArray(data)) {
-            setProducts(data)
-          } else {
-            console.error('API returned non-array data:', data)
-            setProducts([])
-            setError('API\'den beklenmeyen veri formatı alındı')
-          }
-        } else {
-          console.error('Failed to fetch products:', response.status)
-          setProducts([])
-          setError('Ürünler yüklenirken bir hata oluştu')
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error)
-        setProducts([])
-        setError('Ürünler yüklenirken bir hata oluştu')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    refreshProducts()
-
-    // Yeni ürün eklendiğinde sayfayı yenile
-    const handleProductUpdate = () => {
-      refreshProducts()
-    }
-
-    // Event listener ekle
-    window.addEventListener('productUpdated', handleProductUpdate)
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('productUpdated', handleProductUpdate)
-    }
-  }, [])
 
   // Ürün listesini yenileme fonksiyonu
   const refreshProducts = async () => {
@@ -133,20 +72,18 @@ export default function AdminProductsPage() {
         }
       })
       
-              if (response.ok) {
-          const data = await response.json()
-          if (Array.isArray(data)) {
-            setProducts(data)
-          } else {
-            console.error('API returned non-array data:', data)
-            setProducts([])
-            setError('API\'den beklenmeyen veri formatı alındı')
-          }
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data)) {
+          setProducts(data)
         } else {
-          console.error('API error:', response.status)
           setProducts([])
-          setError('Ürünler yüklenirken bir hata oluştu')
+          setError('API\'den beklenmeyen veri formatı alındı')
         }
+      } else {
+        setProducts([])
+        setError('Ürünler yüklenirken bir hata oluştu')
+      }
     } catch (error) {
       console.error('Error fetching products:', error)
       setProducts([])
@@ -156,8 +93,10 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Global olarak refresh fonksiyonunu erişilebilir yap
   useEffect(() => {
+    refreshProducts()
+    
+    // Global erişim için
     ;(window as any).refreshAdminProducts = refreshProducts
   }, [])
 
@@ -232,152 +171,89 @@ export default function AdminProductsPage() {
       }
     })
 
-
-    
     setFilteredProducts(filtered)
-    
-    // Filtreleme yapıldığında ilk sayfaya dön, ama sadece filtre değiştiğinde
-    const hasFilters = searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || stockFilter !== 'all'
-    if (hasFilters) {
-      setCurrentPage(1)
-    }
+    setCurrentPage(1)
   }, [products, searchTerm, categoryFilter, statusFilter, stockFilter, sortBy, sortOrder])
 
-  // Pagination hesaplamaları
+  // Pagination
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage)
-  
-  // Eğer mevcut sayfa, toplam sayfa sayısından büyükse son sayfaya git
-  const adjustedCurrentPage = Math.min(currentPage, totalPages || 1)
-  
-  const indexOfLastProduct = adjustedCurrentPage * productsPerPage
+  const indexOfLastProduct = currentPage * productsPerPage
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct)
-  
-
-
-
-
-
-
-  // Sayfa değiştirme fonksiyonu
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber)
-  }
-
-  // Sayfa numarasını otomatik düzelt
-  useEffect(() => {
-    if (totalPages > 0 && currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
-  }, [totalPages, currentPage])
 
   // Benzersiz kategorileri al
   const uniqueCategories = Array.from(new Set(products.map(p => p.category?.name).filter(Boolean)))
 
+  // Ürün Silme
   const handleDeleteProduct = async (productId: string) => {
     if (confirm('Bu ürünü silmek istediğinizden emin misiniz?')) {
       try {
         const token = localStorage.getItem('token')
-        if (!token) {
-          showNotification('error', 'Yetkilendirme gerekli')
-          return
-        }
+        if (!token) return
 
         const response = await fetch(`/api/products/${productId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         })
 
         if (response.ok) {
           setProducts(products.filter(p => p.id !== productId))
           showNotification('success', 'Ürün başarıyla silindi')
         } else {
-          const errorData = await response.json()
-          showNotification('error', errorData.error || 'Ürün silinirken bir hata oluştu')
+          showNotification('error', 'Ürün silinirken bir hata oluştu')
         }
       } catch (error) {
-        console.error('Error deleting product:', error)
         showNotification('error', 'Ürün silinirken bir hata oluştu')
       }
     }
   }
 
-  const handleToggleFeatured = async (productId: string, currentFeatured: boolean) => {
+  // Toggle İşlemleri (Aktif/Pasif, Featured)
+  const handleToggle = async (productId: string, field: 'isActive' | 'isFeatured', currentValue: boolean) => {
+    // Optimistic update
+    const originalProducts = [...products]
+    setProducts(products.map(p => p.id === productId ? { ...p, [field]: !currentValue } : p))
+
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        showNotification('error', 'Yetkilendirme gerekli')
-        return
-      }
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('Auth error')
 
-      const response = await fetch(`/api/products/${productId}/feature`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ isFeatured: !currentFeatured })
-      })
+        // API Endpoint belirle
+        const endpoint = field === 'isActive' 
+            ? `/api/products/${productId}/active` 
+            : `/api/products/${productId}/feature`
+        
+        const bodyKey = field === 'isActive' ? 'isActive' : 'isFeatured'
 
-      if (response.ok) {
-        const { message } = await response.json()
-        setProducts(products.map(p => 
-          p.id === productId ? { ...p, isFeatured: !currentFeatured } : p
-        ))
+        const response = await fetch(endpoint, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ [bodyKey]: !currentValue })
+        })
+
+        if (!response.ok) throw new Error('Update failed')
+        
+        const message = field === 'isActive' 
+            ? (!currentValue ? 'Ürün aktif edildi' : 'Ürün pasif yapıldı')
+            : (!currentValue ? 'Ürün öne çıkarıldı' : 'Öne çıkarma kaldırıldı')
+            
         showNotification('success', message)
-      } else {
-        const errorData = await response.json()
-        showNotification('error', errorData.error || 'Ürün güncellenirken bir hata oluştu')
-      }
+
     } catch (error) {
-      console.error('Error updating product featured status:', error)
-      showNotification('error', 'Ürün güncellenirken bir hata oluştu')
+        // Revert on error
+        setProducts(originalProducts)
+        showNotification('error', 'Güncelleme başarısız oldu')
     }
   }
 
-  // Aktif/Pasif durumu değiştirme fonksiyonu
-  const handleToggleActive = async (productId: string, currentActive: boolean) => {
-    try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        showNotification('error', 'Yetkilendirme gerekli')
-        return
-      }
-
-      const response = await fetch(`/api/products/${productId}/active`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ isActive: !currentActive })
-      })
-
-      if (response.ok) {
-        setProducts(products.map(p => 
-          p.id === productId ? { ...p, isActive: !currentActive } : p
-        ))
-        showNotification('success', currentActive ? 'Ürün pasif duruma alındı' : 'Ürün aktif duruma alındı')
-      } else {
-        const errorData = await response.json()
-        showNotification('error', errorData.error || 'İşlem sırasında bir hata oluştu')
-      }
-    } catch (error) {
-      console.error('Error toggling active status:', error)
-      showNotification('error', 'İşlem sırasında bir hata oluştu')
-    }
-  }
-
-  // Sıralama değiştirme fonksiyonu
+  // Sıralama güncelleme
   const handleSortOrderChange = async (productId: string, newSortOrder: number) => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) {
-        showNotification('error', 'Yetkilendirme gerekli')
-        return
-      }
+      if (!token) return
 
       const response = await fetch(`/api/products/${productId}/sort-order`, {
         method: 'PUT',
@@ -389,17 +265,10 @@ export default function AdminProductsPage() {
       })
 
       if (response.ok) {
-        setProducts(products.map(p => 
-          p.id === productId ? { ...p, sortOrder: newSortOrder } : p
-        ))
-        showNotification('success', 'Ürün sıralaması güncellendi')
-      } else {
-        const errorData = await response.json()
-        showNotification('error', errorData.error || 'Sıralama güncellenirken bir hata oluştu')
+        setProducts(products.map(p => p.id === productId ? { ...p, sortOrder: newSortOrder } : p))
       }
     } catch (error) {
-      console.error('Error updating product sort order:', error)
-      showNotification('error', 'Sıralama güncellenirken bir hata oluştu')
+      console.error('Error updating sort order', error)
     }
   }
 
@@ -411,531 +280,227 @@ export default function AdminProductsPage() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Ürünler</h1>
-            <p className="text-gray-600">Tüm ürünleri yönetin</p>
-          </div>
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="text-red-600 text-lg font-semibold mb-2">Hata</div>
-            <div className="text-gray-600 mb-4">{error}</div>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Tekrar Dene
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
-      {/* Toast Notification */}
+    <div className="space-y-6">
+      {/* Notification */}
       {notification && (
-        <div className={`fixed top-20 sm:top-4 right-4 z-50 p-3 sm:p-4 rounded-lg shadow-lg max-w-[calc(100vw-2rem)] ${
-          notification.type === 'success' 
-            ? 'bg-green-500 text-white' 
-            : 'bg-red-500 text-white'
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-y-0 ${
+          notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
         }`}>
           {notification.message}
         </div>
       )}
 
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ürünler</h1>
-          <p className="text-sm sm:text-base text-gray-600">Tüm ürünleri yönetin</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Ürün Yönetimi</h1>
+          <p className="text-gray-500 mt-1">Toplam {products.length} ürün listeleniyor</p>
         </div>
         <Link
           href="/admin/products/new"
-          className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] w-full sm:w-auto"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-sm hover:shadow flex items-center gap-2 font-medium"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-5 w-5" />
           Yeni Ürün Ekle
         </Link>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          {/* Arama */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Arama</label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Ürün adı, SKU veya kategori..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Kategori Filtresi */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tüm Kategoriler</option>
-              {uniqueCategories.map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Durum Filtresi */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tüm Durumlar</option>
-              <option value="active">Aktif</option>
-              <option value="inactive">Pasif</option>
-              <option value="featured">Öne Çıkan</option>
-            </select>
-          </div>
-
-          {/* Stok Filtresi */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Stok</label>
-            <select
-              value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tüm Stoklar</option>
-              <option value="inStock">Stokta Var</option>
-              <option value="outOfStock">Tükendi</option>
-              <option value="lowStock">Düşük Stok</option>
-            </select>
-          </div>
-
-          {/* Sıralama */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Sıralama</label>
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [newSortBy, newSortOrder] = e.target.value.split('-')
-                setSortBy(newSortBy as 'name' | 'price' | 'createdAt' | 'stock')
-                setSortOrder(newSortOrder as 'asc' | 'desc')
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="createdAt-desc">En Yeni</option>
-              <option value="createdAt-asc">En Eski</option>
-              <option value="name-asc">İsim A-Z</option>
-              <option value="name-desc">İsim Z-A</option>
-              <option value="price-asc">Fiyat Düşük-Yüksek</option>
-              <option value="price-desc">Fiyat Yüksek-Düşük</option>
-              <option value="stock-asc">Stok Az-Çok</option>
-              <option value="stock-desc">Stok Çok-Az</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Filtreleri Temizle */}
-        {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || stockFilter !== 'all') && (
-          <div className="mt-4">
-            <button
-              onClick={() => {
-                setSearchTerm('')
-                setCategoryFilter('all')
-                setStatusFilter('all')
-                setStockFilter('all')
-              }}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              Filtreleri Temizle
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Products Table - Desktop */}
-      <div className="bg-white rounded-lg shadow-sm border hidden lg:block overflow-hidden relative">
-        <div 
-          className="admin-table-scroll overflow-x-auto overflow-y-auto bg-white" 
-          style={{ maxHeight: '600px' }}
-        >
-          <table className="w-full min-w-[1200px] bg-white">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sıra
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ürün
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Kategori
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fiyat
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stok
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Durum
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Öne Çıkan
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  İşlemler
-                </th>
-              </tr>
-            </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-              {currentProducts && currentProducts.length > 0 ? (
-                currentProducts.map((product, index) => (
-                  <tr key={product.id} className="hover:bg-gray-50" style={{ backgroundColor: index % 2 === 0 ? '#f9fafb' : 'white' }}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={product.sortOrder}
-                          onChange={(e) => handleSortOrderChange(product.id, parseInt(e.target.value) || 0)}
-                          className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          min="0"
-                        />
-                        <span className="text-xs text-gray-500">#</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          {product.images && product.images.length > 0 ? (
-                            <img
-                              className="h-10 w-10 rounded-lg object-cover"
-                              src={product.images[0]}
-                              alt={product.name}
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
-                              <span className="text-xs text-gray-500">Resim</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-4 max-w-xs">
-                          <div className="text-sm font-medium text-gray-900 line-clamp-2">
-                            {product.name}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate">
-                            {product.sku}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.category?.name || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₺{Number(product.price).toLocaleString('tr-TR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.stock === -1 ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Sınırsız
-                        </span>
-                      ) : (
-                        <span className={product.stock === 0 ? 'text-red-600 font-semibold' : product.stock < 10 ? 'text-orange-600 font-semibold' : ''}>
-                          {product.stock}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleActive(product.id, product.isActive)}
-                        className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full transition-colors cursor-pointer ${
-                          product.isActive
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
-                        title={product.isActive ? 'Pasif duruma al' : 'Aktif duruma al'}
-                      >
-                        {product.isActive ? 'Aktif' : 'Pasif'}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleFeatured(product.id, product.isFeatured)}
-                        className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
-                          product.isFeatured
-                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                        }`}
-                        title={product.isFeatured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
-                      >
-                        <Star className={`h-3 w-3 mr-1 ${product.isFeatured ? 'fill-current' : ''}`} />
-                        {product.isFeatured ? 'Öne Çıkan' : 'Öne Çıkar'}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <Link
-                          href={`/products/${product.slug}`}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                        <Link
-                          href={`/admin/products/${product.id}/edit`}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          onClick={() => handleDeleteProduct(product.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                    Henüz ürün bulunmuyor.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Products Card View - Mobile */}
-      <div className="lg:hidden space-y-3">
-        {currentProducts && currentProducts.length > 0 ? (
-          currentProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow-sm border p-4">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="h-16 w-16 flex-shrink-0">
-                  {product.images && product.images.length > 0 ? (
-                    <img
-                      className="h-16 w-16 rounded-lg object-cover"
-                      src={product.images[0]}
-                      alt={product.name}
-                    />
-                  ) : (
-                    <div className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center">
-                      <span className="text-xs text-gray-500">Resim</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</h3>
-                  <p className="text-xs text-gray-500 truncate">{product.sku}</p>
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      product.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.isActive ? 'Aktif' : 'Pasif'}
-                    </span>
-                    {product.isFeatured && (
-                      <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
-                        Öne Çıkan
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3 pt-3 border-t border-gray-200">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Kategori</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">{product.category?.name || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Fiyat</p>
-                  <p className="text-sm font-medium text-gray-900">₺{Number(product.price).toLocaleString('tr-TR')}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Stok</p>
-                  {product.stock === -1 ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Sınırsız
-                    </span>
-                  ) : (
-                    <p className={`text-sm font-medium ${product.stock === 0 ? 'text-red-600' : product.stock < 10 ? 'text-orange-600' : 'text-gray-900'}`}>
-                      {product.stock}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Sıra</p>
-                  <input
-                    type="number"
-                    value={product.sortOrder}
-                    onChange={(e) => handleSortOrderChange(product.id, parseInt(e.target.value) || 0)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent touch-manipulation"
-                    min="0"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] text-sm font-medium"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Görüntüle
-                </Link>
-                <Link
-                  href={`/admin/products/${product.id}/edit`}
-                  className="flex-1 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center touch-manipulation min-h-[44px] text-sm font-medium"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Düzenle
-                </Link>
-                <button
-                  className="bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  onClick={() => handleDeleteProduct(product.id)}
-                  aria-label="Sil"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm border p-6 text-center text-gray-500">
-            Henüz ürün bulunmuyor.
-          </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-            <div className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
-              <span className="font-medium">{indexOfFirstProduct + 1}</span>
-              {' - '}
-              <span className="font-medium">
-                {Math.min(indexOfLastProduct, filteredProducts.length)}
-              </span>
-              {' / '}
-              <span className="font-medium">{filteredProducts.length}</span>
-              {' ürün gösteriliyor'}
+      {/* Filters & Search Bar */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input 
+                    type="text" 
+                    placeholder="Ürün ara (isim, SKU, kategori)..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                />
             </div>
             
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {/* Önceki Sayfa */}
-              <button
-                onClick={() => handlePageChange(adjustedCurrentPage - 1)}
-                disabled={adjustedCurrentPage === 1}
-                className={`px-3 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px] ${
-                  adjustedCurrentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Önceki
-              </button>
+            {/* Filters Group */}
+            <div className="flex flex-wrap gap-3">
+                <select 
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 hover:bg-white transition-colors focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                >
+                    <option value="all">Tüm Kategoriler</option>
+                    {uniqueCategories.map(c => <option key={c} value={c as string}>{c}</option>)}
+                </select>
 
-              {/* Sayfa Numaraları */}
-              {(() => {
-                const pages = []
-                const maxVisiblePages = 5
-                
-                if (totalPages <= maxVisiblePages) {
-                  // Tüm sayfaları göster
-                  for (let i = 1; i <= totalPages; i++) {
-                    pages.push(i)
-                  }
-                } else {
-                  // Akıllı sayfa gösterimi
-                  if (adjustedCurrentPage <= 3) {
-                    // İlk sayfalardayız
-                    for (let i = 1; i <= 4; i++) {
-                      pages.push(i)
-                    }
-                    pages.push('...')
-                    pages.push(totalPages)
-                  } else if (adjustedCurrentPage >= totalPages - 2) {
-                    // Son sayfalardayız
-                    pages.push(1)
-                    pages.push('...')
-                    for (let i = totalPages - 3; i <= totalPages; i++) {
-                      pages.push(i)
-                    }
-                  } else {
-                    // Ortadaki sayfalardayız
-                    pages.push(1)
-                    pages.push('...')
-                    for (let i = adjustedCurrentPage - 1; i <= adjustedCurrentPage + 1; i++) {
-                      pages.push(i)
-                    }
-                    pages.push('...')
-                    pages.push(totalPages)
-                  }
-                }
-                
-                return pages.map((page, index) => (
-                  <button
-                    key={index}
-                    onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
-                    disabled={typeof page !== 'number'}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px] min-w-[44px] ${
-                      typeof page === 'number' && adjustedCurrentPage === page
-                        ? 'bg-blue-600 text-white'
-                        : typeof page === 'number'
-                        ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                        : 'bg-white text-gray-400 border border-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))
-              })()}
+                <select 
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 hover:bg-white transition-colors focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                >
+                    <option value="all">Tüm Durumlar</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Pasif</option>
+                    <option value="featured">Öne Çıkan</option>
+                </select>
 
-              {/* Sonraki Sayfa */}
-              <button
-                onClick={() => handlePageChange(adjustedCurrentPage + 1)}
-                disabled={adjustedCurrentPage === totalPages}
-                className={`px-3 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px] ${
-                  adjustedCurrentPage === totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Sonraki
-              </button>
+                <select 
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value)}
+                    className="px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 hover:bg-white transition-colors focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                >
+                    <option value="all">Tüm Stoklar</option>
+                    <option value="inStock">Stokta Var</option>
+                    <option value="lowStock">Kritik Stok (&lt;10)</option>
+                    <option value="outOfStock">Tükendi</option>
+                </select>
             </div>
-          </div>
         </div>
-      )}
+      </div>
 
-      {/* Toplam Ürün Sayısı */}
-      <div className="text-center text-sm text-gray-600">
-        Toplam {filteredProducts.length} ürün bulundu
-        {searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || stockFilter !== 'all' ? (
-          <span className="text-blue-600"> (filtrelenmiş sonuçlar)</span>
-        ) : null}
+      {/* Products Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th className="px-6 py-4 font-semibold text-gray-600 w-20">Sıra</th>
+                        <th className="px-6 py-4 font-semibold text-gray-600">Ürün</th>
+                        <th className="px-6 py-4 font-semibold text-gray-600">Kategori</th>
+                        <th className="px-6 py-4 font-semibold text-gray-600 cursor-pointer hover:text-blue-600" onClick={() => { setSortBy('price'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>
+                            <div className="flex items-center gap-1">Fiyat <ArrowUpDown className="h-3 w-3" /></div>
+                        </th>
+                        <th className="px-6 py-4 font-semibold text-gray-600 cursor-pointer hover:text-blue-600" onClick={() => { setSortBy('stock'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }}>
+                            <div className="flex items-center gap-1">Stok <ArrowUpDown className="h-3 w-3" /></div>
+                        </th>
+                        <th className="px-6 py-4 font-semibold text-gray-600 text-center">Durum</th>
+                        <th className="px-6 py-4 font-semibold text-gray-600 text-center">Öne Çıkan</th>
+                        <th className="px-6 py-4 font-semibold text-gray-600 text-right">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                    {currentProducts.length > 0 ? (
+                        currentProducts.map((product) => (
+                            <tr key={product.id} className="hover:bg-blue-50/30 transition-colors group">
+                                <td className="px-6 py-4">
+                                    <input 
+                                        type="number" 
+                                        value={product.sortOrder}
+                                        onChange={(e) => handleSortOrderChange(product.id, parseInt(e.target.value) || 0)}
+                                        className="w-12 px-1 py-1 border rounded text-center text-xs text-gray-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                                    />
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-12 w-12 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200">
+                                            {product.images && product.images[0] ? (
+                                                <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs">No Img</div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-gray-900">{product.name}</div>
+                                            <div className="text-xs text-gray-500 font-mono">{product.sku || '-'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 text-gray-600">
+                                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                        {product.category?.name || 'Genel'}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 font-medium text-gray-900">
+                                    ₺{product.price.toLocaleString('tr-TR')}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {product.stock === -1 ? (
+                                        <span className="text-green-600 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">Sınırsız</span>
+                                    ) : (
+                                        <span className={`font-medium ${product.stock === 0 ? 'text-red-600' : product.stock < 10 ? 'text-orange-600' : 'text-gray-700'}`}>
+                                            {product.stock}
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <button 
+                                        onClick={() => handleToggle(product.id, 'isActive', product.isActive)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                            product.isActive ? 'bg-green-500' : 'bg-gray-200'
+                                        }`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${
+                                            product.isActive ? 'translate-x-6' : 'translate-x-1'
+                                        }`} />
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <button 
+                                        onClick={() => handleToggle(product.id, 'isFeatured', product.isFeatured)}
+                                        className={`p-1.5 rounded-full transition-all ${
+                                            product.isFeatured ? 'bg-yellow-100 text-yellow-600' : 'text-gray-300 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        <Star className={`h-5 w-5 ${product.isFeatured ? 'fill-current' : ''}`} />
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Link href={`/products/${product.slug}`} target="_blank" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Görüntüle">
+                                            <Eye className="h-4 w-4" />
+                                        </Link>
+                                        <Link href={`/admin/products/${product.id}/edit`} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Düzenle">
+                                            <Edit className="h-4 w-4" />
+                                        </Link>
+                                        <button 
+                                            onClick={() => handleDeleteProduct(product.id)}
+                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                                            title="Sil"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                                <div className="flex flex-col items-center justify-center">
+                                    <Search className="h-10 w-10 text-gray-300 mb-3" />
+                                    <p>Aradığınız kriterlere uygun ürün bulunamadı.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+
+        {/* Footer / Pagination */}
+        {totalPages > 1 && (
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                    Sayfa <span className="font-medium text-gray-900">{currentPage}</span> / {totalPages}
+                </div>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        Önceki
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        Sonraki
+                    </button>
+                </div>
+            </div>
+        )}
       </div>
     </div>
   )
-} 
+}

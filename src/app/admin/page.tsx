@@ -4,7 +4,6 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
-import ClientRef from '@/app/ClientRef'
 import { useRouter } from 'next/navigation'
 import { 
   ShoppingCart, 
@@ -12,8 +11,9 @@ import {
   Package, 
   TrendingUp, 
   DollarSign,
-  Eye,
-  Star
+  Clock,
+  ArrowRight,
+  Activity
 } from 'lucide-react'
 import { safeLocalStorage, isClient } from '@/lib/browser-utils'
 
@@ -41,178 +41,44 @@ interface DashboardData {
     productsGrowth: number
     revenueGrowth: number
   }
-  performance: {
-    salesTarget: number
-    customerSatisfaction: number
-    deliveryRate: number
-  }
-  recentActivities: Array<{
-    id: string
-    type: 'order' | 'product' | 'customer' | 'content'
-    message: string
-    timestamp: Date
-  }>
 }
 
 export default function AdminDashboard() {
-  const [data, setData] = useState<DashboardData>({
-    totalOrders: 0,
-    totalCustomers: 0,
-    totalProducts: 0,
-    totalRevenue: 0,
-    recentOrders: [],
-    lowStockProducts: [],
-    trends: {
-      ordersGrowth: 0,
-      customersGrowth: 0,
-      productsGrowth: 0,
-      revenueGrowth: 0
-    },
-    performance: {
-      salesTarget: 0,
-      customerSatisfaction: 0,
-      deliveryRate: 0
-    },
-    recentActivities: []
-  })
+  const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Sipariş durumunu Türkçe'ye çevir
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'Beklemede'
-      case 'CONFIRMED':
-        return 'Onaylandı'
-      case 'SHIPPED':
-        return 'Kargoda'
-      case 'DELIVERED':
-        return 'Teslim Edildi'
-      case 'CANCELLED':
-        return 'İptal Edildi'
-      default:
-        return status
-    }
-  }
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        setError(null)
-        setIsLoading(true)
-        
-        // Token'ı localStorage'dan al
-        if (!isClient) {
-          throw new Error('Client-side only')
-        }
-        
+        if (!isClient) return
         const token = safeLocalStorage.getItem('token')
-        if (!token) {
-          throw new Error('Yetkilendirme gerekli')
-        }
+        if (!token) throw new Error('Yetkilendirme gerekli')
 
-        // AbortController ile timeout (daha verimli ve temiz)
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 saniye timeout
-
-        try {
-          // Optimize edilmiş dashboard API'sini kullan
-          const dashboardRes = await fetch('/api/admin/dashboard', {
-            headers: { 'Authorization': `Bearer ${token}` },
-            signal: controller.signal
-          })
-          
-          clearTimeout(timeoutId) // Başarılı olursa timeout'u temizle
-
-          if (!dashboardRes.ok) {
-            const errorData = await dashboardRes.json().catch(() => ({}))
-            
-            // Token geçersiz veya yetkisiz erişim durumunda logout yap
-            if (dashboardRes.status === 401 || dashboardRes.status === 403) {
-              console.log('Yetkisiz erişim tespit edildi, çıkış yapılıyor...', errorData)
-              safeLocalStorage.removeItem('token')
-              safeLocalStorage.removeItem('user')
-              window.location.href = '/login?redirect=/admin'
-              return
-            }
-
-            throw new Error(errorData.error || 'Dashboard verileri yüklenirken hata oluştu')
-          }
-
-          const dashboardData = await dashboardRes.json()
-
-        // Dashboard API'den gelen verileri kullan
-        const products: any[] = [] // Dashboard'da ürün listesi gerekmiyor
-        const customers: any[] = [] // Dashboard'da müşteri listesi gerekmiyor
-        const orders: any[] = [] // Dashboard'da sipariş listesi gerekmiyor (sadece recentOrders)
-
-        console.log('Dashboard data loaded:', dashboardData)
-
-        // Dashboard API'den gelen verileri kullan
-        const recentOrders = dashboardData.recentOrders || []
-        const lowStockProducts = dashboardData.lowStockProducts || []
-        
-        // Son aktiviteler (recent orders'dan oluştur)
-        const recentActivities: Array<{
-          id: string
-          type: 'order' | 'product' | 'customer' | 'content'
-          message: string
-          timestamp: Date
-        }> = []
-        
-        if (recentOrders.length > 0) {
-          recentOrders.slice(0, 2).forEach((order: any) => {
-            recentActivities.push({
-              id: order.id,
-              type: 'order' as const,
-              message: `Yeni sipariş alındı - ${order.orderNumber}`,
-              timestamp: new Date(order.createdAt)
-            })
-          })
-        }
-
-        setData({
-          totalOrders: dashboardData.totalOrders || 0,
-          totalCustomers: dashboardData.totalCustomers || 0,
-          totalProducts: dashboardData.totalProducts || 0,
-          totalRevenue: dashboardData.totalRevenue || 0,
-          recentOrders: recentOrders.map((order: any) => ({
-            ...order,
-            createdAt: new Date(order.createdAt)
-          })),
-          lowStockProducts,
-          trends: dashboardData.trends || {
-            ordersGrowth: 0,
-            customersGrowth: 0,
-            productsGrowth: 0,
-            revenueGrowth: 0
-          },
-          performance: dashboardData.performance || {
-            salesTarget: 85,
-            customerSatisfaction: 4.8,
-            deliveryRate: 0
-          },
-          recentActivities: recentActivities.slice(0, 3)
+        const res = await fetch('/api/admin/dashboard', {
+          headers: { 'Authorization': `Bearer ${token}` }
         })
-        } catch (fetchError: any) {
-          clearTimeout(timeoutId) // Hata durumunda da timeout'u temizle
-          
-          // Abort hatası kontrolü
-          if (fetchError.name === 'AbortError' || fetchError.message?.includes('aborted')) {
-            throw new Error('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.')
-          }
-          
-          throw fetchError
+
+        if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+                window.location.href = '/login?redirect=/admin'
+                return
+            }
+            throw new Error('Veri yüklenemedi')
         }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Veriler yüklenirken bir hata oluştu'
-        setError(errorMessage)
-        
-        // Hata durumunda bile temel verileri göster (eğer varsa)
-        // Bu sayede sayfa tamamen boş kalmaz
+
+        const jsonData = await res.json()
+        // Tarih dönüşümleri
+        if (jsonData.recentOrders) {
+            jsonData.recentOrders = jsonData.recentOrders.map((order: any) => ({
+                ...order,
+                createdAt: new Date(order.createdAt)
+            }))
+        }
+        setData(jsonData)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Hata oluştu')
       } finally {
         setIsLoading(false)
       }
@@ -221,417 +87,250 @@ export default function AdminDashboard() {
     fetchDashboardData()
   }, [])
 
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Günaydın'
+    if (hour < 18) return 'Tünaydın'
+    return 'İyi Akşamlar'
+  }
+
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Mağaza genel durumu ve istatistikler</p>
-        </div>
-
-        {/* Loading Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white p-6 rounded-lg shadow-sm border animate-pulse">
-              <div className="flex items-center">
-                <div className="p-2 bg-gray-200 rounded-lg w-10 h-10"></div>
-                <div className="ml-4 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Dashboard verileri yükleniyor...</p>
-          </div>
-        </div>
+      <div className="flex h-[50vh] items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="text-red-600 text-lg font-semibold mb-2">Hata</div>
-          <div className="text-gray-600 mb-4">{error}</div>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Tekrar Dene
-          </button>
+        <div className="p-6 text-center">
+            <p className="text-red-500">{error}</p>
+            <button onClick={() => window.location.reload()} className="mt-4 text-blue-600 hover:underline">Yenile</button>
         </div>
-      </div>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm sm:text-base text-gray-600">Mağaza genel durumu ve istatistikler</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-blue-600" />
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Sipariş</p>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{data.totalOrders.toLocaleString('tr-TR')}</p>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
-            <span className="text-green-600">+{data.trends.ordersGrowth}%</span>
-            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
-          </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Welcome Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            {getGreeting()}, Admin 👋
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg">
+            İşte mağazanızın bugünkü durumu ve performansı.
+          </p>
         </div>
-
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Müşteri</p>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{data.totalCustomers.toLocaleString('tr-TR')}</p>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
-            <span className="text-green-600">+{data.trends.customersGrowth}%</span>
-            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
-              <Package className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-purple-600" />
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Ürün</p>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{data.totalProducts.toLocaleString('tr-TR')}</p>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
-            <span className="text-green-600">+{data.trends.productsGrowth}%</span>
-            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-yellow-600" />
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Toplam Gelir</p>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">₺{data.totalRevenue.toLocaleString('tr-TR')}</p>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 lg:mt-4 flex items-center text-xs sm:text-sm flex-wrap">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 flex-shrink-0" />
-            <span className="text-green-600">+{data.trends.revenueGrowth}%</span>
-            <span className="text-gray-500 ml-1 hidden sm:inline">geçen aya göre</span>
-          </div>
+        <div className="flex gap-3">
+            <button 
+                onClick={() => router.push('/admin/products/new')}
+                className="bg-gray-900 text-white px-5 py-2.5 rounded-xl hover:bg-gray-800 transition-all font-medium shadow-sm"
+            >
+                Ürün Ekle
+            </button>
+            <button 
+                onClick={() => router.push('/admin/reports')}
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all font-medium shadow-sm"
+            >
+                Raporları Gör
+            </button>
         </div>
       </div>
 
-      {/* Recent Orders & Low Stock */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Son Siparişler</h3>
-          </div>
-          {/* Desktop Table */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sipariş
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Müşteri
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tutar
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Durum
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {data.recentOrders.length > 0 ? (
-                  data.recentOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {order.orderNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {order.user.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₺{order.finalAmount.toLocaleString('tr-TR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                          order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
-                          order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {getStatusText(order.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                      Henüz sipariş bulunmuyor.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Mobile Card View */}
-          <div className="lg:hidden divide-y divide-gray-200">
-            {data.recentOrders.length > 0 ? (
-              data.recentOrders.map((order) => (
-                <div key={order.id} className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{order.orderNumber}</p>
-                      <p className="text-xs text-gray-500 mt-1">{order.user.name}</p>
-                    </div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 flex-shrink-0 ${
-                      order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                      order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
-                      order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                      order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-900">₺{order.finalAmount.toLocaleString('tr-TR')}</p>
-                </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-gray-500 text-sm">
-                Henüz sipariş bulunmuyor.
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Düşük Stok Ürünler</h3>
-          </div>
-          {/* Desktop Table */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ürün
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stok
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Durum
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {data.lowStockProducts.length > 0 ? (
-                  data.lowStockProducts.map((product) => (
-                    <tr key={product.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {product.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.stock}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          product.stock === 0 
-                            ? 'bg-red-100 text-red-800' 
-                            : product.stock < 5
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {product.stock === 0 ? 'Tükendi' : 
-                           product.stock < 5 ? 'Kritik Stok' : 'Düşük Stok'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
-                      Düşük stok ürün bulunmuyor.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Mobile Card View */}
-          <div className="lg:hidden divide-y divide-gray-200">
-            {data.lowStockProducts.length > 0 ? (
-              data.lowStockProducts.map((product) => (
-                <div key={product.id} className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">Stok: {product.stock}</p>
-                    </div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 flex-shrink-0 ${
-                      product.stock === 0 
-                        ? 'bg-red-100 text-red-800' 
-                        : product.stock < 5
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {product.stock === 0 ? 'Tükendi' : 
-                       product.stock < 5 ? 'Kritik' : 'Düşük'}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-gray-500 text-sm">
-                Düşük stok ürün bulunmuyor.
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+            title="Toplam Gelir"
+            value={`₺${data?.totalRevenue.toLocaleString('tr-TR')}`}
+            trend={data?.trends.revenueGrowth || 0}
+            icon={DollarSign}
+            color="blue"
+        />
+        <StatCard 
+            title="Siparişler"
+            value={data?.totalOrders.toString() || '0'}
+            trend={data?.trends.ordersGrowth || 0}
+            icon={ShoppingCart}
+            color="purple"
+        />
+        <StatCard 
+            title="Müşteriler"
+            value={data?.totalCustomers.toString() || '0'}
+            trend={data?.trends.customersGrowth || 0}
+            icon={Users}
+            color="green"
+        />
+        <StatCard 
+            title="Ürünler"
+            value={data?.totalProducts.toString() || '0'}
+            trend={data?.trends.productsGrowth || 0}
+            icon={Package}
+            color="orange"
+        />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Hızlı İşlemler</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:gap-3">
-            <button 
-              onClick={() => router.push('/admin/products/new')}
-              className="bg-blue-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
-            >
-              Yeni Ürün Ekle
-            </button>
-            <button 
-              onClick={() => router.push('/admin/orders')}
-              className="bg-green-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-green-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
-            >
-              Sipariş Görüntüle
-            </button>
-            <button 
-              onClick={() => router.push('/admin/content/new')}
-              className="bg-purple-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-purple-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
-            >
-              Yeni İçerik
-            </button>
-            <button 
-              onClick={() => router.push('/admin/categories/new')}
-              className="bg-orange-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-orange-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base"
-            >
-              Yeni Kategori
-            </button>
-            <button 
-              onClick={() => router.push('/admin/reports')}
-              className="bg-indigo-600 text-white px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-700 transition-colors touch-manipulation min-h-[44px] text-sm sm:text-base col-span-2 sm:col-span-1"
-            >
-              Rapor Oluştur
-            </button>
-          </div>
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Orders */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="font-bold text-gray-900 text-lg">Son Siparişler</h3>
+                <button 
+                    onClick={() => router.push('/admin/orders')}
+                    className="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                >
+                    Tümünü Gör <ArrowRight className="h-4 w-4" />
+                </button>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50/50 text-gray-500">
+                        <tr>
+                            <th className="px-6 py-4 font-medium">Sipariş No</th>
+                            <th className="px-6 py-4 font-medium">Müşteri</th>
+                            <th className="px-6 py-4 font-medium">Tutar</th>
+                            <th className="px-6 py-4 font-medium">Durum</th>
+                            <th className="px-6 py-4 font-medium text-right">Tarih</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {data?.recentOrders.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                    Henüz sipariş bulunmuyor.
+                                </td>
+                            </tr>
+                        ) : (
+                            data?.recentOrders.map((order) => (
+                                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-6 py-4 font-medium text-gray-900">
+                                        {order.orderNumber}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600">
+                                        {order.user.name}
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-gray-900">
+                                        ₺{Number(order.finalAmount).toLocaleString('tr-TR')}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <StatusBadge status={order.status} />
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-gray-500">
+                                        {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Son Aktiviteler</h3>
-          <div className="space-y-3">
-            {data.recentActivities.length > 0 ? (
-              data.recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center text-sm">
-                  <div className={`w-2 h-2 rounded-full mr-3 flex-shrink-0 ${
-                    activity.type === 'order' ? 'bg-green-500' :
-                    activity.type === 'product' ? 'bg-blue-500' :
-                    activity.type === 'customer' ? 'bg-purple-500' :
-                    'bg-gray-500'
-                  }`}></div>
-                  <span className="break-words">{activity.message}</span>
+        {/* Side Panel: Low Stock & Quick Actions */}
+        <div className="space-y-8">
+            {/* Low Stock Alert */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6">
+                    <Activity className="h-5 w-5 text-red-500" />
+                    <h3 className="font-bold text-gray-900 text-lg">Kritik Stok</h3>
                 </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">Henüz aktivite bulunmuyor.</div>
-            )}
-          </div>
-        </div>
+                <div className="space-y-4">
+                    {data?.lowStockProducts.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                            <div className="bg-green-50 text-green-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                                <Package className="h-6 w-6" />
+                            </div>
+                            Tüm stok seviyeleri iyi durumda.
+                        </div>
+                    ) : (
+                        data?.lowStockProducts.map((product) => (
+                            <div key={product.id} className="flex items-center justify-between p-3 rounded-xl bg-red-50/50 border border-red-100">
+                                <div className="flex-1 min-w-0 pr-4">
+                                    <p className="font-medium text-gray-900 truncate">{product.name}</p>
+                                    <p className="text-xs text-red-600 font-medium mt-0.5">
+                                        {product.stock === 0 ? 'Tükendi' : `${product.stock} adet kaldı`}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => router.push(`/admin/products/${product.id}/edit`)}
+                                    className="text-xs bg-white border border-gray-200 px-3 py-1.5 rounded-lg font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    Yönet
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
 
-        {/* Performans alanı geçici olarak yorum satırı yapıldı
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performans</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Satış Hedefi</span>
-              <span className="text-sm font-medium text-gray-900">{data.performance.salesTarget}%</span>
+            {/* Quick Stats or Tips */}
+            <div className="bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+                <h3 className="font-bold text-lg mb-2">Pro İpucu 💡</h3>
+                <p className="text-blue-100 text-sm leading-relaxed">
+                    Raporlar sayfasını kullanarak en çok satan ürünlerinizi analiz edebilir ve stok planlamanızı buna göre yapabilirsiniz.
+                </p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full" 
-                style={{ width: `${data.performance.salesTarget}%` }}
-              ></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Müşteri Memnuniyeti</span>
-              <span className="text-sm font-medium text-gray-900">{data.performance.customerSatisfaction}/5</span>
-            </div>
-            <div className="flex items-center">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`h-4 w-4 ${
-                    star <= data.performance.customerSatisfaction ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Teslimat Oranı</span>
-              <span className="text-sm font-medium text-gray-900">{data.performance.deliveryRate}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-green-600 h-2 rounded-full" 
-                style={{ width: `${data.performance.deliveryRate}%` }}
-              ></div>
-            </div>
-          </div>
         </div>
-        */}
       </div>
     </div>
   )
-} 
+}
+
+function StatCard({ title, value, trend, icon: Icon, color }: any) {
+    const isPositive = trend >= 0
+    
+    const colorStyles = {
+        blue: 'bg-blue-50 text-blue-600',
+        purple: 'bg-purple-50 text-purple-600',
+        green: 'bg-green-50 text-green-600',
+        orange: 'bg-orange-50 text-orange-600'
+    }
+
+    return (
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-xl ${colorStyles[color as keyof typeof colorStyles]}`}>
+                    <Icon className="h-6 w-6" />
+                </div>
+                {trend !== 0 && (
+                    <div className={`flex items-center px-2 py-1 rounded-lg text-xs font-medium ${isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        <TrendingUp className={`h-3 w-3 mr-1 ${!isPositive && 'rotate-180'}`} />
+                        {isPositive ? '+' : ''}{trend}%
+                    </div>
+                )}
+            </div>
+            <div>
+                <p className="text-gray-500 text-sm font-medium">{title}</p>
+                <h3 className="text-2xl font-bold text-gray-900 mt-1 tracking-tight">{value}</h3>
+            </div>
+        </div>
+    )
+}
+
+function StatusBadge({ status }: { status: string }) {
+    const styles = {
+        PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+        CONFIRMED: 'bg-blue-50 text-blue-700 border-blue-100',
+        SHIPPED: 'bg-purple-50 text-purple-700 border-purple-100',
+        DELIVERED: 'bg-green-50 text-green-700 border-green-100',
+        CANCELLED: 'bg-red-50 text-red-700 border-red-100'
+    }
+
+    const labels = {
+        PENDING: 'Beklemede',
+        CONFIRMED: 'Onaylandı',
+        SHIPPED: 'Kargoda',
+        DELIVERED: 'Tamamlandı',
+        CANCELLED: 'İptal'
+    }
+
+    const statusKey = status as keyof typeof styles
+    
+    return (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[statusKey] || 'bg-gray-50 text-gray-700'}`}>
+            {labels[statusKey] || status}
+        </span>
+    )
+}

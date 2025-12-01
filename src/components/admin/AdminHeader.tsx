@@ -1,72 +1,98 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { User, LogOut, Settings } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { User, LogOut, Settings, Bell, ChevronDown, Search } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export default function AdminHeader() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+
+  // Get current page title
+  const getPageTitle = () => {
+    const path = pathname.split('/')[2]
+    if (!path) return 'Dashboard'
+    return path.charAt(0).toUpperCase() + path.slice(1)
+  }
 
   useEffect(() => {
-    // Dışarıya tıklayınca dropdown'ları kapat
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (!target.closest('.user-dropdown') && !target.closest('.user-button')) {
-        setIsDropdownOpen(false)
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-gray-800 to-gray-900 shadow-xl border-b px-3 sm:px-4 lg:px-6 py-3 sm:py-4 z-20 safe-area-inset-top">
-      <div className="flex justify-between items-center">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">Admin Panel</h1>
-          <p className="text-xs sm:text-sm text-gray-200 hidden sm:block">Levent Kolej Ürün Hizmeti Yönetim Paneli</p>
+    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 z-20 px-4 sm:px-6 lg:px-8 transition-all duration-300">
+      <div className="h-full flex items-center justify-between gap-4">
+        {/* Left Side: Breadcrumbs / Title */}
+        <div className="flex items-center gap-4 pl-12 lg:pl-0">
+          <h1 className="text-xl font-semibold text-gray-800">
+            {getPageTitle()}
+          </h1>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-          {/* User Menu */}
-          <div className="relative">
+        {/* Right Side: Actions & Profile */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Notifications (Placeholder) */}
+          <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-full transition-colors relative">
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </button>
+
+          {/* Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
             <button
-              className="user-button flex items-center space-x-1 sm:space-x-2 p-2 sm:p-3 text-white hover:text-gray-200 rounded-lg hover:bg-white/10 transition-colors touch-manipulation min-w-[44px] min-h-[44px]"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              aria-label="Kullanıcı menüsü"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="flex items-center gap-3 pl-2 pr-1 py-1.5 rounded-full hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
             >
-              <User className="h-5 w-5" />
-              <span className="text-sm font-medium hidden sm:inline">Admin</span>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium shadow-sm">
+                A
+              </div>
+              <div className="hidden sm:flex flex-col items-start text-sm">
+                <span className="font-medium text-gray-700 leading-none">Admin</span>
+                <span className="text-xs text-gray-500 leading-none mt-1">Yönetici</span>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 hidden sm:block ${isProfileOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {isDropdownOpen && (
-              <div className="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-2 z-50">
-                <a
-                  href="/profile"
-                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation min-h-[44px]"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Profil
-                </a>
-                <a
-                  href="/admin/settings"
-                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 touch-manipulation min-h-[44px]"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Ayarlar
-                </a>
-                <hr className="my-2" />
-                <button 
-                  onClick={() => {
-                    localStorage.removeItem('token')
-                    localStorage.removeItem('user')
-                    window.location.href = '/login'
-                  }}
-                  className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-gray-100 touch-manipulation min-h-[44px] text-left"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Çıkış Yap
-                </button>
+            {/* Dropdown Menu */}
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="px-4 py-3 border-b border-gray-50">
+                  <p className="text-sm font-medium text-gray-900">Admin Hesabı</p>
+                  <p className="text-xs text-gray-500 truncate">admin@emagaza.com</p>
+                </div>
+                
+                <div className="p-1">
+                  <Link
+                    href="/admin/settings"
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    <Settings className="h-4 w-4 mr-3 text-gray-400" />
+                    Ayarlar
+                  </Link>
+                </div>
+
+                <div className="p-1 border-t border-gray-50">
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('token')
+                      localStorage.removeItem('user')
+                      window.location.href = '/login'
+                    }}
+                    className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 mr-3" />
+                    Çıkış Yap
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -74,4 +100,4 @@ export default function AdminHeader() {
       </div>
     </header>
   )
-} 
+}

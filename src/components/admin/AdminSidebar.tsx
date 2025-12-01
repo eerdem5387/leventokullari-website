@@ -14,14 +14,16 @@ import {
   CreditCard,
   ExternalLink,
   Menu,
-  X
+  X,
+  LayoutDashboard,
+  ChevronRight
 } from 'lucide-react'
 
 const menuItems = [
   {
     name: 'Dashboard',
     href: '/admin',
-    icon: Home
+    icon: LayoutDashboard
   },
   {
     name: 'Ürünler',
@@ -81,139 +83,95 @@ export default function AdminSidebar() {
     }
   }, [isMobileMenuOpen])
 
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-white">
+      {/* Logo Area */}
+      <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <Link href="/admin" className="flex items-center gap-2 group">
+          <div className="bg-blue-600 p-1.5 rounded-lg group-hover:bg-blue-700 transition-colors">
+            <LayoutDashboard className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-lg font-bold text-gray-900">Admin Panel</span>
+        </Link>
+      </div>
+      
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+        {menuItems.map((item) => {
+          const isActive = pathname === item.href
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
+                isActive
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                {item.name}
+              </div>
+              {isActive && <ChevronRight className="h-4 w-4 text-blue-600" />}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Footer Actions */}
+      <div className="p-4 border-t border-gray-100 space-y-2">
+        <Link
+          href="/"
+          target="_blank"
+          className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors gap-2"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Siteyi Görüntüle
+        </Link>
+      </div>
+    </div>
+  )
+
   return (
     <>
       {/* Mobile Menu Button */}
       <button
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-20 left-4 z-30 p-2 bg-white rounded-lg shadow-md border border-gray-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-        aria-label="Menüyü aç/kapat"
+        onClick={() => setIsMobileMenuOpen(true)}
+        className="lg:hidden fixed top-3 left-4 z-40 p-2 bg-white rounded-lg shadow-md border border-gray-200 text-gray-600"
       >
-        {isMobileMenuOpen ? (
-          <X className="h-6 w-6 text-gray-700" />
-        ) : (
-          <Menu className="h-6 w-6 text-gray-700" />
-        )}
+        <Menu className="h-6 w-6" />
       </button>
 
-      {/* Mobile Menu Backdrop */}
-      {(isMobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-20"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )) || null}
-
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-white shadow-sm border-r border-gray-200 z-10 flex-col">
-        <div className="p-6 flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
-        </div>
-        
-        {/* Anasayfa Butonu */}
-        <div className="px-6 mb-4 flex-shrink-0">
-          <Link
-            href="/"
-            target="_blank"
-            className="flex items-center px-4 py-3 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors touch-manipulation"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Site Anasayfası
-          </Link>
-        </div>
-        
-        <nav className="flex-1 overflow-y-auto">
-          <ul className="space-y-2 pb-4">
-            {menuItems.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center px-6 py-3 text-sm font-medium transition-colors touch-manipulation ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                    {item.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
+      <aside className="hidden lg:block fixed left-0 top-0 w-64 h-full border-r border-gray-200 z-30">
+        <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar Drawer */}
       <aside
-        className={`lg:hidden fixed left-0 top-16 w-80 max-w-[85vw] h-[calc(100vh-4rem)] bg-white shadow-xl border-r border-gray-200 z-30 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 sm:p-6 flex-shrink-0 border-b border-gray-200">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Admin Panel</h2>
-        </div>
-        
-        {/* Anasayfa Butonu */}
-        <div className="px-4 sm:px-6 py-4 flex-shrink-0 border-b border-gray-200">
-          <Link
-            href="/"
-            target="_blank"
-            className="flex items-center px-4 py-3 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors touch-manipulation min-w-[44px] min-h-[44px]"
+        <div className="absolute top-0 right-0 -mr-12 pt-4">
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
           >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Site Anasayfası
-          </Link>
+            <X className="h-6 w-6 text-white" />
+          </button>
         </div>
-        
-        <nav className="flex-1 overflow-y-auto">
-          <ul className="space-y-1 p-2">
-            {menuItems.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center px-4 py-3 text-sm font-medium transition-colors touch-manipulation min-w-[44px] min-h-[44px] rounded-lg ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                    {item.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
+        <SidebarContent />
       </aside>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-20 safe-area-inset-bottom">
-        <div className="grid grid-cols-4 gap-1 px-1 py-2">
-          {menuItems.slice(0, 4).map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors touch-manipulation min-h-[60px] ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <item.icon className="h-5 w-5 mb-1" />
-                <span className="text-xs font-medium">{item.name}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
     </>
   )
-} 
+}
