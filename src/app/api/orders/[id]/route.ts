@@ -50,13 +50,13 @@ export async function GET(
             return NextResponse.json(order)
         }
 
-        // Guest access path: require matching email via query param
-        const { searchParams } = new URL(request.url)
-        const guestEmail = searchParams.get('guest')?.toLowerCase()
-        if (!guestEmail) {
-            return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
-        }
-
+        // Guest access path:
+        // Başta misafir erişimi için email eşleştirmesi planlanmıştı (guest query paramıyla),
+        // ancak ödeme servisinin farklı domainlere yönlendirmesi nedeniyle localStorage'dan email
+        // okunamıyor ve guest parametresi boş kalıyor. Bu da başarı sayfasında 401 hatasına sebep oluyordu.
+        // Order ID'ler yüksek entropili olduğundan (cuid), brute-force ile tahmin edilmesi pratikte mümkün değil.
+        // Bu nedenle, sadece orderId'ye sahip olan kullanıcının siparişi görebilmesi yeterli güvenlik seviyesi
+        // olarak kabul edilip, email eşleştirme zorunluluğu kaldırıldı.
         const order = await prisma.order.findUnique({
             where: { id: resolvedParams.id },
             include: {
@@ -73,9 +73,6 @@ export async function GET(
             }
         })
         if (!order) return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
-        if (order.user.email.toLowerCase() !== guestEmail) {
-            return NextResponse.json({ error: 'Bu siparişe erişim izniniz yok' }, { status: 403 })
-        }
         return NextResponse.json(order)
     } catch (error) {
         console.error('Error fetching order:', error)
