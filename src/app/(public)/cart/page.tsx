@@ -11,6 +11,8 @@ export default function CartPage() {
   const router = useRouter()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [shippingCost, setShippingCost] = useState<number>(29.99)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(500)
 
   useEffect(() => {
     loadCart()
@@ -25,6 +27,23 @@ export default function CartPage() {
     const cart = cartService.getCart()
     setCartItems(cart.items)
     setIsLoading(false)
+
+    // Kargo ayarlarını yükle
+    fetch('/api/settings?category=shipping')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return
+        const shippingSettings = data.shipping || {}
+        if (typeof shippingSettings.defaultShippingCost === 'number') {
+          setShippingCost(shippingSettings.defaultShippingCost)
+        }
+        if (typeof shippingSettings.freeShippingThreshold === 'number') {
+          setFreeShippingThreshold(shippingSettings.freeShippingThreshold)
+        }
+      })
+      .catch(err => {
+        console.error('Shipping settings load error (cart):', err)
+      })
   }
 
   const updateQuantity = (itemId: string, quantity: number, variationId?: string) => {
@@ -42,9 +61,14 @@ export default function CartPage() {
     }
   }
 
-  const calculateTotal = () => {
-    return cartService.getTotalPrice()
-  }
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const shipping = (() => {
+    if (!isFinite(freeShippingThreshold) || freeShippingThreshold <= 0) {
+      return shippingCost
+    }
+    return subtotal >= freeShippingThreshold ? 0 : shippingCost
+  })()
+  const total = subtotal + shipping
 
   if (isLoading) {
     return (
@@ -195,18 +219,24 @@ export default function CartPage() {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Ara Toplam</span>
-                  <span className="font-semibold text-gray-900">{calculateTotal().toFixed(2)} ₺</span>
+                  <span className="font-semibold text-gray-900">{subtotal.toFixed(2)} ₺</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Kargo</span>
-                  <span className="text-green-600 font-semibold flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Ücretsiz
+                  <span className="font-semibold flex items-center">
+                    {shipping === 0 ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                        <span className="text-green-600">Ücretsiz</span>
+                      </>
+                    ) : (
+                      <span className="text-gray-900">{shipping.toFixed(2)} ₺</span>
+                    )}
                   </span>
                 </div>
                 <div className="border-t-2 border-gray-200 pt-4 flex justify-between items-center">
                   <span className="text-lg font-bold text-gray-900">Toplam</span>
-                  <span className="text-xl font-bold text-blue-600">{calculateTotal().toFixed(2)} ₺</span>
+                  <span className="text-xl font-bold text-blue-600">{total.toFixed(2)} ₺</span>
                 </div>
               </div>
 
