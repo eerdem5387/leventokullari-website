@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { ShoppingCart, Heart, Share2, ChevronDown } from 'lucide-react'
-import { safeSessionStorage, safeWindow, safeDocument, isClient } from '@/lib/browser-utils'
+import { safeDocument, isClient } from '@/lib/browser-utils'
+import { cartService } from '@/lib/cart-service'
 
 interface ProductDetailClientProps {
   product: {
@@ -49,90 +50,41 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     if (!isClient) return
     
     try {
-      // Mevcut sepeti al (sessionStorage kullan)
-      const existingCart = safeSessionStorage.getItem('cart')
-      const cart = existingCart ? JSON.parse(existingCart) : []
-      
       if (product.productType === 'VARIABLE' && selectedVariation) {
-        // Varyasyonlu ürün için
-        const variationKey = `${product.id}-${selectedVariation.id}`
-        const existingItem = cart.find((item: any) => item.variationKey === variationKey)
-        
-        if (existingItem) {
-          // Varyasyon zaten sepette varsa miktarını artır
-          existingItem.quantity += quantity
-        } else {
-          // Yeni varyasyon ekle (optimize edilmiş)
-          const cartItem: any = {
-            id: product.id,
-            variationId: selectedVariation.id,
-            variationKey: variationKey,
-            name: `${product.name} - ${selectedVariation.attributes.map((attr: any) => 
-              `${getAttributeDisplayName(attr.attributeValue.attributeId)}: ${attr.attributeValue.value}`
-            ).join(', ')}`,
-            price: selectedVariation.price,
-            quantity: quantity,
-            stock: selectedVariation.stock
-          }
-          
-          // Sadece kısa resim URL'lerini ekle
-          if (product.images && product.images.length > 0) {
-            const imageUrl = product.images[0]
-            if (imageUrl && imageUrl.length < 200) {
-              cartItem.image = imageUrl
-            }
-          }
-          
-          cart.push(cartItem)
-        }
-      } else {
-        // Basit ürün için
-        const existingItem = cart.find((item: any) => item.id === product.id && !item.variationId)
-        
-        if (existingItem) {
-          // Ürün zaten sepette varsa miktarını artır
-          existingItem.quantity += quantity
-        } else {
-          // Yeni ürün ekle (optimize edilmiş)
-          const cartItem: any = {
+        // Varyasyonlu ürün için cartService kullan
+        cartService.addItem(
+          {
             id: product.id,
             name: product.name,
+            slug: product.slug,
             price: product.price,
-            quantity: quantity,
-            stock: product.stock
-          }
-          
-          // Sadece kısa resim URL'lerini ekle
-          if (product.images && product.images.length > 0) {
-            const imageUrl = product.images[0]
-            if (imageUrl && imageUrl.length < 200) {
-              cartItem.image = imageUrl
-            }
-          }
-          
-          cart.push(cartItem)
-        }
+            stock: product.stock,
+            images: product.images
+          },
+          quantity,
+          selectedVariation
+        )
+      } else {
+        // Basit ürün için
+        cartService.addItem(
+          {
+            id: product.id,
+            name: product.name,
+            slug: product.slug,
+            price: product.price,
+            stock: product.stock,
+            images: product.images
+          },
+          quantity
+        )
       }
-      
-      // Sepeti sessionStorage'a kaydet
-      try {
-        safeSessionStorage.setItem('cart', JSON.stringify(cart))
-      } catch (storageError) {
-        // Eğer sessionStorage da doluysa, eski verileri temizle
-        console.warn('Storage quota exceeded, clearing old cart data')
-        safeSessionStorage.clear()
-        safeSessionStorage.setItem('cart', JSON.stringify(cart))
-      }
-      
-      // Custom event tetikle
-      safeWindow.dispatchEvent(new Event('cartUpdated'))
       
       // Başarı mesajı göster
-      alert('Ürün sepete eklendi!')
+      window.alert('Ürün sepete eklendi!')
       
     } catch (error) {
       console.error('Sepete ekleme hatası:', error)
-      alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
+      window.alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }
 

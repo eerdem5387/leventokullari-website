@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { ShoppingCart, Search } from 'lucide-react'
-import { safeSessionStorage, safeWindow, isClient } from '@/lib/browser-utils'
+import { isClient } from '@/lib/browser-utils'
+import { cartService } from '@/lib/cart-service'
 
 interface ProductCardProps {
   product: {
@@ -26,70 +27,28 @@ export default function ProductCard({ product }: ProductCardProps) {
     
     // Varyasyonlu ürünler için ürün detay sayfasına yönlendir
     if (product.productType === 'VARIABLE') {
-      safeWindow.location.assign(`/products/${product.slug}`)
+      window.location.assign(`/products/${product.slug}`)
       return
     }
 
     try {
-      // Mevcut sepeti al (sessionStorage kullan)
-      const existingCart = safeSessionStorage.getItem('cart')
-      const cart = existingCart ? JSON.parse(existingCart) : []
-      
-      // Ürünü sepete ekle
-      const existingItem = cart.find((item: any) => item.id === product.id)
-      
-      if (existingItem) {
-        // Ürün zaten sepette varsa miktarını artır
-        existingItem.quantity += 1
-      } else {
-        // Yeni ürün ekle (maksimum optimize edilmiş veri)
-        const cartItem: any = {
+      // cartService ile ürün ekle (SIMPLE ürün)
+      cartService.addItem(
+        {
           id: product.id,
           name: product.name,
+          slug: product.slug,
           price: product.price,
-          quantity: 1,
-          stock: 999
-        }
-        
-        // Sadece resim varsa ekle, yoksa ekleme
-        if (product.images && product.images.length > 0) {
-          // Resim URL'sini kısalt (sadece dosya adını al)
-          const imageUrl = product.images[0]
-          if (imageUrl && imageUrl.length < 200) { // Sadece kısa URL'leri ekle
-            cartItem.image = imageUrl
-          }
-        }
-        
-        cart.push(cartItem)
-      }
-      
-      // Sepeti sessionStorage'a kaydet
-      try {
-        safeSessionStorage.setItem('cart', JSON.stringify(cart))
-      } catch (storageError) {
-        // Eğer sessionStorage da doluysa, eski verileri temizle
-        console.warn('Storage quota exceeded, clearing old cart data')
-        safeSessionStorage.clear()
-        
-        // Tekrar dene
-        try {
-          safeSessionStorage.setItem('cart', JSON.stringify(cart))
-        } catch (finalError) {
-          console.error('Final storage error:', finalError)
-          alert('Sepet verileri çok büyük. Lütfen sepetinizi temizleyip tekrar deneyin.')
-          return
-        }
-      }
-      
-      // Custom event tetikle
-      safeWindow.dispatchEvent(new Event('cartUpdated'))
-      
-      // Başarı mesajı göster
-      alert('Ürün sepete eklendi!')
-      
+          stock: product.stock,
+          images: product.images
+        },
+        1
+      )
+      // Basit bir geri bildirim
+      window.alert('Ürün sepete eklendi!')
     } catch (error) {
       console.error('Sepete ekleme hatası:', error)
-      alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
+      window.alert('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }
 
