@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
+import sharp from 'sharp'
 import { verifyToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
@@ -40,23 +41,41 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Dosya boyutunu kontrol et (5MB limit)
-        if (file.size > 5 * 1024 * 1024) {
+        // Dosya boyutunu kontrol et (10MB limit - yüksek boyutluları da kabul edip sıkıştıracağız)
+        if (file.size > 10 * 1024 * 1024) {
             return NextResponse.json(
-                { error: 'Dosya boyutu 5MB\'dan büyük olamaz' },
+                { error: 'Dosya boyutu 10MB\'dan büyük olamaz' },
                 { status: 400 }
             )
         }
 
-        // Dosya adını oluştur
-        const timestamp = Date.now()
-        const extension = file.name.split('.').pop()
-        const fileName = `products/${timestamp}.${extension}`
+        // Dosyayı belleğe al
+        const arrayBuffer = await file.arrayBuffer()
+        const inputBuffer = Buffer.from(arrayBuffer)
 
-        // Vercel Blob'a yükle
-        const blob = await put(fileName, file, {
+        // sharp ile otomatik yeniden boyutlandırma + sıkıştırma
+        // - Maksimum 1200x1200
+        // - WebP formatı
+        // - Kalite: %80 (genelde 80–90 KB civarına düşürür)
+        const compressedBuffer = await sharp(inputBuffer)
+            .resize({
+                width: 1200,
+                height: 1200,
+                fit: 'inside',
+                withoutEnlargement: true,
+            })
+            .webp({ quality: 80 })
+            .toBuffer()
+
+        // Dosya adını oluştur (her zaman webp uzantılı)
+        const timestamp = Date.now()
+        const fileName = `products/${timestamp}.webp`
+
+        // Vercel Blob'a yükle (sıkıştırılmış buffer'ı gönderiyoruz)
+        const blob = await put(fileName, compressedBuffer, {
             access: 'public',
             addRandomSuffix: false,
+            contentType: 'image/webp',
         })
 
         return NextResponse.json({
