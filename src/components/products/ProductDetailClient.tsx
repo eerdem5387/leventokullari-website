@@ -243,77 +243,82 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             )}
           </div>
 
-          {/* Price */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <span className="text-3xl font-bold text-gray-900">
-                ₺{selectedVariation ? Number(selectedVariation.price).toLocaleString('tr-TR') : Number(product.price).toLocaleString('tr-TR')}
-              </span>
-              {product.comparePrice && !selectedVariation && (
-                <span className="text-xl text-gray-500 line-through">
-                  ₺{Number(product.comparePrice).toLocaleString('tr-TR')}
+          {/* Price - Sadece basit ürünler veya varyasyon seçilmişse göster */}
+          {(product.productType === 'SIMPLE' || (product.productType === 'VARIABLE' && selectedVariation)) && (
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-3xl font-bold text-gray-900">
+                  ₺{selectedVariation ? Number(selectedVariation.price).toLocaleString('tr-TR') : Number(product.price).toLocaleString('tr-TR')}
                 </span>
+                {product.comparePrice && !selectedVariation && product.productType === 'SIMPLE' && (
+                  <span className="text-xl text-gray-500 line-through">
+                    ₺{Number(product.comparePrice).toLocaleString('tr-TR')}
+                  </span>
+                )}
+              </div>
+              
+              {/* Stock Info */}
+              <div className="flex items-center space-x-2">
+                {(() => {
+                  const currentStock = selectedVariation ? selectedVariation.stock : product.stock
+                  if (currentStock === -1) {
+                    return (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-green-700">Sınırsız Stok</span>
+                      </div>
+                    )
+                  } else if (currentStock > 10) {
+                    return (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-green-700">Stokta: {currentStock} adet</span>
+                      </div>
+                    )
+                  } else if (currentStock > 0) {
+                    return (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-orange-700">Son {currentStock} adet!</span>
+                      </div>
+                    )
+                  } else {
+                    return (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-red-700">Stokta Yok</span>
+                      </div>
+                    )
+                  }
+                })()}
+              </div>
+              
+              {product.comparePrice && !selectedVariation && product.productType === 'SIMPLE' && (
+                <div className="text-sm text-green-600">
+                  %{Math.round(((Number(product.comparePrice) - Number(product.price)) / Number(product.comparePrice)) * 100)} indirim
+                </div>
               )}
             </div>
-            
-            {/* Stock Info */}
-            <div className="flex items-center space-x-2">
-              {(() => {
-                const currentStock = selectedVariation ? selectedVariation.stock : product.stock
-                if (currentStock === -1) {
-                  return (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-green-700">Sınırsız Stok</span>
-                    </div>
-                  )
-                } else if (currentStock > 10) {
-                  return (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-green-700">Stokta: {currentStock} adet</span>
-                    </div>
-                  )
-                } else if (currentStock > 0) {
-                  return (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-orange-700">Son {currentStock} adet!</span>
-                    </div>
-                  )
-                } else {
-                  return (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-red-700">Stokta Yok</span>
-                    </div>
-                  )
-                }
-              })()}
-            </div>
-            
-            {product.comparePrice && !selectedVariation && (
-              <div className="text-sm text-green-600">
-                %{Math.round(((Number(product.comparePrice) - Number(product.price)) / Number(product.comparePrice)) * 100)} indirim
-              </div>
-            )}
-          </div>
+          )}
 
-          {/* Stock Status */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${
-                selectedVariation 
-                  ? (selectedVariation.stock > 0 ? 'bg-green-500' : 'bg-red-500')
-                  : (product.stock > 0 ? 'bg-green-500' : 'bg-red-500')
-              }`}></div>
-              <span className="text-sm text-gray-600">
-                {selectedVariation 
-                  ? (selectedVariation.stock === -1 ? 'Stokta' : (selectedVariation.stock > 0 ? `${selectedVariation.stock} adet stokta` : 'Stokta yok'))
-                  : (product.stock === -1 ? 'Stokta' : (product.stock > 0 ? `${product.stock} adet stokta` : 'Stokta yok'))
-                }
-              </span>
+          {/* Stock Status - Sadece basit ürünler veya varyasyon seçilmişse göster */}
+          {(product.productType === 'SIMPLE' || (product.productType === 'VARIABLE' && selectedVariation)) && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  selectedVariation 
+                    ? (selectedVariation.stock > 0 ? 'bg-green-500' : 'bg-red-500')
+                    : (product.stock > 0 ? 'bg-green-500' : 'bg-red-500')
+                }`}></div>
+                <span className="text-sm text-gray-600">
+                  {selectedVariation 
+                    ? (selectedVariation.stock === -1 ? 'Stokta' : (selectedVariation.stock > 0 ? `${selectedVariation.stock} adet stokta` : 'Stokta yok'))
+                    : (product.stock === -1 ? 'Stokta' : (product.stock > 0 ? `${product.stock} adet stokta` : 'Stokta yok'))
+                  }
+                </span>
+              </div>
             </div>
+          )}
 
             {/* Add to Cart */}
             <div className="space-y-4">

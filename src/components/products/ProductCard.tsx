@@ -113,7 +113,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div>
             {product.productType === 'VARIABLE' ? (
               <span className="text-base sm:text-lg lg:text-xl font-bold text-orange-600 bg-orange-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-block">
-                Varyasyon Seçin
+                Öğrenci Seçin
               </span>
             ) : (
               <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
@@ -140,7 +140,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.productType === 'VARIABLE' ? (
               <>
                 <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 flex-shrink-0" />
-                <span className="truncate">Varyasyon Seç</span>
+                <span className="truncate">Öğrenci Seç</span>
               </>
             ) : (
               <>
@@ -154,7 +154,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {product.productType === 'VARIABLE' && (
           <div className="mt-2 text-center">
             <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-              Varyasyonlu Ürün
+              Öğrencili Ürün
             </span>
           </div>
         )}
