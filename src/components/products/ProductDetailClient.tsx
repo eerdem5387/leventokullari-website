@@ -484,44 +484,43 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Description */}
-          <div className="border-t pt-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-              <span className="w-1 h-8 bg-blue-600 mr-3 rounded-full"></span>
-              Ürün Açıklaması
-            </h2>
-            <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200">
-              <p className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
-                {product.description}
-              </p>
+            {/* Description */}
+            <div className="border-t pt-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                <span className="w-1 h-8 bg-blue-600 mr-3 rounded-full"></span>
+                Ürün Açıklaması
+              </h2>
+              <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200">
+                <p className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
+                  {product.description}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Product Details */}
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ürün Detayları</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">SKU:</span>
-                <span className="ml-2 text-gray-900">{product.sku || '-'}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Kategori:</span>
-                <span className="ml-2 text-gray-900">{product.category?.name || '-'}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Ürün Tipi:</span>
-                <span className="ml-2 text-gray-900">
-                  {product.productType === 'SIMPLE' ? 'Basit Ürün' : 'Varyasyonlu Ürün'}
-                </span>
+            {/* Product Details */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Ürün Detayları</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">SKU:</span>
+                  <span className="ml-2 text-gray-900">{product.sku || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Kategori:</span>
+                  <span className="ml-2 text-gray-900">{product.category?.name || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Ürün Tipi:</span>
+                  <span className="ml-2 text-gray-900">
+                    {product.productType === 'SIMPLE' ? 'Basit Ürün' : 'Varyasyonlu Ürün'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
     <Toast toasts={toasts} onRemove={removeToast} />
     </>
