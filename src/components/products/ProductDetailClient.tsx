@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import { ShoppingCart, Heart, Share2, ChevronDown } from 'lucide-react'
 import { safeDocument, isClient } from '@/lib/browser-utils'
 import { cartService } from '@/lib/cart-service'
-import { useToast } from '@/hooks/useToast'
-import Toast from '@/components/ui/Toast'
 
 interface ProductDetailClientProps {
   product: {
@@ -47,7 +45,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [selectedVariation, setSelectedVariation] = useState<any>(null)
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
-  const { toasts, removeToast, success, error } = useToast()
 
   const handleAddToCart = () => {
     if (!isClient) return
@@ -81,12 +78,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           quantity
         )
       }
-      
-      success('Ürün sepete eklendi!')
-      
+      // Başarılı ekleme
+      console.log('Ürün sepete eklendi')
     } catch (err) {
       console.error('Sepete ekleme hatası:', err)
-      error('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }
 
@@ -192,7 +187,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   }, [])
 
   return (
-    <>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Images */}
@@ -525,7 +519,5 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         </div>
       </div>
     </div>
-    <Toast toasts={toasts} onRemove={removeToast} />
-    </>
   )
 } 
