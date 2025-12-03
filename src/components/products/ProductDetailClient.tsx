@@ -295,7 +295,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               
               {product.comparePrice && !selectedVariation && product.productType === 'SIMPLE' && (
                 <div className="text-sm text-green-600">
-                  %{Math.round(((Number(product.comparePrice) - Number(product.price)) / Number(product.comparePrice)) * 100)} indirim
+                  {Math.round(
+                    ((Number(product.comparePrice) - Number(product.price)) / Number(product.comparePrice)) * 100
+                  )}
+                  % indirim
                 </div>
               )}
             </div>
