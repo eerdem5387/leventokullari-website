@@ -27,7 +27,9 @@ const nextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production'
     },
-    // Webpack optimization
+    // Turbopack configuration for Next.js 16
+    turbopack: {},
+    // Webpack optimization (fallback for compatibility)
     webpack: (config, { isServer }) => {
         if (isServer) {
             config.externals.push('@prisma/client')
