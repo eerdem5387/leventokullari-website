@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { ShoppingCart, ChevronDown } from 'lucide-react'
 import { safeDocument, isClient } from '@/lib/browser-utils'
 import { cartService } from '@/lib/cart-service'
+import { useToast } from '@/hooks/useToast'
+import Toast from '@/components/ui/Toast'
 
 interface ProductDetailClientProps {
   product: {
@@ -42,6 +44,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
 
+  const { toasts, removeToast, success, error } = useToast()
+
   const handleAddToCart = () => {
     if (!isClient) return
 
@@ -58,8 +62,19 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         quantity,
         selectedVariation || undefined
       )
+      success(
+        'Sepete ekleme işlemi başarılı!',
+        5000,
+        {
+          label: 'Sepete Git',
+          onClick: () => {
+            window.location.href = '/cart'
+          }
+        }
+      )
     } catch (err) {
       console.error('Sepete ekleme hatası:', err)
+      error('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }
 
@@ -447,6 +462,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </div>
         </div>
       </div>
+      <Toast toasts={toasts} onRemove={removeToast} />
     </div>
   )
 }

@@ -39,7 +39,16 @@ export default function AddToCartButton({ product, variation, className, quantit
     
     try {
       cartService.addItem(product, quantity, variation)
-      success(`${product.name} sepete eklendi!`)
+      success(
+        'Sepete ekleme işlemi başarılı!',
+        5000,
+        {
+          label: 'Sepete Git',
+          onClick: () => {
+            window.location.href = '/cart'
+          }
+        }
+      )
     } catch (err) {
       console.error('Sepete ekleme hatası:', err)
       error('Sepete eklenirken bir hata oluştu.')

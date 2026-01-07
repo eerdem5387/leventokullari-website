@@ -10,6 +10,10 @@ export interface ToastMessage {
   type: ToastType
   message: string
   duration?: number
+  action?: {
+    label: string
+    onClick: () => void
+  }
 }
 
 interface ToastProps {
@@ -71,9 +75,31 @@ function ToastItem({ toast, onRemove }: { toast: ToastMessage; onRemove: (id: st
       `}
     >
       <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
-      <p className={`ml-3 text-sm font-medium flex-1 ${textColors[toast.type]}`}>
-        {toast.message}
-      </p>
+      <div className="ml-3 flex-1 min-w-0">
+        <p className={`text-sm font-medium ${textColors[toast.type]}`}>
+          {toast.message}
+        </p>
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action?.onClick()
+              setIsExiting(true)
+              setTimeout(() => onRemove(toast.id), 300)
+            }}
+            className={`mt-2 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors ${
+              toast.type === 'success'
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : toast.type === 'error'
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : toast.type === 'warning'
+                ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {toast.action.label}
+          </button>
+        )}
+      </div>
       <button
         onClick={() => {
           setIsExiting(true)

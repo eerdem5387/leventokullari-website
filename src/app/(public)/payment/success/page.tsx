@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { CheckCircle, Printer, ArrowRight, MapPin, Mail, Phone } from 'lucide-react'
+import { cartService } from '@/lib/cart-service'
 
 interface OrderItem {
   id: string
@@ -66,6 +67,16 @@ export default function PaymentSuccessPage() {
         const data = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(data.error || 'Sipariş getirilemedi')
         setOrder(data)
+        
+        // Sipariş başarıyla yüklendiğinde ve ödeme tamamlandıysa sepeti temizle
+        // (Sayfa yenilendiğinde tekrar temizlenmesini önlemek için sipariş ID kontrolü yapıyoruz)
+        if (data.paymentStatus === 'COMPLETED') {
+          const clearedOrderId = localStorage.getItem('lastClearedOrderId')
+          if (clearedOrderId !== orderId) {
+            cartService.clearCart()
+            localStorage.setItem('lastClearedOrderId', orderId)
+          }
+        }
       } catch (e: any) {
         setError(e?.message || 'Sipariş getirilemedi')
       } finally {

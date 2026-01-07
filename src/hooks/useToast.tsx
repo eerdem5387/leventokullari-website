@@ -8,9 +8,9 @@ let toastIdCounter = 0
 export function useToast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  const showToast = useCallback((type: ToastType, message: string, duration?: number) => {
+  const showToast = useCallback((type: ToastType, message: string, duration?: number, action?: { label: string; onClick: () => void }) => {
     const id = `toast-${++toastIdCounter}`
-    const newToast: ToastMessage = { id, type, message, duration }
+    const newToast: ToastMessage = { id, type, message, duration, action }
     
     setToasts((prev) => [...prev, newToast])
   }, [])
@@ -19,20 +19,20 @@ export function useToast() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id))
   }, [])
 
-  const success = useCallback((message: string, duration?: number) => {
-    showToast('success', message, duration)
+  const success = useCallback((message: string, duration?: number, action?: { label: string; onClick: () => void }) => {
+    showToast('success', message, duration, action)
   }, [showToast])
 
-  const error = useCallback((message: string, duration?: number) => {
-    showToast('error', message, duration)
+  const error = useCallback((message: string, duration?: number, action?: { label: string; onClick: () => void }) => {
+    showToast('error', message, duration, action)
   }, [showToast])
 
-  const warning = useCallback((message: string, duration?: number) => {
-    showToast('warning', message, duration)
+  const warning = useCallback((message: string, duration?: number, action?: { label: string; onClick: () => void }) => {
+    showToast('warning', message, duration, action)
   }, [showToast])
 
-  const info = useCallback((message: string, duration?: number) => {
-    showToast('info', message, duration)
+  const info = useCallback((message: string, duration?: number, action?: { label: string; onClick: () => void }) => {
+    showToast('info', message, duration, action)
   }, [showToast])
 
   return {
