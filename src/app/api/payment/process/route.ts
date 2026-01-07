@@ -73,7 +73,11 @@ export async function POST(request: NextRequest) {
 
         // Sadece Kredi Kartı için Ziraat POS başlatılır
         if (paymentData.method === 'CREDIT_CARD') {
-            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+            // Request'ten base URL al
+            const host = request.headers.get('host') || ''
+            const protocol = request.headers.get('x-forwarded-proto') || 
+                           (host.includes('localhost') ? 'http' : 'https')
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
             
             const ziraatResponse = await ziraatPaymentService.createPaymentRequest({
                 amount: paymentData.amount,

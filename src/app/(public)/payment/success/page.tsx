@@ -3,9 +3,10 @@
 export const dynamic = 'force-dynamic'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { CheckCircle, Printer, ArrowRight, MapPin, Mail, Phone } from 'lucide-react'
 import { cartService } from '@/lib/cart-service'
+import { isClient } from '@/lib/browser-utils'
 
 interface OrderItem {
   id: string
@@ -49,6 +50,7 @@ export default function PaymentSuccessPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const cartClearedRef = useRef(false)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -69,12 +71,16 @@ export default function PaymentSuccessPage() {
         setOrder(data)
         
         // Sipariş başarıyla yüklendiğinde ve ödeme tamamlandıysa sepeti temizle
-        // (Sayfa yenilendiğinde tekrar temizlenmesini önlemek için sipariş ID kontrolü yapıyoruz)
-        if (data.paymentStatus === 'COMPLETED') {
+        if (isClient && data.paymentStatus === 'COMPLETED' && !cartClearedRef.current) {
           const clearedOrderId = localStorage.getItem('lastClearedOrderId')
           if (clearedOrderId !== orderId) {
+            console.log('Sepet temizleniyor, sipariş ID:', orderId)
             cartService.clearCart()
             localStorage.setItem('lastClearedOrderId', orderId)
+            cartClearedRef.current = true
+          } else {
+            console.log('Sepet zaten temizlenmiş, sipariş ID:', orderId)
+            cartClearedRef.current = true
           }
         }
       } catch (e: any) {
@@ -85,6 +91,19 @@ export default function PaymentSuccessPage() {
     }
     fetchOrder()
   }, [orderId])
+
+  // Ayrı bir useEffect ile sepet temizleme kontrolü (güvenlik için)
+  useEffect(() => {
+    if (isClient && order && order.paymentStatus === 'COMPLETED' && !cartClearedRef.current) {
+      const clearedOrderId = localStorage.getItem('lastClearedOrderId')
+      if (clearedOrderId !== orderId) {
+        console.log('Sepet temizleniyor (ikinci kontrol), sipariş ID:', orderId)
+        cartService.clearCart()
+        localStorage.setItem('lastClearedOrderId', orderId)
+        cartClearedRef.current = true
+      }
+    }
+  }, [order, orderId])
 
   const formatTL = (n: number) => `₺${Number(n || 0).toLocaleString('tr-TR')}`
 

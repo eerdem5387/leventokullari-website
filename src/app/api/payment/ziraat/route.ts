@@ -57,7 +57,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Bu sipariş zaten ödenmiş' }, { status: 400 })
         }
 
-        const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || ''
+        // Request'ten base URL al
+        const host = request.headers.get('host') || ''
+        const protocol = request.headers.get('x-forwarded-proto') || 
+                       (host.includes('localhost') ? 'http' : 'https')
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
+        
         const paymentRequest = {
             amount: validatedData.amount,
             orderId: validatedData.orderId,
@@ -65,8 +70,8 @@ export async function POST(request: NextRequest) {
             customerEmail: validatedData.customerEmail,
             customerName: validatedData.customerName,
             customerPhone: validatedData.customerPhone,
-            successUrl: `${baseUrl}/payment/success?orderId=${validatedData.orderId}`,
-            failUrl: `${baseUrl}/payment/fail?orderId=${validatedData.orderId}`
+            successUrl: `${baseUrl}/api/payment/ziraat/callback`,
+            failUrl: `${baseUrl}/api/payment/ziraat/callback`
         }
 
         const paymentResponse = await ziraatPaymentService.createPaymentRequest(paymentRequest)

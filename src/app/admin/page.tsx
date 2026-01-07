@@ -117,7 +117,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            {getGreeting()}, Admin 👋
+            {getGreeting()}, Admin
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
             İşte mağazanızın bugünkü durumu ve performansı.
