@@ -86,7 +86,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   ])
 
   // Convert Decimal to Number for client compatibility
-  const products = productsData.map(product => ({
+  const products = productsData.map((product: any) => ({
     ...product,
     price: Number(product.price),
     comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined
@@ -123,7 +123,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         {products.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-              {products.map((product) => (
+              {products.map((product: any) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

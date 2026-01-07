@@ -1,5 +1,7 @@
 'use client'
 
-export default function ClientMarker(): JSX.Element {
+import React from 'react'
+
+export default function ClientMarker(): React.ReactElement {
 	return <span aria-hidden style={{ display: 'none' }} />
 }

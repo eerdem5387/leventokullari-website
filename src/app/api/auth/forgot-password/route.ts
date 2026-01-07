@@ -31,14 +31,15 @@ export async function POST(request: NextRequest) {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 saat
 
-    // Kullanıcıyı güncelle
-    await prisma.user.update({
-      where: { email },
-      data: {
-        resetToken,
-        resetTokenExpiry,
-      },
-    });
+    // TODO: User modeline resetToken ve resetTokenExpiry field'ları eklendiğinde aktif edilecek
+    // Şimdilik sadece log'a yazıyoruz
+    // await prisma.user.update({
+    //   where: { email },
+    //   data: {
+    //     resetToken,
+    //     resetTokenExpiry,
+    //   },
+    // });
 
     // E-posta gönderme işlemi burada yapılacak
     // Şimdilik sadece başarılı mesajı döndürüyoruz

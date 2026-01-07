@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
                 success: true,
                 redirectUrl: paymentResponse.redirectUrl,
-                transactionId: paymentResponse.transactionId
+                formParams: paymentResponse.formParams
             })
         } else {
             return NextResponse.json({ success: false, error: paymentResponse.error || 'Ödeme işlemi başlatılamadı' }, { status: 400 })

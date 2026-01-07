@@ -76,8 +76,10 @@ async function handleCallback(data: Record<string, any>) {
                     method: 'CREDIT_CARD',
                     status: 'FAILED',
                     transactionId: data.TransId, // Başarısız işlemde de dönebilir
-                    responseMessage: result.error,
-                    gatewayResponse: JSON.stringify(data)
+                    gatewayResponse: JSON.stringify({
+                        ...data,
+                        error: result.error
+                    })
                 }
             })
         } catch {}

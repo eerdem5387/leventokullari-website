@@ -194,9 +194,11 @@ export async function GET(request: NextRequest) {
       ? Math.round(((thisMonthProducts - lastMonthProducts) / lastMonthProducts) * 100)
       : (thisMonthProducts > 0 ? 100 : 0)
     
-    const revenueGrowth = (lastMonthRevenue._sum.finalAmount || 0) > 0 
-      ? Math.round((((thisMonthRevenue._sum.finalAmount || 0) - (lastMonthRevenue._sum.finalAmount || 0)) / (lastMonthRevenue._sum.finalAmount || 0)) * 100)
-      : ((thisMonthRevenue._sum.finalAmount || 0) > 0 ? 100 : 0)
+    const thisMonthRevenueAmount = Number(thisMonthRevenue._sum.finalAmount || 0)
+    const lastMonthRevenueAmount = Number(lastMonthRevenue._sum.finalAmount || 0)
+    const revenueGrowth = lastMonthRevenueAmount > 0 
+      ? Math.round(((thisMonthRevenueAmount - lastMonthRevenueAmount) / lastMonthRevenueAmount) * 100)
+      : (thisMonthRevenueAmount > 0 ? 100 : 0)
 
     // Delivery rate
     const deliveryRate = totalOrders > 0 

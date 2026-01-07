@@ -139,7 +139,14 @@ export async function PUT(
 
         // Ürünün var olup olmadığını kontrol et
         const existingProduct = await prisma.product.findUnique({
-            where: { id: productId }
+            where: { id: productId },
+            include: {
+                variations: {
+                    include: {
+                        attributes: true
+                    }
+                }
+            }
         })
 
         if (!existingProduct) {
@@ -181,7 +188,173 @@ export async function PUT(
             }
         })
 
-        return NextResponse.json(updatedProduct)
+        // Varyasyonlu ürünse varyasyonları güncelle
+        if (body.productType === 'VARIABLE' && body.variations && Array.isArray(body.variations)) {
+            const incomingVariationIds = new Set<string>()
+            const existingVariationIds = existingProduct.variations.map(v => v.id)
+
+            // Gelen varyasyonları işle
+            for (const variationData of body.variations) {
+                // Varyasyon ID'sini kontrol et (geçici ID'ler var- veya quick- ile başlayabilir)
+                const isNewVariation = !variationData.id || 
+                                      variationData.id.startsWith('var-') || 
+                                      variationData.id.startsWith('quick-') ||
+                                      !existingVariationIds.includes(variationData.id)
+
+                if (isNewVariation) {
+                    // Yeni varyasyon oluştur
+                    const newVariation = await prisma.productVariation.create({
+                        data: {
+                            productId: productId,
+                            sku: variationData.sku || undefined,
+                            price: parseFloat(variationData.price),
+                            stock: parseInt(variationData.stock || '0')
+                        }
+                    })
+
+                    incomingVariationIds.add(newVariation.id)
+
+                    // Varyasyon özelliklerini ekle
+                    if (variationData.attributes && Array.isArray(variationData.attributes)) {
+                        for (const attr of variationData.attributes) {
+                            // Önce özellik değerini bul veya oluştur
+                            let attributeValue = await prisma.productAttributeValue.findFirst({
+                                where: {
+                                    attribute: { name: attr.name },
+                                    value: attr.value
+                                }
+                            })
+
+                            if (!attributeValue) {
+                                // Önce özelliği bul veya oluştur
+                                let attribute = await prisma.productAttribute.findUnique({
+                                    where: { name: attr.name }
+                                })
+
+                                if (!attribute) {
+                                    attribute = await prisma.productAttribute.create({
+                                        data: { name: attr.name, type: 'SELECT' }
+                                    })
+                                }
+
+                                // Özellik değerini oluştur
+                                attributeValue = await prisma.productAttributeValue.create({
+                                    data: {
+                                        attributeId: attribute.id,
+                                        value: attr.value
+                                    }
+                                })
+                            }
+
+                            // Varyasyon özelliğini bağla
+                            await prisma.productVariationAttribute.create({
+                                data: {
+                                    variationId: newVariation.id,
+                                    attributeValueId: attributeValue.id
+                                }
+                            })
+                        }
+                    }
+                } else {
+                    // Mevcut varyasyonu güncelle
+                    incomingVariationIds.add(variationData.id)
+
+                    await prisma.productVariation.update({
+                        where: { id: variationData.id },
+                        data: {
+                            sku: variationData.sku || undefined,
+                            price: parseFloat(variationData.price),
+                            stock: parseInt(variationData.stock || '0')
+                        }
+                    })
+
+                    // Varyasyon özelliklerini güncelle (önce mevcut özellikleri sil, sonra yenilerini ekle)
+                    await prisma.productVariationAttribute.deleteMany({
+                        where: { variationId: variationData.id }
+                    })
+
+                    // Yeni özellikleri ekle
+                    if (variationData.attributes && Array.isArray(variationData.attributes)) {
+                        for (const attr of variationData.attributes) {
+                            // Önce özellik değerini bul veya oluştur
+                            let attributeValue = await prisma.productAttributeValue.findFirst({
+                                where: {
+                                    attribute: { name: attr.name },
+                                    value: attr.value
+                                }
+                            })
+
+                            if (!attributeValue) {
+                                // Önce özelliği bul veya oluştur
+                                let attribute = await prisma.productAttribute.findUnique({
+                                    where: { name: attr.name }
+                                })
+
+                                if (!attribute) {
+                                    attribute = await prisma.productAttribute.create({
+                                        data: { name: attr.name, type: 'SELECT' }
+                                    })
+                                }
+
+                                // Özellik değerini oluştur
+                                attributeValue = await prisma.productAttributeValue.create({
+                                    data: {
+                                        attributeId: attribute.id,
+                                        value: attr.value
+                                    }
+                                })
+                            }
+
+                            // Varyasyon özelliğini bağla
+                            await prisma.productVariationAttribute.create({
+                                data: {
+                                    variationId: variationData.id,
+                                    attributeValueId: attributeValue.id
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+
+            // Silinen varyasyonları kaldır (gelen listede olmayan mevcut varyasyonlar)
+            const variationsToDelete = existingVariationIds.filter(id => !incomingVariationIds.has(id))
+            if (variationsToDelete.length > 0) {
+                await prisma.productVariation.deleteMany({
+                    where: {
+                        id: { in: variationsToDelete }
+                    }
+                })
+            }
+        } else if (body.productType === 'SIMPLE') {
+            // Basit ürünse tüm varyasyonları sil
+            await prisma.productVariation.deleteMany({
+                where: { productId: productId }
+            })
+        }
+
+        // Güncellenmiş ürünü varyasyonlarla birlikte döndür
+        const productWithVariations = await prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                category: true,
+                variations: {
+                    include: {
+                        attributes: {
+                            include: {
+                                attributeValue: {
+                                    include: {
+                                        attribute: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        return NextResponse.json(productWithVariations)
 
     } catch (error) {
         return handleApiError(error)

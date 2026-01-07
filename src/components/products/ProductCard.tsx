@@ -48,8 +48,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         1
       )
       success('Ürün sepete eklendi!')
-    } catch (error) {
-      console.error('Sepete ekleme hatası:', error)
+    } catch (err: unknown) {
+      console.error('Sepete ekleme hatası:', err)
       error('Sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.')
     }
   }

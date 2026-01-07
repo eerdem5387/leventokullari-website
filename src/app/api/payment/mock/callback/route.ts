@@ -61,17 +61,19 @@ export async function POST(request: NextRequest) {
       })
 
       // Ödeme kaydı oluştur
-      await prisma.payment.create({
-        data: {
-          orderId: result.orderId,
-          amount: result.amount || 0,
-          method: 'CREDIT_CARD',
-          status: 'COMPLETED',
-          transactionId: result.transactionId || '',
-          responseCode: result.responseCode || '',
-          responseMessage: result.responseMessage || ''
-        }
-      })
+        await prisma.payment.create({
+          data: {
+            orderId: result.orderId,
+            amount: result.amount || 0,
+            method: 'CREDIT_CARD',
+            status: 'COMPLETED',
+            transactionId: result.transactionId || '',
+            gatewayResponse: JSON.stringify({
+              responseCode: result.responseCode || '',
+              responseMessage: result.responseMessage || ''
+            })
+          }
+        })
 
       // E-posta bildirimleri gönder
       try {
@@ -107,8 +109,10 @@ export async function POST(request: NextRequest) {
             method: 'CREDIT_CARD',
             status: 'FAILED',
             transactionId: result.transactionId || '',
-            responseCode: result.responseCode || '',
-            responseMessage: result.error || ''
+            gatewayResponse: JSON.stringify({
+              responseCode: result.responseCode || '',
+              responseMessage: result.error || ''
+            })
           }
         })
       }

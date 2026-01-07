@@ -12,15 +12,20 @@ interface ZiraatPaymentSettings {
 interface PaymentRequest {
   amount: number
   orderId: string
+  orderNumber?: string
   successUrl: string
   failUrl: string
   installments?: string // Taksit sayısı (boş ise tek çekim)
+  customerEmail?: string
+  customerName?: string
+  customerPhone?: string
 }
 
 interface PaymentResponse {
   success: boolean
   redirectUrl?: string // Banka formunun post edileceği URL
   formParams?: Record<string, string> // Bankaya post edilecek parametreler
+  transactionId?: string
   error?: string
 }
 
