@@ -50,6 +50,7 @@ interface Payment {
   method: string
   status: string
   transactionId?: string
+  gatewayResponse?: string
   createdAt: string
 }
 
@@ -209,6 +210,55 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     }
   }
 
+  // Durum açıklamaları için helper fonksiyon
+  const getStatusExplanation = (orderStatus: string, paymentStatus: string, payments: Payment[]) => {
+    // Ödeme durumu açıklamaları
+    if (paymentStatus === 'PENDING') {
+      return 'Müşteri henüz ödemeyi tamamlamadı'
+    }
+    
+    if (paymentStatus === 'FAILED') {
+      // Son başarısız ödeme kaydını bul
+      const failedPayment = payments.find(p => p.status === 'FAILED')
+      if (failedPayment?.gatewayResponse) {
+        try {
+          const gatewayData = JSON.parse(failedPayment.gatewayResponse)
+          // Ziraat'tan gelen hata mesajını al
+          const errorMsg = gatewayData.ErrMsg || gatewayData.errmsg || gatewayData.error || gatewayData.Error
+          if (errorMsg) {
+            return errorMsg
+          }
+        } catch (e) {
+          console.error('Error parsing gateway response:', e)
+        }
+      }
+      return 'Ödeme işlemi başarısız oldu'
+    }
+
+    // Sipariş durumu açıklamaları
+    if (orderStatus === 'PENDING' && paymentStatus === 'COMPLETED') {
+      return 'Ödeme tamamlandı, sipariş onay bekliyor'
+    }
+
+    if (orderStatus === 'CONFIRMED') {
+      return 'Sipariş onaylandı ve hazırlanıyor'
+    }
+
+    if (orderStatus === 'SHIPPED') {
+      return 'Sipariş kargoya verildi'
+    }
+
+    if (orderStatus === 'DELIVERED') {
+      return 'Sipariş müşteriye teslim edildi'
+    }
+
+    if (orderStatus === 'CANCELLED') {
+      return 'Sipariş iptal edildi'
+    }
+
+    return null
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -328,12 +378,19 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Durum:</span>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                      {getStatusIcon(order.status)}
-                      <span className="ml-2">{getStatusText(order.status)}</span>
-                    </span>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Durum:</span>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        <span className="ml-2">{getStatusText(order.status)}</span>
+                      </span>
+                    </div>
+                    {getStatusExplanation(order.status, order.paymentStatus, order.payments) && (
+                      <p className="text-sm text-gray-500 mt-2 pl-1">
+                        {getStatusExplanation(order.status, order.paymentStatus, order.payments)}
+                      </p>
+                    )}
                   </div>
                   {order.notes && (
                     <div>
@@ -485,16 +542,38 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
               {/* Payment Status */}
               <div className="mt-6 pt-6 border-t">
                 <h3 className="font-medium text-gray-900 mb-2">Ödeme Durumu</h3>
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  order.paymentStatus === 'COMPLETED' 
-                    ? 'bg-green-100 text-green-800' 
-                    : order.paymentStatus === 'PENDING'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {order.paymentStatus === 'COMPLETED' ? 'Ödendi' : 
-                   order.paymentStatus === 'PENDING' ? 'Beklemede' : 'Başarısız'}
-                </span>
+                <div className="space-y-2">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    order.paymentStatus === 'COMPLETED' 
+                      ? 'bg-green-100 text-green-800' 
+                      : order.paymentStatus === 'PENDING'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {order.paymentStatus === 'COMPLETED' ? 'Ödendi' : 
+                     order.paymentStatus === 'PENDING' ? 'Beklemede' : 'Başarısız'}
+                  </span>
+                  {order.paymentStatus === 'PENDING' && (
+                    <p className="text-xs text-gray-500">
+                      Müşteri henüz ödemeyi tamamlamadı
+                    </p>
+                  )}
+                  {order.paymentStatus === 'FAILED' && (() => {
+                    const failedPayment = order.payments.find(p => p.status === 'FAILED')
+                    if (failedPayment?.gatewayResponse) {
+                      try {
+                        const gatewayData = JSON.parse(failedPayment.gatewayResponse)
+                        const errorMsg = gatewayData.ErrMsg || gatewayData.errmsg || gatewayData.error || gatewayData.Error
+                        if (errorMsg) {
+                          return <p className="text-xs text-red-600">{errorMsg}</p>
+                        }
+                      } catch (e) {
+                        console.error('Error parsing gateway response:', e)
+                      }
+                    }
+                    return <p className="text-xs text-red-600">Ödeme işlemi başarısız oldu</p>
+                  })()}
+                </div>
               </div>
 
               {/* Payment History */}
