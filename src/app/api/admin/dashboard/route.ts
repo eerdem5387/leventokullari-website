@@ -51,7 +51,13 @@ export async function GET(request: NextRequest) {
       Promise.all([
         prisma.product.count(),
         prisma.user.count({ where: { role: 'CUSTOMER' } }),
-        prisma.order.count(),
+        // Sadece onaylanan ve ödemesi alınan siparişler
+        prisma.order.count({
+          where: {
+            status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] },
+            paymentStatus: 'COMPLETED'
+          }
+        }),
         prisma.order.count({ where: { status: 'DELIVERED' } })
       ]),
       
@@ -135,11 +141,19 @@ export async function GET(request: NextRequest) {
       thisMonthRevenue,
       lastMonthRevenue
     ] = await Promise.all([
+      // Bu ay onaylanan ve ödemesi alınan siparişler
       prisma.order.count({
-        where: { createdAt: { gte: thisMonth } }
+        where: {
+          status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] },
+          paymentStatus: 'COMPLETED',
+          createdAt: { gte: thisMonth }
+        }
       }),
+      // Geçen ay onaylanan ve ödemesi alınan siparişler
       prisma.order.count({
-        where: { 
+        where: {
+          status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] },
+          paymentStatus: 'COMPLETED',
           createdAt: { gte: lastMonth, lt: thisMonth }
         }
       }),
