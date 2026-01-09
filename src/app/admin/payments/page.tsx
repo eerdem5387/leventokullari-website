@@ -19,6 +19,22 @@ interface Payment {
       name: string
       email: string
     }
+    items: Array<{
+      id: string
+      product: {
+        name: string
+      }
+      variation?: {
+        attributes: Array<{
+          attributeValue: {
+            value: string
+            attribute: {
+              name: string
+            }
+          }
+        }>
+      } | null
+    }>
   }
 }
 
@@ -192,7 +208,7 @@ export default function AdminPaymentsPage() {
                   Ödeme ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sipariş
+                  Ürün
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Müşteri
@@ -214,38 +230,62 @@ export default function AdminPaymentsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {payments && payments.length > 0 ? (
                 payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {payment.id.slice(0, 8)}...
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payment.order.orderNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {payment.order.user.name}
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {payment.id.slice(0, 8)}...
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="max-w-xs">
+                          {payment.order.items.length > 0 ? (
+                            <div className="space-y-1">
+                              {payment.order.items.slice(0, 2).map((item, idx) => (
+                                <div key={item.id}>
+                                  <span className="font-medium">{item.product.name}</span>
+                                  {item.variation && item.variation.attributes.length > 0 && (
+                                    <span className="text-gray-600 ml-1">
+                                      ({item.variation.attributes
+                                        .map(attr => `${attr.attributeValue.attribute.name}: ${attr.attributeValue.value}`)
+                                        .join(', ')})
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                              {payment.order.items.length > 2 && (
+                                <div className="text-gray-500 text-xs">
+                                  +{payment.order.items.length - 2} ürün daha
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500">Ürün bulunamadı</span>
+                          )}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {payment.order.user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {payment.order.user.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {payment.order.user.email}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₺{payment.amount.toLocaleString('tr-TR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {getMethodText(payment.method)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}`}>
-                        {getStatusText(payment.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(payment.createdAt).toLocaleDateString('tr-TR')}
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ₺{payment.amount.toLocaleString('tr-TR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getMethodText(payment.method)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                          {getStatusText(payment.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(payment.createdAt).toLocaleDateString('tr-TR')}
+                      </td>
+                    </tr>
                 ))
               ) : (
                 <tr>
@@ -266,9 +306,35 @@ export default function AdminPaymentsPage() {
             <div key={payment.id} className="bg-white rounded-lg shadow-sm border p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
-                    {payment.order.orderNumber}
-                  </h3>
+                  <div className="mb-2">
+                    {payment.order.items.length > 0 ? (
+                      <div className="space-y-1">
+                        {payment.order.items.slice(0, 2).map((item) => (
+                          <div key={item.id}>
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              {item.product.name}
+                            </h3>
+                            {item.variation && item.variation.attributes.length > 0 && (
+                              <p className="text-xs text-gray-600 ml-1">
+                                {item.variation.attributes
+                                  .map(attr => `${attr.attributeValue.attribute.name}: ${attr.attributeValue.value}`)
+                                  .join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                        {payment.order.items.length > 2 && (
+                          <p className="text-xs text-gray-500">
+                            +{payment.order.items.length - 2} ürün daha
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <h3 className="text-sm font-semibold text-gray-500">
+                        Ürün bulunamadı
+                      </h3>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 truncate">{payment.order.user.name}</p>
                   <p className="text-xs text-gray-500 truncate">{payment.order.user.email}</p>
                 </div>

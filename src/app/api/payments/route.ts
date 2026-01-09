@@ -9,6 +9,28 @@ export async function GET() {
                     include: {
                         user: {
                             select: { name: true, email: true }
+                        },
+                        items: {
+                            include: {
+                                product: {
+                                    select: { name: true }
+                                },
+                                variation: {
+                                    include: {
+                                        attributes: {
+                                            include: {
+                                                attributeValue: {
+                                                    include: {
+                                                        attribute: {
+                                                            select: { name: true }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -26,7 +48,23 @@ export async function GET() {
             createdAt: payment.createdAt.toISOString(),
             order: {
                 orderNumber: payment.order.orderNumber,
-                user: payment.order.user
+                user: payment.order.user,
+                items: payment.order.items.map(item => ({
+                    id: item.id,
+                    product: {
+                        name: item.product.name
+                    },
+                    variation: item.variation ? {
+                        attributes: item.variation.attributes.map(attr => ({
+                            attributeValue: {
+                                value: attr.attributeValue.value,
+                                attribute: {
+                                    name: attr.attributeValue.attribute.name
+                                }
+                            }
+                        }))
+                    } : null
+                }))
             }
         }))
 
