@@ -231,7 +231,11 @@ export default function AdminCustomersPage() {
         <div className="md:hidden divide-y divide-gray-100">
           {filteredCustomers.length > 0 ? (
             filteredCustomers.map((customer) => (
-              <div key={customer.id} className="px-4 py-3 flex flex-col gap-2">
+              <Link
+                key={customer.id}
+                href={`/admin/customers/${customer.id}`}
+                className="block px-4 py-3 flex flex-col gap-2 hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
                     {customer.name.charAt(0).toUpperCase()}
@@ -278,16 +282,20 @@ export default function AdminCustomersPage() {
                     >
                       <Mail className="h-3.5 w-3.5" />
                     </a>
-                    <Link
-                      href={`/admin/customers/${customer.id}`}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        window.location.href = `/admin/customers/${customer.id}`
+                      }}
                       className="p-1.5 rounded-full bg-gray-50 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
                       title="Profili Görüntüle"
                     >
                       <Eye className="h-3.5 w-3.5" />
-                    </Link>
+                    </button>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))
           ) : (
             <div className="px-4 py-8 text-center text-gray-500">
