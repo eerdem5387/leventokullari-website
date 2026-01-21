@@ -884,7 +884,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                         </div>
                         
                         {/* Nitelik Değerleri - Tek nitelik varsa gizle (hızlı ekleme modu) */}
-                        {!(attributes.length === 1 && attributes[0]?.name.trim() !== '') && (
+                        {attributes.length !== 1 && (
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <label className="block text-sm font-medium text-gray-700">
