@@ -128,19 +128,16 @@ export default function NewProductPage() {
 
   // Varyasyonları otomatik oluştur
   const generateVariations = () => {
+    // Hızlı mod için kontrol: Sadece nitelik adı yeterli
+    const singleAttribute = attributes.filter(attr => attr.name.trim() !== '')
+    
+    // Normal mod için kontrol: Nitelik adı ve en az bir değer gerekli
     const validAttributes = attributes.filter(attr => 
       attr.name.trim() !== '' && attr.values.some(val => val.trim() !== '')
     )
 
-    if (validAttributes.length === 0) {
-      setVariations([])
-      setIsQuickMode(false)
-      setQuickVariations([])
-      return
-    }
-
-    // Tek nitelikli varyasyonlar için hızlı mod
-    if (validAttributes.length === 1) {
+    // Tek nitelikli varyasyonlar için hızlı mod (sadece nitelik adı yeterli)
+    if (singleAttribute.length === 1 && attributes.length === 1) {
       setIsQuickMode(true)
       // Hızlı mod için boş varyasyon listesi oluştur
       if (quickVariations.length === 0) {
@@ -154,6 +151,13 @@ export default function NewProductPage() {
       }
       // Normal varyasyonları temizle
       setVariations([])
+      return
+    }
+
+    if (validAttributes.length === 0) {
+      setVariations([])
+      setIsQuickMode(false)
+      setQuickVariations([])
       return
     }
 
@@ -752,41 +756,44 @@ export default function NewProductPage() {
                           </button>
                         </div>
                         
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-medium text-gray-700">
-                              Nitelik Değerleri
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => addAttributeValue(attributeIndex)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Değer Ekle
-                            </button>
+                        {/* Nitelik Değerleri - Hızlı modda gizle */}
+                        {!(isQuickMode && attributes.length === 1) && (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Nitelik Değerleri
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => addAttributeValue(attributeIndex)}
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                              >
+                                + Değer Ekle
+                              </button>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              {attribute.values.map((value, valueIndex) => (
+                                <div key={valueIndex} className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={value}
+                                    onChange={(e) => updateAttributeValue(attributeIndex, valueIndex, e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Değer (örn: Kırmızı)"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeAttributeValue(attributeIndex, valueIndex)}
+                                    className="text-red-600 hover:text-red-800 px-2 py-2"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          
-                          <div className="space-y-2">
-                            {attribute.values.map((value, valueIndex) => (
-                              <div key={valueIndex} className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={value}
-                                  onChange={(e) => updateAttributeValue(attributeIndex, valueIndex, e.target.value)}
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Değer (örn: Kırmızı)"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => removeAttributeValue(attributeIndex, valueIndex)}
-                                  className="text-red-600 hover:text-red-800 px-2 py-2"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -794,7 +801,7 @@ export default function NewProductPage() {
               </div>
 
               {/* Hızlı Ekleme Modu - Tek Nitelikli Varyasyonlar */}
-              {isQuickMode && attributes.length === 1 && (
+              {attributes.length === 1 && attributes[0]?.name.trim() !== '' && (
                 <div>
                   <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-start">
@@ -805,7 +812,7 @@ export default function NewProductPage() {
                       </div>
                       <div className="ml-3">
                         <h3 className="text-sm font-medium text-green-800">
-                          Hızlı Ekleme Modu Aktif
+                          Hızlı Ekleme Modu
                         </h3>
                         <p className="mt-1 text-sm text-green-700">
                           Tek nitelikli varyasyonlar için hızlı ekleme modu. Her satıra {attributes[0]?.name || 'öğrenci'} adı ve fiyat girin.
