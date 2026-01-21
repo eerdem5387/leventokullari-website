@@ -200,9 +200,57 @@ class ZiraatPaymentService {
   }
 
   /**
+   * Hata kodlarına göre detaylı hata mesajı döndürür
+   */
+  private getDetailedErrorMessage(procReturnCode: string, errMsg: string): string | null {
+    // Ziraat Sanal Pos hata kodları ve açıklamaları
+    const errorCodeMap: Record<string, string> = {
+      '0005': 'İşlem onaylanmadı. Kart limiti yetersiz olabilir veya kart bloke olabilir.',
+      '0012': 'Geçersiz işlem. İşlem tipi veya parametreler hatalı.',
+      '0013': 'Geçersiz tutar. Tutar formatı hatalı veya limit dışında.',
+      '0014': 'Geçersiz kart numarası. Kart numarası hatalı veya geçersiz.',
+      '0030': 'Format hatası. Gönderilen veri formatı hatalı.',
+      '0032': 'İşlem yapılamıyor. Kartın bu işlem tipine izni yok.',
+      '0033': 'Hatalı kart. Kart geçersiz veya süresi dolmuş.',
+      '0034': 'Dolandırıcılık şüphesi. İşlem güvenlik nedeniyle reddedildi.',
+      '0035': 'Kart sahibi işlemi reddetti. 3D Secure doğrulaması başarısız.',
+      '0036': 'İşlem zaman aşımına uğradı.',
+      '0037': 'Banka işlemi reddetti. Kart sahibi bankası işlemi onaylamadı.',
+      '0041': 'Kayıp kart. Kart kayıp olarak işaretlenmiş.',
+      '0043': 'Çalıntı kart. Kart çalıntı olarak işaretlenmiş.',
+      '0051': 'Yetersiz bakiye. Kart bakiyesi yetersiz.',
+      '0054': 'Süresi dolmuş kart. Kartın son kullanma tarihi geçmiş.',
+      '0055': 'Hatalı şifre. CVV veya şifre hatalı.',
+      '0057': 'Kart sahibi işleme izin vermedi. İnternet alışverişi kapalı olabilir.',
+      '0058': 'Terminal işleme izin vermedi.',
+      '0061': 'Para çekme limiti aşıldı.',
+      '0062': 'Kısıtlı kart. Kart belirli işlemlere kapatılmış.',
+      '0065': 'Günlük işlem limiti aşıldı.',
+      '0091': 'Banka veya işlem merkezi ulaşılamıyor.',
+      '0092': 'Banka veya işlem merkezi yanıt vermiyor.',
+      '0093': 'İşlem iptal edildi.',
+      '0096': 'Banka sistemi hata verdi.',
+      '0121': 'Geçersiz tutar. Minimum tutar altında.',
+      '0122': 'Geçersiz tutar. Maximum tutar üstünde.',
+    }
+
+    // Hata koduna göre mesaj döndür
+    if (errorCodeMap[procReturnCode]) {
+      return errorCodeMap[procReturnCode]
+    }
+
+    // Eğer kod yoksa ama ErrMsg varsa onu döndür
+    if (errMsg && errMsg.trim() !== '') {
+      return errMsg
+    }
+
+    return null
+  }
+
+  /**
    * Bankadan dönen callback isteğini doğrular.
    */
-  async verifyCallback(data: Record<string, any>): Promise<{ success: boolean; error?: string }> {
+  async verifyCallback(data: Record<string, any>): Promise<{ success: boolean; error?: string; errorCode?: string; rawError?: string }> {
     if (!this.settings) {
         await this.initialize()
     }
@@ -238,22 +286,32 @@ class ZiraatPaymentService {
             return { success: true }
         }
 
-        // Ziraat API'sinden gelen tüm olası hata mesajı alanlarını kontrol et
-        const errorMessage = 
-            data["ErrMsg"] || 
-            data["errmsg"] || 
-            data["ErrMsg"] || 
-            data["ErrorMessage"] || 
-            data["errorMessage"] ||
-            data["Error"] ||
-            data["error"] ||
-            data["ProcReturnCode"] || // İşlem dönüş kodu
-            data["ResponseCode"] || // Yanıt kodu
-            'İşlem banka tarafından reddedildi'
+        // Ziraat API'sinden gelen hata bilgilerini topla
+        const procReturnCode = data["ProcReturnCode"] || data["procReturnCode"] || ''
+        const responseCode = data["ResponseCode"] || data["responseCode"] || ''
+        const errMsg = data["ErrMsg"] || data["errmsg"] || ''
+        
+        // Hata kodlarına göre detaylı mesaj oluştur
+        let errorMessage = errMsg || 'İşlem banka tarafından reddedildi'
+        
+        // ProcReturnCode'a göre daha detaylı açıklama ekle
+        if (procReturnCode) {
+            const detailedMessage = this.getDetailedErrorMessage(procReturnCode, errMsg)
+            if (detailedMessage) {
+                errorMessage = detailedMessage
+            }
+        }
+        
+        // ResponseCode varsa ekle
+        if (responseCode && responseCode !== procReturnCode) {
+            errorMessage += ` (Kod: ${responseCode})`
+        }
 
         return { 
             success: false, 
-            error: errorMessage
+            error: errorMessage,
+            errorCode: procReturnCode || responseCode || null,
+            rawError: errMsg || null
         }
 
     } catch (error) {

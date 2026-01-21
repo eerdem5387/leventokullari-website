@@ -97,7 +97,11 @@ async function handleCallback(data: Record<string, any>, baseUrl: string) {
                     transactionId: data.TransId, // Başarısız işlemde de dönebilir
                     gatewayResponse: JSON.stringify({
                         ...data,
-                        error: result.error
+                        error: result.error,
+                        errorCode: result.errorCode || null,
+                        rawError: result.rawError || null,
+                        procReturnCode: data["ProcReturnCode"] || data["procReturnCode"] || null,
+                        responseCode: data["ResponseCode"] || data["responseCode"] || null
                     })
                 }
             })
