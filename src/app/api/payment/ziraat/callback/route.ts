@@ -21,6 +21,10 @@ function getBaseUrl(request: NextRequest): string {
 // Helper to process callback data (works for both POST formData and GET searchParams)
 async function handleCallback(data: Record<string, any>, baseUrl: string) {
     console.log('Ziraat Callback Data:', data)
+    // Hata durumunda tüm veriyi logla (debug için)
+    if (data["Response"] && data["Response"].toLowerCase() !== "approved") {
+        console.log('Ziraat Payment Failed - Full Response:', JSON.stringify(data, null, 2))
+    }
 
     const result = await ziraatPaymentService.verifyCallback(data)
     const orderId = data["oid"] || data["OID"] || data["OrderId"]

@@ -238,9 +238,22 @@ class ZiraatPaymentService {
             return { success: true }
         }
 
+        // Ziraat API'sinden gelen tüm olası hata mesajı alanlarını kontrol et
+        const errorMessage = 
+            data["ErrMsg"] || 
+            data["errmsg"] || 
+            data["ErrMsg"] || 
+            data["ErrorMessage"] || 
+            data["errorMessage"] ||
+            data["Error"] ||
+            data["error"] ||
+            data["ProcReturnCode"] || // İşlem dönüş kodu
+            data["ResponseCode"] || // Yanıt kodu
+            'İşlem banka tarafından reddedildi'
+
         return { 
             success: false, 
-            error: data["ErrMsg"] || data["errmsg"] || 'İşlem banka tarafından reddedildi' 
+            error: errorMessage
         }
 
     } catch (error) {

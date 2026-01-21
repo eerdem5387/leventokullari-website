@@ -39,7 +39,18 @@ export async function GET(
                     },
                     shippingAddress: true,
                     billingAddress: true,
-                    payments: { orderBy: { createdAt: 'desc' } }
+                    payments: {
+                        orderBy: { createdAt: 'desc' },
+                        select: {
+                            id: true,
+                            amount: true,
+                            method: true,
+                            status: true,
+                            transactionId: true,
+                            gatewayResponse: true,
+                            createdAt: true
+                        }
+                    }
                 }
             })
 

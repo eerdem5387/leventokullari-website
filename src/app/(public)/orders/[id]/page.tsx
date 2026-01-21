@@ -7,6 +7,16 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { CheckCircle, Clock, Truck, Package, AlertCircle } from 'lucide-react'
 
+interface Payment {
+  id: string
+  amount: number
+  method: string
+  status: string
+  transactionId?: string
+  gatewayResponse?: string
+  createdAt: string
+}
+
 interface Order {
   id: string
   orderNumber: string
@@ -16,6 +26,7 @@ interface Order {
   finalAmount: number
   createdAt: string
   notes?: string
+  payments?: Payment[]
   items: Array<{
     id: string
     product: {
@@ -233,6 +244,31 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Ödeme Durumu ve Hata Mesajı */}
+          {order.paymentStatus === 'FAILED' && order.payments && order.payments.length > 0 && (() => {
+            const failedPayment = order.payments.find(p => p.status === 'FAILED')
+            if (failedPayment?.gatewayResponse) {
+              try {
+                const gatewayData = JSON.parse(failedPayment.gatewayResponse)
+                const errorMsg = gatewayData.ErrMsg || gatewayData.errmsg || gatewayData.error || gatewayData.Error
+                if (errorMsg) {
+                  return (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <h3 className="font-medium text-red-900 mb-2 flex items-center">
+                        <AlertCircle className="h-5 w-5 mr-2" />
+                        Ödeme Hatası
+                      </h3>
+                      <p className="text-red-700">{errorMsg}</p>
+                    </div>
+                  )
+                }
+              } catch (e) {
+                console.error('Error parsing gateway response:', e)
+              }
+            }
+            return null
+          })()}
 
           {order.notes && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
