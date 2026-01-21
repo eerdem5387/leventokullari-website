@@ -756,8 +756,8 @@ export default function NewProductPage() {
                           </button>
                         </div>
                         
-                        {/* Nitelik Değerleri - Hızlı modda gizle */}
-                        {!(isQuickMode && attributes.length === 1) && (
+                        {/* Nitelik Değerleri - Tek nitelik varsa gizle (hızlı ekleme modu) */}
+                        {!(attributes.length === 1 && attributes[0]?.name.trim() !== '') && (
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <label className="block text-sm font-medium text-gray-700">
