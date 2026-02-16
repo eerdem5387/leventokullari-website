@@ -48,6 +48,8 @@ export default function PaymentPage() {
   const [expiryMonth, setExpiryMonth] = useState('')
   const [expiryYear, setExpiryYear] = useState('')
   const [cvv, setCvv] = useState('')
+  // Taksit: '' = tek çekim, '2' = vade farksız 2 taksit (sadece bu iki seçenek sunuluyor)
+  const [installments, setInstallments] = useState<string>('')
 
   // Provider'ı env'den al, yoksa default ziraat olsun (gerçek projede)
   const provider = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || 'ziraat'
@@ -90,14 +92,13 @@ export default function PaymentPage() {
       const token = localStorage.getItem('token')
       const guestEmail = localStorage.getItem('userEmail') || ''
 
-      // Ödeme başlatma isteği
+      // Ödeme başlatma isteği (installments: '' = tek çekim, '2' = vade farksız 2 taksit)
       const payload = {
         orderId,
         amount: order?.finalAmount ? Number(order.finalAmount) : 0,
         method: 'CREDIT_CARD',
+        installments: installments || undefined,
         guestEmail: !token ? guestEmail : undefined,
-        // Kart bilgilerini Ziraat Hosting modelinde göndermiyoruz, banka sayfasında girilecek.
-        // Eğer API modeline geçilirse burada alınır.
       }
 
       const res = await fetch('/api/payment/process', {
@@ -247,6 +248,41 @@ export default function PaymentPage() {
             )}
 
             <div className="space-y-6">
+              {/* Taksit seçimi: sadece Tek Çekim ve 2 Taksit (vade farksız) */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Taksit Seçenekleri</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setInstallments('')}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      installments === ''
+                        ? 'border-green-600 bg-green-50 text-green-800'
+                        : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                    }`}
+                  >
+                    <span className="block font-semibold">Tek Çekim</span>
+                    <span className="block text-sm mt-0.5 opacity-90">
+                      ₺{order?.finalAmount?.toLocaleString('tr-TR')}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInstallments('2')}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      installments === '2'
+                        ? 'border-green-600 bg-green-50 text-green-800'
+                        : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                    }`}
+                  >
+                    <span className="block font-semibold">2 Taksit</span>
+                    <span className="block text-sm mt-0.5 opacity-90">
+                      Vade farksız • Aylık ₺{order?.finalAmount ? (order.finalAmount / 2).toLocaleString('tr-TR') : '0'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-5">
                 <div className="flex items-center mb-2">
                   <Lock className="h-5 w-5 text-blue-600 mr-2" />
