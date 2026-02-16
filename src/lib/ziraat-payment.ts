@@ -169,7 +169,8 @@ class ZiraatPaymentService {
             callbackUrl: data.successUrl, // Callback URL
             lang: "tr",
             encoding: "utf-8",
-            Instalment: data.installments || ""
+            // Ziraat: tek çekim için "0", 2 taksit için "2". Boş string "99" hatası veriyor.
+            Instalment: data.installments && data.installments !== "" ? data.installments : "0"
         }
 
         // Hash hesapla
