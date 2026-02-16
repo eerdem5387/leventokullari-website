@@ -10,7 +10,6 @@ const paymentSchema = z.object({
     method: z.enum(['CREDIT_CARD', 'BANK_TRANSFER', 'CASH_ON_DELIVERY']),
     // Kart bilgileri Ziraat sayfasına post edileceği için burada zorunlu değil,
     // v3 Hosting modelinde kart bilgisi banka sayfasında girilir.
-    installments: z.string().optional(),
     // Misafir kullanıcı için opsiyonel e-posta doğrulaması
     guestEmail: z.string().email().optional()
 })
@@ -33,16 +32,6 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json()
         const paymentData = paymentSchema.parse(body)
-
-        // Taksit: sadece tek çekim (boş/undefined) veya 2 taksit (vade farksız) kabul ediyoruz
-        const allowedInstallments = ['', '2']
-        const installmentsValue = paymentData.installments == null ? '' : String(paymentData.installments).trim()
-        if (installmentsValue && !allowedInstallments.includes(installmentsValue)) {
-            return NextResponse.json(
-                { error: 'Yalnızca tek çekim veya 2 taksit seçeneği sunulmaktadır.' },
-                { status: 400 }
-            )
-        }
 
         // Siparişi kontrol et
         const order = await prisma.order.findUnique({
@@ -97,8 +86,7 @@ export async function POST(request: NextRequest) {
                 failUrl: `${baseUrl}/api/payment/ziraat/callback`,
                 customerEmail: order.user.email,
                 customerName: order.user.name,
-                customerPhone: order.user.phone || '',
-                installments: installmentsValue || undefined
+                customerPhone: order.user.phone || ''
             })
 
             if (!ziraatResponse.success || !ziraatResponse.redirectUrl) {

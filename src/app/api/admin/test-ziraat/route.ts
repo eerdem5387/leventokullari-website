@@ -28,9 +28,7 @@ export async function POST(request: NextRequest) {
             amount: 1.00, // 1 TL'lik test
             orderId: testOrderId,
             successUrl: `${baseUrl}/api/payment/ziraat/callback`,
-            failUrl: `${baseUrl}/api/payment/ziraat/callback`,
-            installments: '0',
-            // Test verileri
+            failUrl: `${baseUrl}/api/payment/ziraat/callback`
             // customerEmail, name vs. gerekirse servise eklenebilir, 
             // şu anki implementasyonumuzda createPaymentRequest bunları parametre olarak alıyor mu kontrol edelim.
             // createPaymentRequest metodumuz parametre olarak sadece interface'de tanımlı alanları alıyor.
