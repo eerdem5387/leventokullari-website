@@ -50,6 +50,11 @@ export default function PaymentPage() {
   const [cvv, setCvv] = useState('')
   // Taksit: '' = tek çekim, '2' = vade farksız 2 taksit (sadece bu iki seçenek sunuluyor)
   const [installments, setInstallments] = useState<string>('')
+  // Kart türü (BIN ile): taksit yalnızca kredi kartında gösterilir
+  const [cardBin, setCardBin] = useState('')
+  const [cardType, setCardType] = useState<'credit' | 'debit' | 'unknown' | null>(null)
+  const [installmentsAvailable, setInstallmentsAvailable] = useState(false)
+  const [binChecking, setBinChecking] = useState(false)
 
   // Provider'ı env'den al, yoksa default ziraat olsun (gerçek projede)
   const provider = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || 'ziraat'
@@ -57,6 +62,42 @@ export default function PaymentPage() {
   useEffect(() => {
     fetchOrder()
   }, [orderId])
+
+  // BIN 6 hane olduğunda kart türünü sorgula; kredi kartı ise taksit göster
+  useEffect(() => {
+    const digits = cardBin.replace(/\D/g, '')
+    if (digits.length !== 6) {
+      setCardType(null)
+      setInstallmentsAvailable(false)
+      setInstallments((prev) => (prev === '2' ? '' : prev))
+      return
+    }
+    let cancelled = false
+    setBinChecking(true)
+    fetch(`/api/payment/card-type?bin=${digits}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return
+        const type = (data.type || 'unknown').toLowerCase()
+        const isCredit = type === 'credit'
+        setCardType(type === 'credit' ? 'credit' : type === 'debit' ? 'debit' : 'unknown')
+        setInstallmentsAvailable(isCredit)
+        if (!isCredit) setInstallments('')
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCardType('unknown')
+          setInstallmentsAvailable(false)
+          setInstallments('')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBinChecking(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [cardBin])
 
   const fetchOrder = async () => {
     try {
@@ -248,7 +289,39 @@ export default function PaymentPage() {
             )}
 
             <div className="space-y-6">
-              {/* Taksit seçimi: sadece Tek Çekim ve 2 Taksit (vade farksız) */}
+              {/* Kartın ilk 6 hanesi: kredi/banka kartı ayrımı için (taksit sadece kredi kartında) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Kart numaranızın ilk 6 hanesi
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Taksit seçeneği yalnızca kredi kartları için geçerlidir. Kart türünüzü belirlemek için ilk 6 haneyi girin.
+                </p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="Örn. 453201"
+                  value={cardBin}
+                  onChange={(e) => setCardBin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="block w-full max-w-[10rem] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                />
+                {binChecking && (
+                  <p className="text-xs text-blue-600 mt-1.5">Kart türü kontrol ediliyor...</p>
+                )}
+                {!binChecking && cardType === 'debit' && (
+                  <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                    Banka kartı tespit edildi — taksit seçeneği sunulmamaktadır.
+                  </p>
+                )}
+                {!binChecking && cardType === 'credit' && (
+                  <p className="text-xs text-green-700 mt-1.5 font-medium">
+                    Kredi kartı tespit edildi — 2 taksit seçeneği kullanılabilir.
+                  </p>
+                )}
+              </div>
+
+              {/* Taksit seçimi: kredi kartında Tek Çekim + 2 Taksit, banka kartında sadece Tek Çekim */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Taksit Seçenekleri</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -266,20 +339,29 @@ export default function PaymentPage() {
                       ₺{order?.finalAmount?.toLocaleString('tr-TR')}
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setInstallments('2')}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      installments === '2'
-                        ? 'border-green-600 bg-green-50 text-green-800'
-                        : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
-                    }`}
-                  >
-                    <span className="block font-semibold">2 Taksit</span>
-                    <span className="block text-sm mt-0.5 opacity-90">
-                      Vade farksız • Aylık ₺{order?.finalAmount ? (order.finalAmount / 2).toLocaleString('tr-TR') : '0'}
-                    </span>
-                  </button>
+                  {installmentsAvailable ? (
+                    <button
+                      type="button"
+                      onClick={() => setInstallments('2')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        installments === '2'
+                          ? 'border-green-600 bg-green-50 text-green-800'
+                          : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                      }`}
+                    >
+                      <span className="block font-semibold">2 Taksit</span>
+                      <span className="block text-sm mt-0.5 opacity-90">
+                        Vade farksız • Aylık ₺{order?.finalAmount ? (order.finalAmount / 2).toLocaleString('tr-TR') : '0'}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="p-4 rounded-xl border-2 border-gray-100 bg-gray-50 text-gray-500 text-sm flex flex-col justify-center">
+                      <span className="block font-medium text-gray-600">2 Taksit</span>
+                      <span className="block text-xs mt-0.5">
+                        Yalnızca kredi kartı ile kullanılabilir
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
