@@ -15,6 +15,7 @@ interface PaymentRequest {
   orderNumber?: string
   successUrl: string
   failUrl: string
+  installments?: string // Taksit sayısı (boş ise tek çekim)
   customerEmail?: string
   customerName?: string
   customerPhone?: string
@@ -152,7 +153,7 @@ class ZiraatPaymentService {
         const rnd = String(Date.now())
         const amountStr = data.amount.toFixed(2) // 100.00 formatı
         
-        // Temel parametreler. Taksit seçimi Ziraat ödeme sayfasında müşteri tarafından yapılır; instalment parametresi gönderilmiyor.
+        // Temel parametreler
         const baseParams: Record<string, string> = {
             clientid: this.settings!.merchantId,
             storetype: this.settings!.storeType,
@@ -166,7 +167,8 @@ class ZiraatPaymentService {
             failUrl: data.failUrl,
             callbackUrl: data.successUrl, // Callback URL
             lang: "tr",
-            encoding: "utf-8"
+            encoding: "utf-8",
+            Instalment: data.installments || ""
         }
 
         // Hash hesapla
